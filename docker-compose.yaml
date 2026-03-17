@@ -1,0 +1,16 @@
+services:
+  database:
+    # https://hub.docker.com/_/postgres
+    image: postgres
+    restart: always
+    shm_size: 256mb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres:/var/lib/postgresql
+
+
+volumes:
+  postgres:
