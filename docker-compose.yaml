@@ -1,7 +1,8 @@
 services:
   database:
     # https://hub.docker.com/_/postgres
-    image: postgres
+    # https://hub.docker.com/r/postgis/postgis/
+    image: postgis/postgis:18-3.6-alpine
     restart: always
     shm_size: 256mb
     ports:
