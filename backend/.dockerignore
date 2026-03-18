@@ -1,0 +1,9 @@
+.env
+/vendor/*
+package.json
+vite.config.js
+/tests/*
+phpunit.xml
+.gitignore
+.gitattributes
+.editorconfig
