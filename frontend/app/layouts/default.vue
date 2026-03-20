@@ -7,29 +7,28 @@ const toast = useToast()
 const open = ref(false)
 
 const links = [[{
-  label: 'Home',
+  label: 'Início',
   icon: 'i-lucide-house',
   to: '/',
   onSelect: () => {
     open.value = false
   }
 }, {
-  label: 'Inbox',
-  icon: 'i-lucide-inbox',
-  to: '/inbox',
-  badge: '4',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Customers',
-  icon: 'i-lucide-users',
+  label: 'Utilizadores',
+  icon: 'i-lucide-user',
   to: '/customers',
   onSelect: () => {
     open.value = false
   }
 }, {
-  label: 'Settings',
+  label: 'Ocorrências',
+  icon: 'i-lucide-flame',
+  to: '/inbox',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Definições',
   to: '/settings',
   icon: 'i-lucide-settings',
   defaultOpen: true,
