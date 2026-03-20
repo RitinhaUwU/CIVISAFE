@@ -18,14 +18,14 @@ class AuthController extends Controller
 
         if (!Auth::attempt($request->only('email', 'password'))) {
             throw ValidationException::withMessages([
-                'email' => ['As credenciais fornecidas estao incorretas.'],
+                'email' => ['As credenciais fornecidas estão incorretas.'],
             ]);
         }
 
         $user = Auth::user();
-        if ($user->blocked === true)
+        if ($user->locked === true)
         {
-            abort(401,'Esta conta esta bloqueada');
+            abort(401,'Esta conta está bloqueada.');
         }
         $token = $user->createToken('auth-token')->plainTextToken;
 
