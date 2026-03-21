@@ -1,60 +1,38 @@
 <script setup lang="ts">
-import { sub } from 'date-fns'
-import type { DropdownMenuItem } from '@nuxt/ui'
-import type { Period, Range } from '~/types'
-
-const { isNotificationsSlideoverOpen } = useDashboard()
-
-const items = [[{
-  label: 'New mail',
-  icon: 'i-lucide-send',
-  to: '/inbox'
-}, {
-  label: 'New customer',
-  icon: 'i-lucide-user-plus',
-  to: '/customers'
-}]] satisfies DropdownMenuItem[][]
-
-const range = shallowRef<Range>({
-  start: sub(new Date(), { days: 14 }),
-  end: new Date()
+definePageMeta({
+  layout: 'login'
 })
-const period = ref<Period>('daily')
+
+const email = ref('')
+const password = ref('')
+
+// Função de Login
+const login = () => {
+  console.log('Email:', email.value)
+  console.log('Password:', password.value)
+}
 </script>
 
 <template>
-  <UDashboardPanel id="home">
-    <template #header>
-      <UDashboardNavbar title="Início" :ui="{ right: 'gap-3' }">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
-
-        <template #right>
-          <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
-          <UDropdownMenu :items="items">
-            <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
-          </UDropdownMenu>
-        </template>
-      </UDashboardNavbar>
-    </template>
-
-    <template #body>
-      <HomeStats :period="period" :range="range" />
-      <HomeChart :period="period" :range="range" />
-      <HomeSales :period="period" :range="range" />
-    </template>
-  </UDashboardPanel>
+  <div class="flex items-center justify-center flex-1 px-4">
+    <UCard class="w-full max-w-md bg-gray-500/5 backdrop-blur">
+      <h1 class="text-xl sm:text-2xl font-bold mb-4 text-center">
+        Login
+      </h1>
+      <div class="mb-3 flex flex-col">
+        <label class="mb-1">Email</label>
+        <UInput v-model="email" type="email" placeholder="exemplo@exemplo.pt" />
+      </div>
+      <div class="mb-3 flex flex-col">
+        <label class="mb-1">Palavra-Passe</label>
+        <UInput v-model="password" type="password" placeholder="••••••" />
+      </div>
+      <NuxtLink to="" class="text-sm cursor-pointer text-blue-500 hover:underline">
+        Esqueci-me da palavra-passe
+      </NuxtLink>
+      <UButton block class="mt-4 cursor-pointer" @click="login">
+        Entrar
+      </UButton>
+    </UCard>
+  </div>
 </template>

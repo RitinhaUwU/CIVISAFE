@@ -114,48 +114,52 @@ onMounted(async () => {
 </script>
 
 <template>
-  <UDashboardGroup unit="rem">
-    <UDashboardSidebar
-      id="default"
-      v-model:open="open"
-      collapsible
-      resizable
-      class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
-    >
-      <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
-      </template>
-
-      <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[0]"
-          orientation="vertical"
-          tooltip
-          popover
-        />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[1]"
-          orientation="vertical"
-          tooltip
-          class="mt-auto"
-        />
-      </template>
-
-      <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
-      </template>
-    </UDashboardSidebar>
-
-    <UDashboardSearch :groups="groups" />
-
-    <slot />
-
-    <NotificationsSlideover />
-  </UDashboardGroup>
+  <div class="flex flex-col min-h-screen">
+    <div class="flex flex-1 overflow-hidden">
+      <UDashboardGroup unit="rem" class="flex-1">
+        <UDashboardSidebar
+          id="default"
+          v-model:open="open"
+          collapsible
+          resizable
+          class="bg-elevated/25"
+          :ui="{ footer: 'lg:border-t lg:border-default' }"
+        >
+          <template #header="{ collapsed }">
+            <TeamsMenu :collapsed="collapsed" />
+          </template>
+          <template #default="{ collapsed }">
+            <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="links[0]"
+              orientation="vertical"
+              tooltip
+              popover
+            />
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="links[1]"
+              orientation="vertical"
+              tooltip
+              class="mt-auto"
+            />
+          </template>
+          <template #footer="{ collapsed }">
+            <UserMenu :collapsed="collapsed" />
+          </template>
+        </UDashboardSidebar>
+        <UDashboardSearch :groups="groups" />
+        <div class="flex-1 overflow-auto">
+          <slot />
+        </div>
+        <NotificationsSlideover />
+      </UDashboardGroup>
+    </div>
+    <UFooter class="w-full">
+      <div class="py-4 text-center text-sm opacity-70">
+        Copyright © 2026
+      </div>
+    </UFooter>
+  </div>
 </template>
