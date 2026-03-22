@@ -1,15 +1,27 @@
 <script setup lang="ts">
+import { useAuth } from '../composables/useAuth'
+
 definePageMeta({
   layout: 'login'
 })
 
-const email = ref('')
-const password = ref('')
+const auth = useAuth()
 
-// Função de Login
-const login = () => {
-  console.log('Email:', email.value)
-  console.log('Password:', password.value)
+const credentials = reactive({
+  email: '',
+  password: ''
+})
+
+onBeforeMount(async () => {
+  if (await auth.isAuthenticated()) {
+    navigateTo('/home')
+  }
+})
+
+async function handleLogin(e) {
+  e.preventDefault()
+  await auth.login(credentials)
+  navigateTo('/home')
 }
 </script>
 
@@ -19,20 +31,22 @@ const login = () => {
       <h1 class="text-xl sm:text-2xl font-bold mb-4 text-center">
         Login
       </h1>
-      <div class="mb-3 flex flex-col">
-        <label class="mb-1">Email</label>
-        <UInput v-model="email" type="email" placeholder="exemplo@exemplo.pt" />
-      </div>
-      <div class="mb-3 flex flex-col">
-        <label class="mb-1">Palavra-Passe</label>
-        <UInput v-model="password" type="password" placeholder="••••••" />
-      </div>
-      <NuxtLink to="" class="text-sm cursor-pointer text-blue-500 hover:underline">
-        Esqueci-me da palavra-passe
-      </NuxtLink>
-      <UButton block class="mt-4 cursor-pointer" @click="login">
-        Entrar
-      </UButton>
+      <form @submit.prevent="handleLogin">
+        <div class="mb-3 flex flex-col">
+          <label class="mb-1">Email</label>
+          <UInput v-model="credentials.email" type="email" placeholder="exemplo@exemplo.pt" />
+        </div>
+        <div class="mb-3 flex flex-col">
+          <label class="mb-1">Palavra-Passe</label>
+          <UInput v-model="credentials.password" type="password" placeholder="••••••" />
+        </div>
+        <NuxtLink to="" class="text-sm cursor-pointer text-blue-500 hover:underline">
+          Esqueci-me da palavra-passe
+        </NuxtLink>
+        <UButton block class="mt-4 cursor-pointer" type="submit">
+          Entrar
+        </UButton>
+      </form>
     </UCard>
   </div>
 </template>
