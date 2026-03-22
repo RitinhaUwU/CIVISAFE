@@ -1,0 +1,27 @@
+info:
+  name: Autenticar
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:8000/api/v1/login
+  headers:
+    - name: Accept
+      value: application/json
+  body:
+    type: multipart-form
+    data:
+      - name: email
+        type: text
+        value: admin@example.com
+      - name: password
+        type: text
+        value: password
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
