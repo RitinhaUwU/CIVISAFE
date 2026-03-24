@@ -1,17 +1,23 @@
 <script setup lang="ts">
+import { useAuthStore } from '../stores/auth'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
 defineProps<{
   collapsed?: boolean
 }>()
 
+const auth = useAuthStore()
 const colorMode = useColorMode()
 
-const user = ref({
-  name: 'Benjamin Canac',
-  avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: 'Benjamin Canac'
+const user = computed(() => {
+  const data = auth.currentUser
+
+  return {
+    name: data?.name,
+    avatar: {
+      src: data?.avatar,
+      alt: data?.name
+    }
   }
 })
 
@@ -20,17 +26,14 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   label: user.value.name,
   avatar: user.value.avatar
 }], [{
-  label: 'Profile',
+  label: 'Perfil',
   icon: 'i-lucide-user'
-}, {
-  label: 'Billing',
-  icon: 'i-lucide-credit-card'
 }, {
   label: 'Settings',
   icon: 'i-lucide-settings',
   to: '/settings'
 }], [{
-  label: 'Appearance',
+  label: 'Aparência',
   icon: 'i-lucide-sun-moon',
   children: [{
     label: 'Light',
@@ -67,8 +70,11 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   to: 'https://github.com/nuxt-ui-templates/dashboard',
   target: '_blank'
 }, {
-  label: 'Log out',
-  icon: 'i-lucide-log-out'
+  label: 'Sair',
+  icon: 'i-lucide-log-out',
+  async onSelect() {
+    await auth.logout()
+  }
 }]]))
 </script>
 
@@ -80,7 +86,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   >
     <UButton
       v-bind="{
-        ...user,
+        ...user.value,
         label: collapsed ? undefined : user?.name,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"

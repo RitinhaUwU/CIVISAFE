@@ -1,27 +1,30 @@
 <script setup lang="ts">
-import { useAuth } from '../composables/useAuth'
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
+import { onBeforeMount, reactive } from 'vue'
 
 definePageMeta({
   layout: 'login'
 })
 
-const auth = useAuth()
+const auth = useAuthStore()
+const router = useRouter()
 
 const credentials = reactive({
-  email: '',
+  username: '',
   password: ''
 })
 
 onBeforeMount(async () => {
-  if (await auth.isAuthenticated()) {
-    navigateTo('/home')
+  if (await auth.isAuthenticated() === false) {
+    await router.push('/')
   }
 })
 
 async function handleLogin(e) {
   e.preventDefault()
   await auth.login(credentials)
-  navigateTo('/home')
+  await router.push('/home')
 }
 </script>
 
