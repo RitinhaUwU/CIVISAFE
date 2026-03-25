@@ -2,6 +2,24 @@ opencollection: 1.0.0
 
 info:
   name: CIVISAFE
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  headers:
+    - name: Accept
+      value: application/json
+  auth:
+    type: bearer
 bundled: false
 extensions:
   bruno:

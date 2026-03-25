@@ -5,10 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:8000/api/v1/login
-  headers:
-    - name: Accept
-      value: application/json
+  url: "{{BASE_URL}}/api/v1/login"
   body:
     type: multipart-form
     data:
@@ -18,7 +15,6 @@ http:
       - name: password
         type: text
         value: password
-  auth: inherit
 
 settings:
   encodeUrl: true

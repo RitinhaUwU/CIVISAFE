@@ -5,10 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8000/api/v1/user
-  headers:
-    - name: Accept
-      value: application/json
+  url: "{{BASE_URL}}/api/v1/user"
   auth: inherit
 
 settings:
