@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useApiStore } from './api'
 import { useToast } from '../../.nuxt/imports'
 import { useRouter } from 'vue-router'
-import axios from "axios";
+import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const apiStore = useApiStore()

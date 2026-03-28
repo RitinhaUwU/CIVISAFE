@@ -24,7 +24,7 @@ onBeforeMount(async () => {
 async function handleLogin(e) {
   e.preventDefault()
   await auth.login(credentials)
-  await router.push('/home')
+  await router.push('/inicio')
 }
 </script>
 

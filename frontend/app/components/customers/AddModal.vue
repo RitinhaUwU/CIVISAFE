@@ -23,8 +23,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="New customer" description="Add a new customer to the database">
-    <UButton label="New customer" icon="i-lucide-plus" />
+  <UModal v-model:open="open" title="Novo Utilizador" description="Add a new customer to the database">
+    <UButton label="Novo Utilizador" icon="i-lucide-plus" />
 
     <template #body>
       <UForm

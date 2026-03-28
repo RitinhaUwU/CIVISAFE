@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isLoggedIn = !!auth.currentUser
 
   if (isLoggedIn && isPublic) {
-    return navigateTo('/home')
+    return navigateTo('/inicio')
   }
 
   if (!isLoggedIn && !isPublic) {

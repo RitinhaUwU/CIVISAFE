@@ -8,7 +8,7 @@ const { isNotificationsSlideoverOpen } = useDashboard()
 const items = [[{
   label: 'New mail',
   icon: 'i-lucide-send',
-  to: '/inbox'
+  to: '/ocorrencias'
 }, {
   label: 'New customer',
   icon: 'i-lucide-user-plus',
@@ -52,9 +52,8 @@ const period = ref<Period>('daily')
     </template>
 
     <template #body>
-      <HomeStats :period="period" :range="range" />
-      <HomeChart :period="period" :range="range" />
-      <HomeSales :period="period" :range="range" />
+      <InicioStats :period="period" :range="range" />
+      <InicioMapa />
     </template>
   </UDashboardPanel>
 </template>

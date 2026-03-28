@@ -72,36 +72,15 @@ function getRowItems(row: Row<User>) {
 
 const columns: TableColumn<User>[] = [
   {
-    id: 'select',
-    header: ({ table }) =>
-      h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
-          ? 'indeterminate'
-          : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
-      }),
-    cell: ({ row }) =>
-      h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
-  },
-  {
     accessorKey: 'id',
-    header: 'ID'
+    header: 'ID',
+    cell: ({ row }) => `#${row.original.id}`
   },
   {
     accessorKey: 'name',
     header: 'Name',
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-3' }, [
-        h(UAvatar, {
-          ...row.original.avatar,
-          size: 'lg'
-        }),
         h('div', undefined, [
           h('p', { class: 'font-medium text-highlighted' }, row.original.name),
           h('p', { class: '' }, `@${row.original.name}`)
@@ -155,22 +134,35 @@ const columns: TableColumn<User>[] = [
       return h(
         'div',
         { class: 'text-right' },
-        h(
-          UDropdownMenu,
-          {
-            content: {
-              align: 'end'
-            },
-            items: getRowItems(row)
-          },
-          () =>
-            h(UButton, {
-              icon: 'i-lucide-ellipsis-vertical',
-              color: 'neutral',
-              variant: 'ghost',
-              class: 'ml-auto'
+        h(UButton, {
+          icon: 'i-lucide-info',
+          color: 'info',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Detalhes', row.original)
+          }
+        }),
+        h(UButton, {
+          icon: 'i-lucide-pencil',
+          color: 'warning',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Editar', row.original)
+          }
+        }),
+        h(UButton, {
+          icon: 'i-lucide-trash',
+          color: 'error',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Apagar', row.original)
+
+            toast.add({
+              title: 'Customer deleted',
+              description: 'The customer has been deleted.'
             })
-        )
+          }
+        })
       )
     }
   }
@@ -207,15 +199,11 @@ const pagination = ref({
 </script>
 
 <template>
-  <UDashboardPanel id="utilizadores">
+  <UDashboardPanel id="ocorrencia">
     <template #header>
-      <UDashboardNavbar title="Utilizadores">
+      <UDashboardNavbar title="Ocorrências">
         <template #leading>
           <UDashboardSidebarCollapse />
-        </template>
-
-        <template #right>
-          <CustomersAddModal />
         </template>
       </UDashboardNavbar>
     </template>
@@ -230,22 +218,6 @@ const pagination = ref({
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
-            <UButton
-              v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Delete"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-trash"
-            >
-              <template #trailing>
-                <UKbd>
-                  {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
-                </UKbd>
-              </template>
-            </UButton>
-          </CustomersDeleteModal>
-
           <USelect
             v-model="statusFilter"
             :items="[
@@ -277,12 +249,6 @@ const pagination = ref({
             "
             :content="{ align: 'end' }"
           >
-            <UButton
-              label="Display"
-              color="neutral"
-              variant="outline"
-              trailing-icon="i-lucide-settings-2"
-            />
           </UDropdownMenu>
         </div>
       </div>
@@ -310,12 +276,7 @@ const pagination = ref({
         }"
       />
 
-      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
-        <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
-        </div>
-
+      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
         <div class="flex items-center gap-1.5">
           <UPagination
             :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"

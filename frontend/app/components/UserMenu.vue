@@ -14,17 +14,12 @@ const user = computed(() => {
 
   return {
     name: data?.name,
-    avatar: {
-      src: data?.avatar,
-      alt: data?.name
-    }
   }
 })
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
   label: user.value.name,
-  avatar: user.value.avatar
 }], [{
   label: 'Perfil',
   icon: 'i-lucide-user'
