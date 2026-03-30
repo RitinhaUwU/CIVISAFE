@@ -4,19 +4,19 @@ namespace Database\Factories;
 
 use App\Models\Entity;
 use App\Models\Incident;
-use App\Models\IncidentEntitiesMapping;
+use App\Models\IncidentParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
-class IncidentEntitiesMappingFactory extends Factory
+class IncidentPartyFactory extends Factory
 {
-    protected $model = IncidentEntitiesMapping::class;
+    protected $model = IncidentParty::class;
 
     public function definition(): array
     {
         return [
-            'human_resource_amount' => $this->faker->randomNumber(2),
-            'vehicle_amount' => $this->faker->randomNumber(2),
+            'human_count' => $this->faker->randomNumber(2),
+            'vehicle_count' => $this->faker->randomNumber(2),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 

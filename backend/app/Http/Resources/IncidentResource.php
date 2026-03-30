@@ -4,49 +4,43 @@ namespace App\Http\Resources;
 
 use App\Models\Incident;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\JsonApi\JsonApiResource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /** @mixin Incident */
-class IncidentResource extends JsonApiResource
+class IncidentResource extends JsonResource
 {
-
-    public $attributes = [
-      'id',
-      'identifier',
-      'is_major',
-      'start_datetime',
-      'end_datetime',
-
-      'coordinates',
-      'common_place',
-      'address',
-      'parish',
-      'municipality',
-      'district',
-
-      'command_post',
-
-      'alert_source_name',
-      'alert_source_contact',
-
-      'obs',
-      'created_at',
-      'updated_at'
-    ];
-
-    public $relationships = [
-        'category'         => CategoryResource::class,
-        'incidentState'    => IncidentStateResource::class,
-        'incidentPriority' => IncidentPriorityResource::class,
-        'resources'        => IncidentEntitiesMappingResource::class,
-        'parentIncident'   => IncidentResource::class,
-//        'user'             => UserResource::class,
-    ];
-
-    public function toLinks(Request $request)
+    public function toArray(Request $request): array
     {
         return [
-            'self' => url('/api/v1/incidents/' . $this->id),
+            'id' => $this->id,
+            'identifier' => $this->identifier,
+            'start_datetime' => $this->start_datetime,
+            'end_datetime' => $this->end_datetime,
+
+            'coordinates' => $this->coordinates,
+            'common_place' => $this->common_place,
+            'address' => $this->address,
+            'parish' => $this->parish,
+            'municipality' => $this->municipality,
+            'district' => $this->district,
+            'command_post' => $this->command_post,
+            'is_major' => $this->is_major,
+            'alert_source_relationship' => $this->alert_source_relationship,
+            'alert_source_name' => $this->alert_source_name,
+            'alert_source_contact' => $this->alert_source_contact,
+            'obs' => $this->obs,
+            'incident_id' => $this->incident_id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+
+            'user_id' => $this->user_id,
+
+            'category' => new CategoryResource($this->whenLoaded('category')),
+            'incidentPriority' => new IncidentPriorityResource($this->whenLoaded('incidentPriority')),
+            'incidentState' => new IncidentStateResource($this->whenLoaded('incidentState')),
+            'parentIncident' => new IncidentResource($this->whenLoaded('parentIncident')),
         ];
     }
+
+
 }

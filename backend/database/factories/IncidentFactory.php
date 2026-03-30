@@ -16,17 +16,15 @@ class IncidentFactory extends Factory
 
     public function definition(): array
     {
-        $is_major = false;
+        $is_major = $this->faker->boolean(20);
         $major_id = null;
 
-        if(Incident::count() > 0 && $this->faker->boolean(100))
-        {
-            $is_major = true;
-            $major_id = Incident::inRandomOrder()->first()->id;
-        }
+//        if(!$is_major && $this->faker->boolean(60) && Incident::where(['is_major' => true])->count() > 0){
+//            $major_id = Incident::where(['is_major' => true])->inRandomOrder()->first()->id;
+//        }
 
-        $start = $this->faker->dateTime('-1 week');
-        $end = $this->faker->dateTimeBetween($start, 'yesterday');
+        $start = $this->faker->dateTime('-1 week')->format('Y-m-d H:i:s');
+        $end = $this->faker->dateTimeBetween($start, 'yesterday')->format('Y-m-d H:i:s');
 
         return [
             'identifier' => date('Y') . "/" . $this->faker->randomNumber(4),

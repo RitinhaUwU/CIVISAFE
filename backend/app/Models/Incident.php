@@ -37,15 +37,23 @@ class Incident extends Model
         return $this->belongsTo(Incident::class);
     }
 
+    public function childrenIncidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
     public function resources(): HasMany
     {
-        return $this->hasMany(IncidentEntitiesMapping::class);
+        return $this->hasMany(IncidentParty::class);
     }
+
+    protected $with = ['category', 'incidentState', 'incidentPriority', 'user', 'resources', 'parentIncident', 'childrenIncidents'];
 
     protected function casts(): array
     {
         return [
             'start_datetime' => 'datetime',
+            'end_datetime' => 'datetime',
             'is_major' => 'boolean',
         ];
     }

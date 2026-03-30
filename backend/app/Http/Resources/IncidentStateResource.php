@@ -5,24 +5,19 @@ namespace App\Http\Resources;
 use App\Models\IncidentState;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 
 /** @mixin IncidentState */
-class IncidentStateResource extends JsonApiResource
+class IncidentStateResource extends JsonResource
 {
-    public $attributes = [
-        'id',
-        'name',
-        'description',
-        'hex_color',
-        'terminates_incident',
-        'is_active',
-    ];
-
-    public function toLinks(Request $request)
+    public function toArray(Request $request): array
     {
         return [
-            'self' => url('/api/v1/incidentStates/' . $this->id),
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'hex_color' => $this->hex_color,
+            'terminates_incident' => $this->terminates_incident,
+            'is_active' => $this->is_active,
         ];
     }
 }

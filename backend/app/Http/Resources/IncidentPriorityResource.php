@@ -4,24 +4,19 @@ namespace App\Http\Resources;
 
 use App\Models\IncidentPriority;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\JsonApi\JsonApiResource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /** @mixin IncidentPriority */
-class IncidentPriorityResource extends JsonApiResource
+class IncidentPriorityResource extends JsonResource
 {
-
-    public $attributes = [
-        'id',
-        'name',
-        'description',
-        'hex_color',
-        'is_active',
-    ];
-
-    public function toLinks(Request $request)
+    public function toArray(Request $request): array
     {
         return [
-            'self' => url('/api/v1/incidentPriorities/' . $this->id),
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'hex_color' => $this->hex_color,
+            'is_active' => $this->is_active,
         ];
     }
 }

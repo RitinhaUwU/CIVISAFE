@@ -6,13 +6,12 @@ use App\Enums\RolesEnum;
 use App\Models\Category;
 use App\Models\Entity;
 use App\Models\Incident;
-use App\Models\IncidentEntitiesMapping;
+use App\Models\IncidentParty;
 use App\Models\IncidentPriority;
 use App\Models\IncidentState;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Validation\Rules\In;
 use Spatie\Permission\Models\Role;
 use function Illuminate\Support\enum_value;
 
@@ -75,9 +74,16 @@ class DatabaseSeeder extends Seeder
             'name' => 'Emergente',
         ]);
 
-        Incident::factory(10)->create();
+        Incident::factory(60)->create();
 
-        IncidentEntitiesMapping::factory(10)->create();
+        for ($i = 0; $i<=20; $i++) {
+            Incident::factory()->create([
+                'is_major' => false,
+                'incident_id' => Incident::where(['is_major' => true])->inRandomOrder()->first()->id,
+            ]);
+        }
+
+        IncidentParty::factory(100)->create();
 
     }
 }

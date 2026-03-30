@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\IncidentRequest;
 use App\Http\Resources\IncidentResource;
 use App\Models\Incident;
-use Illuminate\Http\Request;
 
 class IncidentController extends Controller
 {
@@ -15,9 +14,7 @@ class IncidentController extends Controller
             'category',
             'incidentState',
             'incidentPriority',
-            'resources',
             'parentIncident',
-            'user',
         ])->paginate(15));
     }
 

@@ -2,27 +2,22 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\JsonApi\JsonApiResource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class CategoryResource extends JsonApiResource
+/** @mixin Category */
+class CategoryResource extends JsonResource
 {
-    /**
-     * The resource's attributes.
-     */
-    public $attributes = [
-        'code',
-        'name',
-        'description',
-        'is_active',
-        'created_at',
-        'updated_at',
-    ];
-
-    public function toLinks(Request $request)
+    public function toArray(Request $request): array
     {
         return [
-            'self' => url('/api/v1/categories/' . $this->code),
+            'code' => $this->code,
+            'name' => $this->name,
+            'description' => $this->description,
+            'is_active' => $this->is_active,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -5,29 +5,25 @@ namespace App\Http\Resources;
 use App\Models\Entity;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 
-class EntityResource extends JsonApiResource
+/** @mixin Entity */
+class EntityResource extends JsonResource
 {
-    public $attributes = [
-        'id',
-        'name',
-        'description',
-        'phone_contact',
-        'email_contact',
-        'address',
-        'logo',
-        'poc_name',
-        'poc_phone',
-        'poc_email',
-        'created_at',
-        'updated_at',
-    ];
-
-    public function toLinks(Request $request)
+    public function toArray(Request $request): array
     {
         return [
-            'self' => url('/api/v1/entities/' . $this->id),
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'phone_contact' => $this->phone_contact,
+            'email_contact' => $this->email_contact,
+            'address' => $this->address,
+            'logo' => $this->logo,
+            'poc_name' => $this->poc_name,
+            'poc_phone' => $this->poc_phone,
+            'poc_email' => $this->poc_email,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

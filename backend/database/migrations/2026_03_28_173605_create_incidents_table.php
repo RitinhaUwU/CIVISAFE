@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->foreignId('incident_state_id')->constrained('incident_states');
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('incident_priority_id')->constrained('incident_priorities');
-            $table->dateTimeTz('start_datetime');
-            $table->dateTimeTz('end_datetime')->nullable();
+            $table->dateTime('start_datetime');
+            $table->dateTime('end_datetime')->nullable();
             $table->string('coordinates')->nullable();
             $table->string('common_place')->nullable();
             $table->string('address')->nullable();
