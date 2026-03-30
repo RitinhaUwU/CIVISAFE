@@ -5,11 +5,9 @@ import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
 import type { User } from '~/types'
 
-const UAvatar = resolveComponent('UAvatar')
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UCheckbox = resolveComponent('UCheckbox')
 
 const toast = useToast()
 const table = useTemplateRef('table')
@@ -72,36 +70,10 @@ function getRowItems(row: Row<User>) {
 
 const columns: TableColumn<User>[] = [
   {
-    id: 'select',
-    header: ({ table }) =>
-      h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
-          ? 'indeterminate'
-          : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
-      }),
-    cell: ({ row }) =>
-      h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
-  },
-  {
-    accessorKey: 'id',
-    header: 'ID'
-  },
-  {
-    accessorKey: 'name',
-    header: 'Nome',
+    accessorKey: 'num_ocorrencias',
+    header: 'Nº Ocorrências',
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-3' }, [
-        h(UAvatar, {
-          ...row.original.avatar,
-          size: 'lg'
-        }),
         h('div', undefined, [
           h('p', { class: 'font-medium text-highlighted' }, row.original.name),
           h('p', { class: '' }, `@${row.original.name}`)
@@ -110,32 +82,8 @@ const columns: TableColumn<User>[] = [
     }
   },
   {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
-
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'Email',
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? 'i-lucide-arrow-up-narrow-wide'
-            : 'i-lucide-arrow-down-wide-narrow'
-          : 'i-lucide-arrow-up-down',
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
-  },
-  {
-    accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => row.original.location
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: 'estado',
+    header: 'Estado',
     filterFn: 'equals',
     cell: ({ row }) => {
       const color = {
@@ -144,10 +92,44 @@ const columns: TableColumn<User>[] = [
         bounced: 'warning' as const
       }[row.original.status]
 
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
+      return h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () =>
         row.original.status
       )
     }
+  },
+  {
+    accessorKey: 'prioridade',
+    header: 'Prioridade',
+    filterFn: 'equals',
+    cell: ({ row }) => {
+      const color = {
+        subscribed: 'success' as const,
+        unsubscribed: 'error' as const,
+        bounced: 'warning' as const
+      }[row.original.status]
+
+      return h(UBadge, { class: 'capitalize, rounded-full', variant: 'solid', color }, () =>
+        row.original.status
+      )
+    }
+  },
+  {
+    accessorKey: 'categoria',
+    header: 'Categoria',
+    cell: ({ row }) => row.original.location
+  },
+  {
+    accessorKey: 'dataInicio',
+    header: () => {
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Data Início',
+        icon: 'i-lucide-arrow-up-down',
+        class: '-mx-2.5'
+      })
+    },
+    cell: ({ row }) => row.original.email
   },
   {
     id: 'actions',
@@ -155,50 +137,33 @@ const columns: TableColumn<User>[] = [
       return h(
         'div',
         { class: 'text-right' },
-        h(
-          UDropdownMenu,
-          {
-            content: {
-              align: 'end'
-            },
-            items: getRowItems(row)
-          },
-          () =>
-            h(UButton, {
-              icon: 'i-lucide-ellipsis-vertical',
-              color: 'neutral',
-              variant: 'ghost',
-              class: 'ml-auto'
+        h(UButton, {
+          icon: 'i-lucide-pencil',
+          color: 'warning',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Editar', row.original)
+          }
+        }),
+        h(UButton, {
+          icon: 'i-lucide-trash',
+          color: 'error',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Apagar', row.original)
+
+            toast.add({
+              title: 'Customer deleted',
+              description: 'The customer has been deleted.'
             })
-        )
+          }
+        })
       )
     }
   }
 ]
 
 const statusFilter = ref('all')
-
-watch(() => statusFilter.value, (newVal) => {
-  if (!table?.value?.tableApi) return
-
-  const statusColumn = table.value.tableApi.getColumn('status')
-  if (!statusColumn) return
-
-  if (newVal === 'all') {
-    statusColumn.setFilterValue(undefined)
-  } else {
-    statusColumn.setFilterValue(newVal)
-  }
-})
-
-const email = computed({
-  get: (): string => {
-    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || ''
-  },
-  set: (value: string) => {
-    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined)
-  }
-})
 
 const pagination = ref({
   pageIndex: 0,
@@ -207,15 +172,11 @@ const pagination = ref({
 </script>
 
 <template>
-  <UDashboardPanel id="utilizadores">
+  <UDashboardPanel id="ocorrencia">
     <template #header>
-      <UDashboardNavbar title="Utilizadores">
+      <UDashboardNavbar title="Ocorrências">
         <template #leading>
           <UDashboardSidebarCollapse />
-        </template>
-
-        <template #right>
-          <CustomersAddModal />
         </template>
       </UDashboardNavbar>
     </template>
@@ -226,30 +187,14 @@ const pagination = ref({
           v-model="email"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filtrar emails..."
+          placeholder="Filtrar ocorrências..."
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
-            <UButton
-              v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Delete"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-trash"
-            >
-              <template #trailing>
-                <UKbd>
-                  {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
-                </UKbd>
-              </template>
-            </UButton>
-          </CustomersDeleteModal>
-
           <USelect
             v-model="statusFilter"
             :items="[
-              { label: 'All', value: 'all' },
+              { label: 'Estado', value: 'all' },
               { label: 'Subscribed', value: 'subscribed' },
               { label: 'Unsubscribed', value: 'unsubscribed' },
               { label: 'Bounced', value: 'bounced' }
@@ -277,12 +222,38 @@ const pagination = ref({
             "
             :content="{ align: 'end' }"
           >
-            <UButton
-              label="Display"
-              color="neutral"
-              variant="outline"
-              trailing-icon="i-lucide-settings-2"
-            />
+          </UDropdownMenu>
+          <USelect
+            v-model="statusFilter"
+            :items="[
+              { label: 'Prioridade', value: 'all' },
+              { label: 'Subscribed', value: 'subscribed' },
+              { label: 'Unsubscribed', value: 'unsubscribed' },
+              { label: 'Bounced', value: 'bounced' }
+            ]"
+            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+            placeholder="Filter status"
+            class="min-w-28"
+          />
+          <UDropdownMenu
+            :items="
+              table?.tableApi
+                ?.getAllColumns()
+                .filter((column: any) => column.getCanHide())
+                .map((column: any) => ({
+                  label: upperFirst(column.id),
+                  type: 'checkbox' as const,
+                  checked: column.getIsVisible(),
+                  onUpdateChecked(checked: boolean) {
+                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
+                  },
+                  onSelect(e?: Event) {
+                    e?.preventDefault()
+                  }
+                }))
+            "
+            :content="{ align: 'end' }"
+          >
           </UDropdownMenu>
         </div>
       </div>
@@ -310,12 +281,7 @@ const pagination = ref({
         }"
       />
 
-      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
-        <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
-        </div>
-
+      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
         <div class="flex items-center gap-1.5">
           <UPagination
             :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"

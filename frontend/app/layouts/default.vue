@@ -7,29 +7,28 @@ const toast = useToast()
 const open = ref(false)
 
 const links = [[{
-  label: 'Home',
+  label: 'Início',
   icon: 'i-lucide-house',
-  to: '/',
+  to: '/inicio',
   onSelect: () => {
     open.value = false
   }
 }, {
-  label: 'Inbox',
-  icon: 'i-lucide-inbox',
-  to: '/inbox',
-  badge: '4',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Customers',
-  icon: 'i-lucide-users',
+  label: 'Utilizadores',
+  icon: 'i-lucide-user',
   to: '/customers',
   onSelect: () => {
     open.value = false
   }
 }, {
-  label: 'Settings',
+  label: 'Ocorrências',
+  icon: 'i-lucide-flame',
+  to: '/ocorrencias',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Definições',
   to: '/settings',
   icon: 'i-lucide-settings',
   defaultOpen: true,
@@ -115,48 +114,47 @@ onMounted(async () => {
 </script>
 
 <template>
-  <UDashboardGroup unit="rem">
-    <UDashboardSidebar
-      id="default"
-      v-model:open="open"
-      collapsible
-      resizable
-      class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }"
-    >
-      <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
-      </template>
-
-      <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[0]"
-          orientation="vertical"
-          tooltip
-          popover
-        />
-
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[1]"
-          orientation="vertical"
-          tooltip
-          class="mt-auto"
-        />
-      </template>
-
-      <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
-      </template>
-    </UDashboardSidebar>
-
-    <UDashboardSearch :groups="groups" />
-
-    <slot />
-
-    <NotificationsSlideover />
-  </UDashboardGroup>
+  <div class="flex flex-col min-h-screen">
+    <div class="flex flex-1 overflow-hidden">
+      <UDashboardGroup unit="rem" class="flex-1">
+        <UDashboardSidebar
+          id="default"
+          v-model:open="open"
+          collapsible
+          resizable
+          class="bg-elevated/25"
+          :ui="{ footer: 'lg:border-t lg:border-default' }"
+        >
+          <template #header="{ collapsed }">
+            <TeamsMenu :collapsed="collapsed" />
+          </template>
+          <template #default="{ collapsed }">
+            <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="links[0]"
+              orientation="vertical"
+              tooltip
+              popover
+            />
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="links[1]"
+              orientation="vertical"
+              tooltip
+              class="mt-auto"
+            />
+          </template>
+          <template #footer="{ collapsed }">
+            <UserMenu :collapsed="collapsed" />
+          </template>
+        </UDashboardSidebar>
+        <UDashboardSearch :groups="groups" />
+        <div class="flex-1 overflow-auto">
+          <slot />
+        </div>
+        <NotificationsSlideover />
+      </UDashboardGroup>
+    </div>
+  </div>
 </template>
