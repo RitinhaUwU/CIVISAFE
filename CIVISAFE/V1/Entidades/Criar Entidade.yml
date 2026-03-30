@@ -1,0 +1,22 @@
+info:
+  name: Criar Entidade
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/entities"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Guarda Nacional Republicana",
+        "description": "GNR"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

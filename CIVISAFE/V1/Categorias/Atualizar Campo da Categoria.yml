@@ -1,0 +1,21 @@
+info:
+  name: Atualizar Campo da Categoria
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/categories/2"
+  body:
+    type: json
+    data: |-
+      {
+        "is_active": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
