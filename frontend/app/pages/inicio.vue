@@ -53,7 +53,7 @@ const period = ref<Period>('daily')
 
     <template #body>
       <InicioStats :period="period" :range="range" />
-      <InicioMapa />
+      <InicioFormRegisto />
     </template>
   </UDashboardPanel>
 </template>

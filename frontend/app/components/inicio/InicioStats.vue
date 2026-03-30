@@ -84,14 +84,6 @@ const { data: stats } = await useAsyncData<Stat[]>('stats', async () => {
         <span class="text-2xl font-semibold text-highlighted">
           {{ stat.value }}
         </span>
-
-        <UBadge
-          :color="stat.variation > 0 ? 'success' : 'error'"
-          variant="subtle"
-          class="text-xs"
-        >
-          {{ stat.variation > 0 ? '+' : '' }}{{ stat.variation }}%
-        </UBadge>
       </div>
     </UPageCard>
   </UPageGrid>

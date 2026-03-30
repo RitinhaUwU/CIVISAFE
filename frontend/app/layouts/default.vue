@@ -156,10 +156,5 @@ onMounted(async () => {
         <NotificationsSlideover />
       </UDashboardGroup>
     </div>
-    <UFooter class="w-full">
-      <div class="py-4 text-center text-sm opacity-70">
-        Copyright © 2026
-      </div>
-    </UFooter>
   </div>
 </template>

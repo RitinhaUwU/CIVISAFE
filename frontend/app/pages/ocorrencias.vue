@@ -5,11 +5,9 @@ import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
 import type { User } from '~/types'
 
-const UAvatar = resolveComponent('UAvatar')
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UCheckbox = resolveComponent('UCheckbox')
 
 const toast = useToast()
 const table = useTemplateRef('table')
@@ -72,13 +70,8 @@ function getRowItems(row: Row<User>) {
 
 const columns: TableColumn<User>[] = [
   {
-    accessorKey: 'id',
-    header: 'ID',
-    cell: ({ row }) => `#${row.original.id}`
-  },
-  {
-    accessorKey: 'name',
-    header: 'Name',
+    accessorKey: 'num_ocorrencias',
+    header: 'Nº Ocorrências',
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-3' }, [
         h('div', undefined, [
@@ -89,32 +82,8 @@ const columns: TableColumn<User>[] = [
     }
   },
   {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
-
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'Email',
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? 'i-lucide-arrow-up-narrow-wide'
-            : 'i-lucide-arrow-down-wide-narrow'
-          : 'i-lucide-arrow-up-down',
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
-  },
-  {
-    accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => row.original.location
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: 'estado',
+    header: 'Estado',
     filterFn: 'equals',
     cell: ({ row }) => {
       const color = {
@@ -123,10 +92,44 @@ const columns: TableColumn<User>[] = [
         bounced: 'warning' as const
       }[row.original.status]
 
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
+      return h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () =>
         row.original.status
       )
     }
+  },
+  {
+    accessorKey: 'prioridade',
+    header: 'Prioridade',
+    filterFn: 'equals',
+    cell: ({ row }) => {
+      const color = {
+        subscribed: 'success' as const,
+        unsubscribed: 'error' as const,
+        bounced: 'warning' as const
+      }[row.original.status]
+
+      return h(UBadge, { class: 'capitalize, rounded-full', variant: 'solid', color }, () =>
+        row.original.status
+      )
+    }
+  },
+  {
+    accessorKey: 'categoria',
+    header: 'Categoria',
+    cell: ({ row }) => row.original.location
+  },
+  {
+    accessorKey: 'dataInicio',
+    header: () => {
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Data Início',
+        icon: 'i-lucide-arrow-up-down',
+        class: '-mx-2.5'
+      })
+    },
+    cell: ({ row }) => row.original.email
   },
   {
     id: 'actions',
@@ -134,14 +137,6 @@ const columns: TableColumn<User>[] = [
       return h(
         'div',
         { class: 'text-right' },
-        h(UButton, {
-          icon: 'i-lucide-info',
-          color: 'info',
-          variant: 'ghost',
-          onClick: () => {
-            console.log('Detalhes', row.original)
-          }
-        }),
         h(UButton, {
           icon: 'i-lucide-pencil',
           color: 'warning',
@@ -170,28 +165,6 @@ const columns: TableColumn<User>[] = [
 
 const statusFilter = ref('all')
 
-watch(() => statusFilter.value, (newVal) => {
-  if (!table?.value?.tableApi) return
-
-  const statusColumn = table.value.tableApi.getColumn('status')
-  if (!statusColumn) return
-
-  if (newVal === 'all') {
-    statusColumn.setFilterValue(undefined)
-  } else {
-    statusColumn.setFilterValue(newVal)
-  }
-})
-
-const email = computed({
-  get: (): string => {
-    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || ''
-  },
-  set: (value: string) => {
-    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined)
-  }
-})
-
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10
@@ -214,14 +187,46 @@ const pagination = ref({
           v-model="email"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filter emails..."
+          placeholder="Filtrar ocorrências..."
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
             v-model="statusFilter"
             :items="[
-              { label: 'All', value: 'all' },
+              { label: 'Estado', value: 'all' },
+              { label: 'Subscribed', value: 'subscribed' },
+              { label: 'Unsubscribed', value: 'unsubscribed' },
+              { label: 'Bounced', value: 'bounced' }
+            ]"
+            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+            placeholder="Filter status"
+            class="min-w-28"
+          />
+          <UDropdownMenu
+            :items="
+              table?.tableApi
+                ?.getAllColumns()
+                .filter((column: any) => column.getCanHide())
+                .map((column: any) => ({
+                  label: upperFirst(column.id),
+                  type: 'checkbox' as const,
+                  checked: column.getIsVisible(),
+                  onUpdateChecked(checked: boolean) {
+                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
+                  },
+                  onSelect(e?: Event) {
+                    e?.preventDefault()
+                  }
+                }))
+            "
+            :content="{ align: 'end' }"
+          >
+          </UDropdownMenu>
+          <USelect
+            v-model="statusFilter"
+            :items="[
+              { label: 'Prioridade', value: 'all' },
               { label: 'Subscribed', value: 'subscribed' },
               { label: 'Unsubscribed', value: 'unsubscribed' },
               { label: 'Bounced', value: 'bounced' }

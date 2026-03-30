@@ -95,7 +95,7 @@ const columns: TableColumn<User>[] = [
   },
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: 'Nome',
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-3' }, [
         h(UAvatar, {
@@ -226,7 +226,7 @@ const pagination = ref({
           v-model="email"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filter emails..."
+          placeholder="Filtrar emails..."
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
