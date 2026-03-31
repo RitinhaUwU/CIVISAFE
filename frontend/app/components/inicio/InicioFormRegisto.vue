@@ -4,7 +4,7 @@ import Map from '../Map.vue'
 
 const props = defineProps<{
   modelValue: boolean
-  coords?: { lat: number, lng: number } | null
+  coords: { lat: number, lng: number }
 }>()
 
 const emit = defineEmits(['update:modelValue'])
@@ -17,27 +17,26 @@ const options = ref([
 
 const form = reactive({
   geral: {
-    ocorrenciaMajor: false,
-    num_ocorrencia: '',
+    is_major: false,
+    identifier: '',
     data_inicio: '',
     hora_inicio: '',
-    data_fim: '',
-    hora_fim: '',
-    estado: '',
-    prioridade: null,
-    tipo_ocorrencia: null,
-    associar_evento: '',
-    fonte_alerta: '',
-    nome_contacto: '',
-    tel_contacto: '',
-    coordenadas: '',
-    localidade: '',
-    distrito: '',
-    concelho: '',
-    freguesia: '',
-    ponto_referencia: '',
-    descricao: ''
+    status_id: '',
+    priority_id: null,
+    category_id: null,
+    incident_id: null,
+    alert_source_relationship: '',
+    alert_source_name: '',
+    alert_source_contact: '',
+    coordinates: '',
+    address: '',
+    district: '',
+    municipality: '',
+    parish: '',
+    common_place: '',
+    obs: ''
   },
+
   posto: {
     coordenadas: '',
     data_montagem: '',
@@ -49,7 +48,7 @@ const form = reactive({
   }
 })
 
-const items = [
+const tabItems = [
   {
     label: 'Geral',
     icon: 'i-lucide-users',
@@ -62,15 +61,14 @@ const items = [
   }
 ]
 
-defineShortcuts({
-  o: () => open.value = !open.value
-})
-
 watch(() => props.coords, (newCoords) => {
   if (newCoords) {
-    form.geral.coordenadas = `${newCoords.lat}, ${newCoords.lng}`
+    form.geral.coordinates = `${newCoords.lat}, ${newCoords.lng}`
   }
 }, { immediate: true })
+
+//TODO: Criar função no Mapa que permita receber coordenadas para criar um ponto e remover o anterior
+
 </script>
 
 <template>
@@ -87,22 +85,22 @@ watch(() => props.coords, (newCoords) => {
           <h2 class="text-lg font-semibold">
             Registo de Ocorrências
           </h2>
-          <UTabs :items="items">
+          <UTabs :items="tabItems">
             <template #geral>
               <div class="mt-4 space-y-6">
                 <UCheckbox
-                  v-model="form.geral.ocorrenciaMajor"
+                  v-model="form.geral.is_major"
                   label="Ocorrência Major"
                 />
 
                 <UForm class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
                   <div class="space-y-5">
                     <UFormField label="Nº Ocorrência:" name="num_ocorrencia">
-                      <UInput v-model="form.geral.num_ocorrencia" class="w-full" />
+                      <UInput v-model="form.geral.identifier" class="w-full" />
                     </UFormField>
                     <UFormField label="Estado:" name="estado">
                       <SearchableSelect
-                        v-model="form.geral.estado"
+                        v-model="form.geral.status_id"
                         :items="options"
                         placeholder="Selecionar Estado"
                         create-title="Novo Estado"
@@ -112,7 +110,7 @@ watch(() => props.coords, (newCoords) => {
                     </UFormField>
                     <UFormField label="Prioridade:" name="prioridade">
                       <SearchableSelect
-                        v-model="form.geral.prioridade"
+                        v-model="form.geral.priority_id"
                         :items="options"
                         placeholder="Selecionar Prioridade"
                         create-title="Novo estado de prioridade"
@@ -122,7 +120,7 @@ watch(() => props.coords, (newCoords) => {
                     </UFormField>
                     <UFormField label="Tipo de Ocorrência:" name="tipo_ocorrencia">
                       <SearchableSelect
-                        v-model="form.geral.tipo_ocorrencia"
+                        v-model="form.geral.category_id"
                         :items="options"
                         placeholder="Selecionar Tipo de Ocorrência"
                         create-title="Novo Tipo de Ocorrência"
@@ -131,12 +129,12 @@ watch(() => props.coords, (newCoords) => {
                       />
                     </UFormField>
                     <UFormField
-                      v-if="!form.geral.ocorrenciaMajor"
+                      v-if="!form.geral.is_major"
                       label="Associar Evento:"
                       name="associar_evento"
                     >
                       <SearchableSelect
-                        v-model="form.geral.associar_evento"
+                        v-model="form.geral.incident_id"
                         :items="options"
                         placeholder="Associar Evento"
                         create-title="Novo Evento"
@@ -146,7 +144,7 @@ watch(() => props.coords, (newCoords) => {
                     </UFormField>
                     <UFormField label="Descrição:" name="descricao">
                       <UTextarea
-                        v-model="form.geral.descricao"
+                        v-model="form.geral.obs"
                         class="w-full resize-none overflow-y-auto"
                       />
                     </UFormField>
@@ -162,42 +160,37 @@ watch(() => props.coords, (newCoords) => {
                       </UFormField>
                     </div>
                     <UFormField label="Fonte de Alerta:" name="fonte_alerta">
-                      <UInput v-model="form.geral.fonte_alerta" class="w-full" />
+                      <UInput v-model="form.geral.alert_source_relationship" class="w-full" />
                     </UFormField>
                     <UFormField label="Nome do Contacto:" name="nome_contacto">
-                      <UInput v-model="form.geral.nome_contacto" class="w-full" />
+                      <UInput v-model="form.geral.alert_source_name" class="w-full" />
                     </UFormField>
                     <UFormField label="Tlf. Contacto:" name="tel_contacto">
-                      <UInput v-model="form.geral.tel_contacto" class="w-full" />
+                      <UInput v-model="form.geral.alert_source_contact" class="w-full" />
                     </UFormField>
                   </div>
 
                   <div class="space-y-5">
                     <UFormField label="Coordenadas:" name="coordenadas">
-                      <UInput v-model="form.geral.coordenadas" class="w-full" />
+                      <UInput v-model="form.geral.coordinates" class="w-full" />
                     </UFormField>
                     <UFormField label="Localidade:" name="localidade">
-                      <UInput v-model="form.geral.localidade" class="w-full" />
+                      <UInput v-model="form.geral.address" class="w-full" />
                     </UFormField>
                     <UFormField label="Distrito:" name="distrito">
-                      <UInput v-model="form.geral.distrito" class="w-full" />
+                      <UInput v-model="form.geral.district" class="w-full" />
                     </UFormField>
                     <UFormField label="Concelho:" name="concelho">
-                      <UInput v-model="form.geral.concelho" class="w-full" />
+                      <UInput v-model="form.geral.municipality" class="w-full" />
                     </UFormField>
                     <UFormField label="Freguesia:" name="freguesia">
-                      <UInput v-model="form.geral.freguesia" class="w-full" />
+                      <UInput v-model="form.geral.parish" class="w-full" />
                     </UFormField>
                     <UFormField label="Ponto de Referência:" name="ponto_referencia">
-                      <UInput v-model="form.geral.ponto_referencia" class="w-full" />
+                      <UInput v-model="form.geral.common_place" class="w-full" />
                     </UFormField>
                   </div>
                 </UForm>
-                <Map
-                  :center="[39.917716, -8.145799]"
-                  :zoom="13"
-                  class="w-full h-[400px] rounded-lg"
-                />
               </div>
             </template>
 
@@ -234,14 +227,17 @@ watch(() => props.coords, (newCoords) => {
                     </UFormField>
                   </div>
                 </UForm>
-                <Map
-                  :center="[39.917716, -8.145799]"
-                  :zoom="13"
-                  class="w-full h-[400px] rounded-lg"
-                />
               </div>
             </template>
           </UTabs>
+
+          <Map
+            :center="[props.coords?.lat, props.coords?.lng]"
+            :zoom="13"
+            class="w-full h-[400px] rounded-lg"
+            @map-click="coordinates => props.coords"
+          />
+
         </div>
         <div class="flex justify-end gap-2 p-4 bg-white shrink-0">
           <UButton color="neutral" variant="ghost" @click="emit('update:modelValue', false)">

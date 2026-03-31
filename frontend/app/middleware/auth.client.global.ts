@@ -1,4 +1,4 @@
-import { useAuthStore } from "../stores/auth";
+import {useAuthStore} from "@/stores/auth";
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
@@ -7,14 +7,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
     await auth.isAuthenticated()
   }
 
-  const isPublic = to.path === '/'
   const isLoggedIn = !!auth.currentUser
 
-  if (isLoggedIn && isPublic) {
+  if (isLoggedIn && to.path === '/') {
     return navigateTo('/inicio')
   }
 
-  if (!isLoggedIn && !isPublic) {
+  if (!isLoggedIn && !(to.path === '/')) {
     return navigateTo('/')
   }
 })

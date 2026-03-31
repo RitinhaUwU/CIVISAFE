@@ -17,6 +17,7 @@ export default defineNuxtConfig({
     '~/assets/css/main.css',
     'leaflet/dist/leaflet.css'
   ],
+
   runtimeConfig: {
     public: {
       apiBase: ''
@@ -25,12 +26,13 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2024-07-11',
 
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'axios',
+      ]
     }
   }
 })

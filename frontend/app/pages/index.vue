@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import { onBeforeMount, reactive } from 'vue'
+import { reactive } from 'vue'
 
 definePageMeta({
   layout: 'login'
@@ -11,18 +11,11 @@ const auth = useAuthStore()
 const router = useRouter()
 
 const credentials = reactive({
-  username: '',
+  email: '',
   password: ''
 })
 
-onBeforeMount(async () => {
-  if (await auth.isAuthenticated() === false) {
-    await router.push('/')
-  }
-})
-
-async function handleLogin(e) {
-  e.preventDefault()
+async function handleLogin() {
   await auth.login(credentials)
   await router.push('/inicio')
 }
@@ -37,13 +30,13 @@ async function handleLogin(e) {
       <form @submit.prevent="handleLogin">
         <div class="mb-3 flex flex-col">
           <label class="mb-1">Email</label>
-          <UInput v-model="credentials.email" type="email" placeholder="exemplo@exemplo.pt" />
+          <UInput v-model="credentials.email" type="email" placeholder="exemplo@exemplo.pt" required />
         </div>
         <div class="mb-3 flex flex-col">
           <label class="mb-1">Palavra-Passe</label>
-          <UInput v-model="credentials.password" type="password" placeholder="••••••" />
+          <UInput v-model="credentials.password" type="password" placeholder="••••••" required />
         </div>
-        <NuxtLink to="" class="text-sm cursor-pointer text-blue-500 hover:underline">
+        <NuxtLink to="#" class="text-sm cursor-pointer text-blue-500 hover:underline">
           Esqueci-me da palavra-passe
         </NuxtLink>
         <UButton block class="mt-4 cursor-pointer" type="submit">

@@ -1,28 +1,7 @@
 <script setup lang="ts">
-import { sub } from 'date-fns'
-import type { DropdownMenuItem } from '@nuxt/ui'
-import type { Period, Range } from '~/types'
-
 const { isNotificationsSlideoverOpen } = useDashboard()
 
-const items = [[{
-  label: 'New mail',
-  icon: 'i-lucide-send',
-  to: '/ocorrencias'
-}, {
-  label: 'New customer',
-  icon: 'i-lucide-user-plus',
-  to: '/customers'
-}]] satisfies DropdownMenuItem[][]
-
-const range = shallowRef<Range>({
-  start: sub(new Date(), { days: 14 }),
-  end: new Date()
-})
-
-const period = ref<Period>('daily')
-
-const selectedCoords = ref<{ lat: number, lng: number } | null>(null)
+const selectedCoords = ref<{ lat: number, lng: number }>({lat: 0, lng: 0})
 const openModal = ref(false)
 
 function handleMapClick(coords: { lat: number, lng: number }) {
@@ -53,24 +32,17 @@ function handleMapClick(coords: { lat: number, lng: number }) {
             </UButton>
           </UTooltip>
 
-          <UDropdownMenu :items="items">
-            <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
-          </UDropdownMenu>
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
-      <InicioStats :period="period" :range="range" />
+      <InicioStats />
       <InicioFormRegisto
         v-model="openModal"
         :coords="selectedCoords"
       />
-      <Map
-        :center="[39.917716, -8.145799]"
-        :zoom="13"
-        @map-click="handleMapClick"
-      />
+      <Map @map-click="handleMapClick"/>
     </template>
   </UDashboardPanel>
 </template>

@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const route = useRoute()
-const toast = useToast()
+import type {NavigationMenuItem} from '@nuxt/ui'
 
 const open = ref(false)
 
@@ -31,7 +28,6 @@ const links = [[{
   label: 'Definições',
   to: '/settings',
   icon: 'i-lucide-settings',
-  defaultOpen: true,
   type: 'trigger',
   children: [{
     label: 'General',
@@ -61,14 +57,12 @@ const links = [[{
   }]
 }, {
   label: 'Administração',
-  to: '/administration',
   icon: 'i-lucide-wrench',
-  defaultOpen: false,
   type: 'trigger',
   children: [{
     label: 'Categorias',
     to: '/administration/categories',
-    exact: true,
+    exact: true, //TODO: Validar este comportamento e se é preciso nos outros também
     onSelect: () => {
       open.value = false
     }
@@ -91,58 +85,13 @@ const links = [[{
       open.value = false
     }
   }]
-}], [{
-  label: 'Feedback',
-  icon: 'i-lucide-message-circle',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}, {
-  label: 'Help & Support',
-  icon: 'i-lucide-info',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
 }]] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
   id: 'links',
-  label: 'Go to',
+  label: 'Ir para...',
   items: links.flat()
-}, {
-  id: 'code',
-  label: 'Code',
-  items: [{
-    id: 'source',
-    label: 'View page source',
-    icon: 'i-simple-icons-github',
-    to: `https://github.com/nuxt-ui-templates/dashboard/blob/main/app/pages${route.path === '/' ? '/index' : route.path}.vue`,
-    target: '_blank'
-  }]
 }])
-
-onMounted(async () => {
-  const cookie = useCookie('cookie-consent')
-  if (cookie.value === 'accepted') {
-    return
-  }
-
-  toast.add({
-    title: 'We use first-party cookies to enhance your experience on our website.',
-    duration: 0,
-    close: false,
-    actions: [{
-      label: 'Accept',
-      color: 'neutral',
-      variant: 'outline',
-      onClick: () => {
-        cookie.value = 'accepted'
-      }
-    }, {
-      label: 'Opt out',
-      color: 'neutral',
-      variant: 'ghost'
-    }]
-  })
-})
 </script>
 
 <template>
@@ -158,10 +107,10 @@ onMounted(async () => {
           :ui="{ footer: 'lg:border-t lg:border-default' }"
         >
           <template #header="{ collapsed }">
-            <TeamsMenu :collapsed="collapsed" />
+            <TeamsMenu :collapsed="collapsed"/>
           </template>
           <template #default="{ collapsed }">
-            <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
+            <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default"/>
             <UNavigationMenu
               :collapsed="collapsed"
               :items="links[0]"
@@ -178,14 +127,14 @@ onMounted(async () => {
             />
           </template>
           <template #footer="{ collapsed }">
-            <UserMenu :collapsed="collapsed" />
+            <UserMenu :collapsed="collapsed"/>
           </template>
         </UDashboardSidebar>
-        <UDashboardSearch :groups="groups" />
+        <UDashboardSearch :groups="groups"/>
         <div class="flex-1 overflow-auto">
-          <slot />
+          <slot/>
         </div>
-        <NotificationsSlideover />
+        <NotificationsSlideover/>
       </UDashboardGroup>
     </div>
   </div>
