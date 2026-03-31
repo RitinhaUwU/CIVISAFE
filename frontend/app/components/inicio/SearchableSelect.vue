@@ -119,7 +119,7 @@ onUnmounted(() => document.removeEventListener('mousedown', clickOutside))
 
       <div
         v-if="open"
-        class="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50"
+        class="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
       >
         <!-- Search -->
         <div class="p-2 border-b border-gray-200">
