@@ -59,6 +59,38 @@ const links = [[{
       open.value = false
     }
   }]
+}, {
+  label: 'Administração',
+  to: '/administration',
+  icon: 'i-lucide-wrench',
+  defaultOpen: false,
+  type: 'trigger',
+  children: [{
+    label: 'Categorias',
+    to: '/administration/categories',
+    exact: true,
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Entidades',
+    to: '/administration/entities',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Prioridades',
+    to: '/administration/incidentPriorities',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Estados',
+    to: '/administration/incidentStates',
+    onSelect: () => {
+      open.value = false
+    }
+  }]
 }], [{
   label: 'Feedback',
   icon: 'i-lucide-message-circle',

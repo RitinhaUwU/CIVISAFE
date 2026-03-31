@@ -47,13 +47,12 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = res.data.token // res.data
       localStorage.setItem('token', token.value)
       apiStore.setBearerToken(token.value)
-      console.log('TOKEN:', token.value)
-      console.log('HEADERS AXIOS:', axios.defaults.headers.common)
+
       await getUser()
 
       toast.add({
         title: 'Login efetuado com sucesso',
-        color: 'green'
+        color: 'success'
       })
 
       return currentUser.value
@@ -62,10 +61,10 @@ export const useAuthStore = defineStore('auth', () => {
 
       toast.add({
         title: 'Credenciais inválidas',
-        color: 'red'
+        color: 'error'
       })
 
-      throw err
+      // throw err
     }
   }
 
@@ -73,7 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
     reset()
     toast.add({
       title: 'Sessão Encerrada',
-      color: 'green'
+      color: 'success'
     })
 
     if (router) {

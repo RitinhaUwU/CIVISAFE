@@ -20,12 +20,6 @@ export default defineNuxtConfig({
     }
   },
 
-  routeRules: {
-    '/api/**': {
-      cors: true
-    }
-  },
-
   compatibilityDate: '2024-07-11',
 
   eslint: {

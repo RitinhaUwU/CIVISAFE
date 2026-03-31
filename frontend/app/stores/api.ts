@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 import axios from 'axios'
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
 
-  const setBearerToken = (token) => {
+  const setBearerToken = (token: string) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
   }
 
@@ -14,14 +14,9 @@ export const useApiStore = defineStore('api', () => {
 
   // Login
   const postLogin = async (credentials) => {
-    try {
-      const response = await axios.post(`${config.public.apiBase}/login`, credentials)
-      localStorage.setItem('token', response.data.token) // response.data
-      return response
-    } catch (erro) {
-      console.error('Erro no login:', erro)
-      throw erro
-    }
+    const response = await axios.post(`${config.public.apiBase}/login`, credentials)
+    localStorage.setItem('token', response.data.token) // response.data
+    return response
   }
 
   // Logout
