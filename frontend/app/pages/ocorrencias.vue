@@ -71,7 +71,7 @@ function getRowItems(row: Row<User>) {
 const columns: TableColumn<User>[] = [
   {
     accessorKey: 'num_ocorrencias',
-    header: 'Nº Ocorrências',
+    header: 'Nº Ocorrência',
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-3' }, [
         h('div', undefined, [
@@ -138,8 +138,8 @@ const columns: TableColumn<User>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
-          icon: 'i-lucide-pencil',
-          color: 'warning',
+          icon: 'i-lucide-info',
+          color: 'info',
           variant: 'ghost',
           onClick: () => {
             console.log('Editar', row.original)

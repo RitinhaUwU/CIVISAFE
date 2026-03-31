@@ -19,7 +19,16 @@ const range = shallowRef<Range>({
   start: sub(new Date(), { days: 14 }),
   end: new Date()
 })
+
 const period = ref<Period>('daily')
+
+const selectedCoords = ref<{ lat: number, lng: number } | null>(null)
+const openModal = ref(false)
+
+function handleMapClick(coords: { lat: number, lng: number }) {
+  selectedCoords.value = coords
+  openModal.value = true
+}
 </script>
 
 <template>
@@ -53,7 +62,15 @@ const period = ref<Period>('daily')
 
     <template #body>
       <InicioStats :period="period" :range="range" />
-      <InicioFormRegisto />
+      <InicioFormRegisto
+        v-model="openModal"
+        :coords="selectedCoords"
+      />
+      <Map
+        :center="[39.917716, -8.145799]"
+        :zoom="13"
+        @map-click="handleMapClick"
+      />
     </template>
   </UDashboardPanel>
 </template>
