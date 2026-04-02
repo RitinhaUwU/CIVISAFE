@@ -37,8 +37,8 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getCategories = (params?: { page?: number; per_page?: number }) => {
-    return axios.get(`${config.public.apiBase}/categories`, { params })
+  const getIncidentTypes = (params?: { page?: number; per_page?: number }) => {
+    return axios.get(`${config.public.apiBase}/incidentTypes`, { params })
   }
 
   /*************************
@@ -87,7 +87,7 @@ export const useApiStore = defineStore('api', () => {
     postLogin,
     postLogout,
     getAuthUser,
-    getCategories,
+    getIncidentTypes,
     getEntities,
     getIncidents,
     getIncidentStates,

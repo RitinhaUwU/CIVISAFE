@@ -4,17 +4,18 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CategoryRequest extends FormRequest
+class IncidentTypeRequest extends FormRequest
 {
     public function rules(): array
     {
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'code' => [$is_patch ? 'sometimes' : 'required', 'integer', 'unique:categories,code'],
-            'name' => [$is_patch ? 'sometimes' : 'required'],
+            'code' => [$is_patch ? 'sometimes' : 'required', 'integer'],
+            'species' => [$is_patch ? 'sometimes' : 'required'],
+            'type' => [$is_patch ? 'sometimes' : 'required'],
             'description' => [$is_patch ? 'sometimes' : 'required'],
-            'is_active' => ['boolean'],
+            'is_active' => ['sometimes', 'boolean'],
         ];
     }
 

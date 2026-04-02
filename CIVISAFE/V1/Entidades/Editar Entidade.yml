@@ -5,12 +5,12 @@ info:
 
 http:
   method: PUT
-  url: "{{BASE_URL}}/api/v1/entities/12"
+  url: "{{BASE_URL}}/api/v1/entities/1"
   body:
     type: json
     data: |-
       {
-        "nae": "GNR - Pedrogão"
+        "name": "GNR - Pedrogão"
       }
   auth: inherit
 

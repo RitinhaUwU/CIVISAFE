@@ -10,7 +10,8 @@ const total = ref(0);
 
 type Category = {
   code: number;
-  name: string;
+  species: string;
+  type: string;
   description: string;
   is_active: boolean;
   created_at: Date;
@@ -23,8 +24,12 @@ const columns: TableColumn<Category>[] = [
     header: "Código",
   },
   {
-    accessorKey: "name",
-    header: "Nome",
+    accessorKey: "species",
+    header: "Espécie"
+  },
+  {
+    accessorKey: "type",
+    header: "Tipo",
   },
   {
     accessorKey: "updated_at",
@@ -43,7 +48,7 @@ const pagination = ref({
 const fetch = async() => {
   loading.value = true;
   try {
-    const res = await api.getCategories({
+    const res = await api.getIncidentTypes({
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
     });
@@ -52,7 +57,7 @@ const fetch = async() => {
 
     pagination.value.pageSize = res.data.meta.per_page;
   } catch (e) {
-    console.error("Erro ao carregar categorias: ", e);
+    console.error("Erro ao carregar tipos de ocorrências: ", e);
   } finally {
     loading.value = false;
   }
@@ -65,8 +70,8 @@ onMounted(fetch);
 
 <template>
   <UPageCard
-    title="Categorias"
-    description="Lista de todas as categorias (tipos) de ocorrências."
+    title="Tipos de Ocorrências"
+    description="Lista de todos os tipos de ocorrência."
     variant="naked"
     orientation="horizontal"
     class="mb-4"

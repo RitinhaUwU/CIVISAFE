@@ -1,0 +1,28 @@
+info:
+  name: Atualizar Tipo
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/incidentTypes/12345"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+          "code": 12345,
+          "species": "Fenómeno de TesteAA",
+          "type": "Teste AlteradoAA",
+          "description": "Descrição do tipo de Teste Alterado.AA",
+          "is_active": false
+        }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

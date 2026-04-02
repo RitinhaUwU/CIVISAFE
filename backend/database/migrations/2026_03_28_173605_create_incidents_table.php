@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('incidents', function (Blueprint $table) {
             $table->id();
             $table->string('identifier');
-            $table->foreignId('category_code')->constrained('categories', 'code');
+            $table->foreignId('incident_type_code')->constrained('incident_types', 'code');
             $table->foreignId('incident_state_id')->constrained('incident_states');
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('incident_priority_id')->constrained('incident_priorities');

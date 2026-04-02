@@ -1,11 +1,11 @@
 info:
-  name: Atualizar Campo da Categoria
+  name: Atualizar Campo do Tipo
   type: http
   seq: 5
 
 http:
   method: PATCH
-  url: "{{BASE_URL}}/api/v1/categories/2"
+  url: "{{BASE_URL}}/api/v1/incidentTypes/12345"
   body:
     type: json
     data: |-

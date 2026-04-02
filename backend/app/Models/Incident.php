@@ -12,9 +12,9 @@ class Incident extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public function category(): BelongsTo
+    public function incidentType(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(IncidentType::class);
     }
 
     public function incidentState(): BelongsTo
@@ -47,7 +47,7 @@ class Incident extends Model
         return $this->hasMany(IncidentParty::class);
     }
 
-    protected $with = ['category', 'incidentState', 'incidentPriority', 'user', 'resources', 'parentIncident', 'childrenIncidents'];
+    protected $with = ['incidentType', 'incidentState', 'incidentPriority', 'user', 'resources', 'parentIncident', 'childrenIncidents'];
 
     protected function casts(): array
     {

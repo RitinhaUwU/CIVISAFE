@@ -2,19 +2,20 @@
 
 namespace Database\Factories;
 
-use App\Models\Category;
+use App\Models\IncidentType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
-class CategoryFactory extends Factory
+class IncidentTypeFactory extends Factory
 {
-    protected $model = Category::class;
+    protected $model = IncidentType::class;
 
     public function definition(): array
     {
         return [
             'code' => $this->faker->randomNumber(),
-            'name' => $this->faker->words(3, true),
+            'species' => $this->faker->words(3, true),
+            'type' => $this->faker->words(3, true),
             'description' => $this->faker->text(),
             'is_active' => $this->faker->boolean(),
             'created_at' => Carbon::now(),

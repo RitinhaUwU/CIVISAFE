@@ -7,18 +7,18 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('incident_types', function (Blueprint $table) {
             $table->integer('code')->primary();
-            $table->string('name');
+            $table->string('species');
+            $table->string('type');
             $table->text('description');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('incident_types');
     }
 };

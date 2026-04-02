@@ -1,11 +1,11 @@
 info:
-  name: Apagar Categoria
+  name: Tipo Especifico
   type: http
-  seq: 5
+  seq: 2
 
 http:
-  method: DELETE
-  url: "{{BASE_URL}}/api/v1/categories/12345"
+  method: GET
+  url: "{{BASE_URL}}/api/v1/incidentTypes/1101"
   auth: inherit
 
 settings:

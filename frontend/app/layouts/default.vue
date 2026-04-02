@@ -60,27 +60,25 @@ const links = [[{
   icon: 'i-lucide-wrench',
   type: 'trigger',
   children: [{
-    label: 'Categorias',
-    to: '/administration/categories',
-    exact: true, //TODO: Validar este comportamento e se é preciso nos outros também
-    onSelect: () => {
-      open.value = false
-    }
+    label: 'Ocorrências',
+    children: [
+      {
+        label: 'Tipos',
+        to: '/administration/incidentTypes',
+        exact: true
+      },
+      {
+        label: 'Prioridades',
+        to: '/administration/incidentPriorities'
+      },
+      {
+        label: 'Estados',
+        to: '/administration/incidentStates'
+      }
+    ]
   }, {
     label: 'Entidades',
     to: '/administration/entities',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Prioridades',
-    to: '/administration/incidentPriorities',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Estados',
-    to: '/administration/incidentStates',
     onSelect: () => {
       open.value = false
     }
