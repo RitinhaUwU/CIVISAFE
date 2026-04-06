@@ -38,6 +38,36 @@ const columns: TableColumn<Category>[] = [
       return new Date(row.getValue("updated_at")).toLocaleString("pt-PT");
     },
   },
+  {
+    id: 'actions',
+    cell: ({ row }) => {
+      return h(
+        'div',
+        { class: 'text-right' },
+        h(UButton, {
+          icon: 'i-lucide-info',
+          color: 'info',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Editar', row.original)
+          }
+        }),
+        h(UButton, {
+          icon: 'i-lucide-trash',
+          color: 'error',
+          variant: 'ghost',
+          onClick: () => {
+            console.log('Apagar', row.original)
+
+            toast.add({
+              title: 'Customer deleted',
+              description: 'The customer has been deleted.'
+            })
+          }
+        })
+      )
+    }
+  }
 ];
 
 const pagination = ref({
@@ -70,18 +100,30 @@ onMounted(fetch);
 
 <template>
   <UPageCard
-    title="Tipos de Ocorrências"
-    description="Lista de todos os tipos de ocorrência."
     variant="naked"
-    orientation="horizontal"
-    class="mb-4"
+    class="mb-4 w-full max-w-none"
+    :ui="{
+      container: 'w-full max-w-none',
+      header: 'w-full',
+      wrapper: 'w-full flex-row items-center justify-between'
+    }"
   >
-    <UButton
-      label="Nova Categoria"
-      color="neutral"
-      type="submit"
-      class="w-fit lg:ms-auto"
-    />
+
+    <template #header>
+      <div class="flex items-center justify-between w-full gap-4">
+        <div>
+          <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
+          <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
+        </div>
+
+        <UButton
+          icon="i-lucide-plus"
+          label="Novo Tipo"
+          type="submit"
+          color="primary"
+        />
+      </div>
+    </template>
 
     <div class="w-full space-y-4 pb-4">
       <UTable
@@ -94,7 +136,14 @@ onMounted(fetch);
             rowCount: total,
             manualPagination: true,
           }"
-        :ui="{ root: 'w-full' }"
+        :ui="{
+          base: 'table-fixed border-separate border-spacing-0',
+          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+          tbody: '[&>tr]:last:[&>td]:border-b-0',
+          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+          td: 'border-b border-default',
+          separator: 'h-0'
+        }"
         class="w-full"
       />
 
