@@ -9,7 +9,7 @@ const loading = ref(false);
 const total = ref(0);
 
 const deleteModalOpen = ref(false)
-const selectedEntityById = ref<States>(null)
+const selectedStateById = ref<States>(null)
 
 type States = {
   id: number;
@@ -105,7 +105,7 @@ const columns: TableColumn<States>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            selectedEntityById.value = row.original
+            selectedStateById.value = row.original
             deleteModalOpen.value = true
           }
         })
@@ -187,8 +187,8 @@ onMounted(fetch);
 
       <IncidentStatesDeleteModal
         v-model:open="deleteModalOpen"
-        :id="selectedEntityById?.id"
-        :name="selectedEntityById?.name"
+        :id="selectedStateById?.id"
+        :name="selectedStateById?.name"
         @deleted="fetch"
       />
     </template>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class IncidentType extends Model
 {
@@ -11,8 +12,15 @@ class IncidentType extends Model
 
     protected $primaryKey = 'code';
     public $incrementing = false;
+    protected $keyType = 'int';
 
-    protected $fillable = ['code', 'species', 'type', 'description', 'is_active'];
+    protected $fillable = [
+        'code',
+        'species',
+        'type',
+        'description',
+        'is_active'
+    ];
 
     protected function casts(): array
     {

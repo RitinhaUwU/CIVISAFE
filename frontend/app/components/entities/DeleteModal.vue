@@ -2,7 +2,7 @@
 import { useApiStore } from "@/stores/api"
 
 const api = useApiStore()
-
+const toast = useToast()
 const props = defineProps<{
   id: number
   name: string
@@ -14,10 +14,25 @@ const emit = defineEmits(['update:open', 'deleted'])
 const onSubmit = async () => {
   if (!props.id) return
 
-  await api.deleteIncidentState(props.id)
+  try {
+    await api.deleteIncidentState(props.id)
 
-  emit('deleted')
-  emit('update:open', false)
+    toast.add({
+      title: 'Eliminado com sucesso',
+      description: `A Entidade foi eliminada.`,
+      color: 'success'
+    })
+
+    emit('deleted')
+    emit('update:open', false)
+
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: 'Não foi possível eliminar o registo da Entidade.',
+      color: 'error'
+    })
+  }
 }
 </script>
 

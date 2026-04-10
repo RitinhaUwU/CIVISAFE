@@ -2,30 +2,45 @@
 import { useApiStore } from "@/stores/api"
 
 const api = useApiStore()
-
+const toast = useToast()
 const props = defineProps<{
-  id: number
-  name: string
+  code: number
+  type: string
   open: boolean
 }>()
 
 const emit = defineEmits(['update:open', 'deleted'])
 
 const onSubmit = async () => {
-  if (!props.id) return
+  if (!props.code) return
 
-  await api.deleteIncidentState(props.id)
+  try {
+    await api.deleteIncidentType(props.code)
 
-  emit('deleted')
-  emit('update:open', false)
+    toast.add({
+      title: 'Eliminado com sucesso',
+      description: `O Tipo foi eliminado.`,
+      color: 'success'
+    })
+
+    emit('deleted')
+    emit('update:open', false)
+
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: 'Não foi possível eliminar o registo do Tipo.',
+      color: 'error'
+    })
+  }
 }
 </script>
 
 <template>
   <UModal
     v-model:open="props.open"
-    :title="`Eliminar tipo de Estado: ${props.name}`"
-    :description="`Tem certeza que deseja eliminar este tipo de estado '${props.name}'?`"
+    :title="`Eliminar tipo de Estado: ${props.type}`"
+    :description="`Tem certeza que deseja eliminar este tipo de estado '${props.type}'?`"
     :ui="{
       close: 'hidden'
     }"

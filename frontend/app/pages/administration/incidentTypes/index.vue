@@ -8,6 +8,9 @@ const categories = ref<Category[]>([]);
 const loading = ref(false);
 const total = ref(0);
 
+const deleteModalOpen = ref(false)
+const selectedTypeByCode = ref<Category>(null)
+
 type Category = {
   code: number;
   species: string;
@@ -25,11 +28,31 @@ const columns: TableColumn<Category>[] = [
   },
   {
     accessorKey: "species",
-    header: "Espécie"
+    header: "Espécie",
+    cell: ({ row }) => {
+      return h(
+        'div',
+        {
+          class: 'max-w-[180px] truncate',
+          title: row.getValue("species")
+        },
+        row.getValue("species")
+      )
+    }
   },
   {
     accessorKey: "type",
     header: "Tipo",
+    cell: ({ row }) => {
+      return h(
+        'div',
+        {
+          class: 'max-w-[180px] truncate',
+          title: row.getValue("type")
+        },
+        row.getValue("type")
+      )
+    }
   },
   {
     accessorKey: "updated_at",
@@ -49,7 +72,7 @@ const columns: TableColumn<Category>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            console.log('Editar', row.original)
+            navigateTo(`/administration/incidentTypes/${row.original.code}`)
           }
         }),
         h(UButton, {
@@ -57,12 +80,8 @@ const columns: TableColumn<Category>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            console.log('Apagar', row.original)
-
-            toast.add({
-              title: 'Customer deleted',
-              description: 'The customer has been deleted.'
-            })
+            selectedTypeByCode.value = row.original
+            deleteModalOpen.value = true
           }
         })
       )
@@ -106,11 +125,7 @@ onMounted(fetch);
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <UButton
-          icon="i-lucide-plus"
-          label="Novo Tipo"
-          color="primary"
-        />
+        <IncidentTypesAddModal @created="fetch" />
       </div>
 
       <div class="overflow-x-auto">
@@ -144,6 +159,13 @@ onMounted(fetch);
           @update:page="(p) => (pagination.pageIndex = p - 1)"
         />
       </div>
+
+      <IncidentTypesDeleteModal
+        v-model:open="deleteModalOpen"
+        :code="selectedTypeByCode?.code"
+        :type="selectedTypeByCode?.type"
+        @deleted="fetch"
+      />
     </template>
   </UDashboardPanel>
 </template>

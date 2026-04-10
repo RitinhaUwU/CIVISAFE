@@ -41,6 +41,22 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidentTypes`, { params })
   }
 
+  const getIncidentType = (code, params) => {
+    return axios.get(`${config.public.apiBase}/incidentTypes/${code}`, params)
+  }
+
+  const createIncidentType = (params) => {
+    return axios.post(`${config.public.apiBase}/incidentTypes`, params)
+  }
+
+  const updateIncidentType = (code, params) => {
+    return axios.put(`${config.public.apiBase}/incidentTypes/${code}`, params)
+  }
+
+  const deleteIncidentType = (code) => {
+    return axios.delete(`${config.public.apiBase}/incidentTypes/${code}`)
+  }
+
   /*************************
    *
    *  Entities
@@ -120,6 +136,10 @@ export const useApiStore = defineStore('api', () => {
     postLogout,
     getAuthUser,
     getIncidentTypes,
+    getIncidentType,
+    updateIncidentType,
+    deleteIncidentType,
+    createIncidentType,
     getEntities,
     getEntity,
     updateEntity,

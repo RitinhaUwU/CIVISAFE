@@ -64,12 +64,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UModal
     v-model:open="open"
-    title="Nova Entidade"
-    description="Adicione uma Nova Entidade"
+    title="Novo Tipo de Estado"
+    description="Adicione um Novo Tipo de Estado"
   >
     <UButton
       icon="i-lucide-plus"
-      label="Nova Entidade"
+      label="Novo Estado"
       color="primary"
     />
     <template #body>
