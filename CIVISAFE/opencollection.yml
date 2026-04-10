@@ -18,11 +18,9 @@ request:
   headers:
     - name: Accept
       value: application/json
-    - name: Content-Type
-      value: application/json
   auth:
     type: bearer
-    token: 2|BHVyTAENG8O1jnjJ65ZhqxSBZZwz7HNlUPpp2TIYd11858a6
+    token: 6|gSlPqpTBckDwHsqM2G7WsFuZI1IvPfYa0r5qoI1x8f439da7
 bundled: false
 extensions:
   bruno:

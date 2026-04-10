@@ -1,54 +1,90 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api';
-import type {TableColumn} from "@nuxt/ui";
-import {getPaginationRowModel} from "@tanstack/table-core";
+import type { TableColumn } from '@nuxt/ui';
+import { getPaginationRowModel } from '@tanstack/table-core';
 
 const api = useApiStore();
-const entities = ref<Entity[]>([]);
+const states = ref<States[]>([]);
 const loading = ref(false);
 const total = ref(0);
 
 const deleteModalOpen = ref(false)
-const selectedEntityById = ref<Entity>(null)
+const selectedEntityById = ref<States>(null)
 
-type Entity = {
+type States = {
   id: number;
   name: string;
   description: string;
-  phone_contact: string;
-  email_contact: string;
-  address: string;
-  logo: string;
-  poc_name: string;
-  poc_phone: string;
-  poc_email: string;
-  created_at: Date;
-  updated_at: Date;
+  hex_color: string;
+  terminates_incident: boolean;
+  is_active: boolean;
 };
 
-const columns: TableColumn<Entity>[] = [
+const columns: TableColumn<States>[] = [
   {
     accessorKey: "name",
     header: "Nome",
+    cell: ({ row }) => {
+      return h(
+        'div',
+        { class: 'flex items-center gap-2' },
+        [
+          h('span', {
+            class: 'size-3 rounded-full border',
+            style: {
+              backgroundColor: row.original.hex_color
+            }
+          }),
+          h('span', { class: 'font-medium' }, row.original.name)
+        ]
+      )
+    }
   },
   {
-    accessorKey: "phone_contact",
-    header: "Telefone",
+    accessorKey: "description",
+    header: "Descrição",
+    cell: ({ row }) => {
+      return h(
+        'div',
+        {
+          class: 'truncate max-w-[250px]'
+        },
+        row.original.description
+      )
+    }
   },
   {
-    accessorKey: "poc_name",
-    header: "Nome do Responsável",
+    accessorKey: "terminates_incident",
+    header: () => h('div', { class: 'text-center w-full' }, 'Ocorrência Termina'),
+    meta: { class: 'text-center' },
+    cell: ({ row }) => {
+      const value = row.original.terminates_incident
+
+      const color = value ? 'success' : 'error'
+      const label = value ? 'Sim' : 'Não'
+
+      return h(
+        'div',
+        { class: 'flex justify-center' },
+        h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () => label)
+      )
+    }
   },
   {
-    accessorKey: "poc_phone",
-    header: "Telefone Responsável",
-  },
-  {
-    accessorKey: "updated_at",
-    header: "Última Atualização",
-    cell: ({row}) => {
-      return new Date(row.getValue("updated_at")).toLocaleString("pt-PT");
-    },
+    accessorKey: "is_active",
+    header: () => h('div', { class: 'text-center w-full' }, 'Estado'),
+    cell: ({ row }) => {
+      const value = row.original.is_active
+
+      const color = value ? 'success' : 'error'
+      const label = value ? 'Ativado' : 'Desativado'
+
+      return h(
+        'div',
+        { class: 'flex justify-center' },
+        h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () => label)
+      )
+    }
   },
   {
     id: 'actions',
@@ -61,7 +97,7 @@ const columns: TableColumn<Entity>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            navigateTo(`/administration/entities/${row.original.id}`)
+            navigateTo(`/administration/incidentStates/${row.original.id}`)
           }
         }),
         h(UButton, {
@@ -86,16 +122,16 @@ const pagination = ref({
 const fetch = async() => {
   loading.value = true;
   try {
-    const res = await api.getEntities({
+    const res = await api.getIncidentStates({
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
     });
-    entities.value = res.data.data;
+    states.value = res.data.data;
     total.value = res.data.meta.total;
 
     pagination.value.pageSize = res.data.meta.per_page;
   } catch (e) {
-    console.error("Erro ao carregar entidades: ", e);
+    console.error("Erro ao carregar estados: ", e);
   } finally {
     loading.value = false;
   }
@@ -107,19 +143,19 @@ onMounted(fetch);
 </script>
 
 <template>
-  <UDashboardPanel id="entidades">
+  <UDashboardPanel id="estados-ocorrencias">
     <template #body>
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
-          <h2 class="text-lg font-semibold">Entidades</h2>
-          <p class="text-sm text-muted max-w-md">Lista de todas as Entidades.</p>
+          <h2 class="text-lg font-semibold">Estados de Ocorrências</h2>
+          <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Estado de Ocorrências.</p>
         </div>
-        <EntitiesAddModal @created="fetch" />
+        <IncidentStatesAddModal @created="fetch" />
       </div>
 
       <div class="overflow-x-auto">
         <UTable
-          :data="entities"
+          :data="states"
           :columns="columns"
           :loading="loading"
           v-model:pagination="pagination"
@@ -136,7 +172,7 @@ onMounted(fetch);
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[640px]"
+          class="w-full min-w-[500px]"
         />
       </div>
 
@@ -149,7 +185,7 @@ onMounted(fetch);
         />
       </div>
 
-      <EntitiesDeleteModal
+      <IncidentStatesDeleteModal
         v-model:open="deleteModalOpen"
         :id="selectedEntityById?.id"
         :name="selectedEntityById?.name"

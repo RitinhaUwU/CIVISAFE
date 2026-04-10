@@ -24,8 +24,8 @@ const onSubmit = async () => {
 <template>
   <UModal
     v-model:open="props.open"
-    :title="`Eliminar Entidade: ${props.name}`"
-    :description="`Tem certeza que deseja eliminar a Entidade '${props.name}'?`"
+    :title="`Eliminar tipo de Estado: ${props.name}`"
+    :description="`Tem certeza que deseja eliminar este tipo de estado '${props.name}'?`"
     :ui="{
       close: 'hidden'
     }"

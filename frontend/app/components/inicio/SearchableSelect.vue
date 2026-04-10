@@ -79,32 +79,34 @@ onUnmounted(() => document.removeEventListener('mousedown', clickOutside))
 
 <template>
   <div class="flex flex-col w-full">
-    <!-- Label -->
-    <label v-if="label" class="text-xs font-medium text-gray-700 mb-1">
+    <label v-if="label" class="text-xs font-medium text-default mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-500 ml-1">*</span>
+      <span v-if="required" class="text-error ml-1">*</span>
     </label>
 
     <div ref="wrapper" class="relative">
       <button
         type="button"
-        class="w-full h-8 px-3 flex items-center justify-between
-               border border-gray-300 bg-white rounded-md text-sm text-gray-900
-               transition hover:border-gray-400
-               focus:outline-none focus:ring-primary focus:border-primary focus:border-2"
+        class="w-full h-9 px-3 flex items-center justify-between
+               border border-default
+               bg-default
+               rounded-md text-sm text-default
+               transition
+               hover:border-muted
+               focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
         @click="toggle"
       >
         <span class="truncate">
           <template v-if="modelValue">
             {{ modelValue.label }}
           </template>
-          <span v-else class="text-gray-400">
+          <span class="text-muted" v-else>
             {{ placeholder }}
           </span>
         </span>
 
         <svg
-          class="w-5 h-5 text-gray-400 transition-transform"
+          class="w-5 h-5 text-muted transition-transform"
           :class="{ 'rotate-180': open }"
           viewBox="0 0 20 20"
           fill="currentColor"
@@ -119,16 +121,17 @@ onUnmounted(() => document.removeEventListener('mousedown', clickOutside))
 
       <div
         v-if="open"
-        class="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
+        class="absolute mt-1 w-full
+               bg-elevated
+               border border-default
+               rounded-md shadow-lg z-[9999]"
       >
-        <!-- Search -->
-        <div class="p-2 border-b border-gray-200">
+        <div class="p-2 border-b border-default">
           <input
             ref="searchInput"
             v-model="query"
-            class="w-full text-sm outline-none"
+            class="w-full text-sm outline-none bg-transparent text-default placeholder:text-muted"
             placeholder="Pesquisar..."
-            @keydown.enter.prevent="create"
           >
         </div>
 
@@ -136,23 +139,31 @@ onUnmounted(() => document.removeEventListener('mousedown', clickOutside))
           <div
             v-for="item in filteredItems"
             :key="item.id"
-            class="px-3 py-2 text-sm cursor-pointer rounded hover:bg-gray-50"
+            class="px-3 py-2 text-sm cursor-pointer rounded
+                   text-default
+                   hover:bg-muted/50"
             :class="{
-              'bg-primary-50 text-primary-600': modelValue?.id === item.id
+              'bg-primary/10 text-primary': modelValue?.id === item.id
             }"
             @click="select(item)"
           >
             {{ item.label }}
           </div>
 
-          <div v-if="filteredItems.length === 0" class="text-center text-xs text-gray-400 py-2">
+          <div
+            v-if="filteredItems.length === 0"
+            class="text-center text-xs text-muted py-2"
+          >
             Nenhum resultado
           </div>
         </div>
 
-        <div class="border-t border-gray-200 p-1">
+        <div class="border-t border-default p-1">
           <button
-            class="w-full text-left px-3 py-2 text-sm text-primary-600 rounded hover:bg-primary-50"
+            class="w-full text-left px-3 py-2 text-sm
+                   text-primary
+                   rounded
+                   hover:bg-primary/10"
           >
             Adicionar "{{ query }}"
           </button>

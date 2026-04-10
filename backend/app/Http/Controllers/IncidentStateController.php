@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EntityRequest;
+use App\Http\Requests\IncidentStatesRequest;
+use App\Http\Resources\EntityResource;
 use App\Http\Resources\IncidentStateResource;
+use App\Models\Entity;
 use App\Models\IncidentState;
 use Illuminate\Http\Request;
 
@@ -13,17 +17,9 @@ class IncidentStateController extends Controller
         return IncidentStateResource::collection(IncidentState::all());
     }
 
-    public function store(Request $request)
+    public function store(IncidentStatesRequest $request)
     {
-        $data = $request->validate([
-            'name' => ['required'],
-            'description' => ['required'],
-            'rgb_color' => ['required'],
-            'terminates_incident' => ['boolean'],
-            'is_active' => ['boolean'],
-        ]);
-
-        return new IncidentStateResource(IncidentState::create($data));
+        return new IncidentStateResource(IncidentState::create($request->validated()));
     }
 
     public function show(IncidentState $incidentState)
@@ -31,17 +27,9 @@ class IncidentStateController extends Controller
         return new IncidentStateResource($incidentState);
     }
 
-    public function update(Request $request, IncidentState $incidentState)
+    public function update(IncidentStatesRequest $request, IncidentState $incidentState)
     {
-        $data = $request->validate([
-            'name' => ['required'],
-            'description' => ['required'],
-            'rgb_color' => ['required'],
-            'terminates_incident' => ['boolean'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $incidentState->update($data);
+        $incidentState->update($request->validated());
 
         return new IncidentStateResource($incidentState);
     }

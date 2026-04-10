@@ -5,6 +5,7 @@ import { useApiStore } from '../../stores/api'
 
 const apiStore = useApiStore()
 const open = ref(false)
+const emit = defineEmits(['created'])
 
 const toast = useToast()
 
