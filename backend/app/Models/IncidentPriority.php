@@ -12,6 +12,13 @@ class IncidentPriority extends Model
 
     public $timestamps = false;
 
+    protected $fillable = [
+        'name',
+        'description',
+        'hex_color',
+        'is_active'
+    ];
+
     protected function casts(): array
     {
         return [

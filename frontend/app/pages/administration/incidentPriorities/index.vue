@@ -1,30 +1,28 @@
 <script setup lang="ts">
-import { useApiStore } from '@/stores/api';
-import type { TableColumn } from '@nuxt/ui';
-import { getPaginationRowModel } from '@tanstack/table-core';
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
 const api = useApiStore()
-const states = ref<States[]>([])
+const priorities = ref<Priority[]>([])
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
 const statusFilter = ref('all')
-const terminatesFilter = ref('all')
 
 const deleteModalOpen = ref(false)
-const selectedStateById = ref<States>(null)
+const selectedPriorityById = ref<Priority | null>(null)
 
-type States = {
+type Priority = {
   id: number;
   name: string;
   description: string;
   hex_color: string;
-  terminates_incident: boolean;
   is_active: boolean;
-}
+};
 
-const columns: TableColumn<States>[] = [
+const columns: TableColumn<Priority>[] = [
   {
     accessorKey: "name",
     header: "Nome",
@@ -35,9 +33,7 @@ const columns: TableColumn<States>[] = [
         [
           h('span', {
             class: 'size-3 rounded-full border',
-            style: {
-              backgroundColor: row.original.hex_color
-            }
+            style: { backgroundColor: row.original.hex_color }
           }),
           h('span', { class: 'font-medium' }, row.original.name)
         ]
@@ -47,46 +43,19 @@ const columns: TableColumn<States>[] = [
   {
     accessorKey: "description",
     header: "Descrição",
-    cell: ({ row }) => {
-      return h(
-        'div',
-        {
-          class: 'truncate max-w-[250px]'
-        },
-        row.original.description
-      )
-    }
-  },
-  {
-    accessorKey: "terminates_incident",
-    header: () => h('div', { class: 'text-center w-full' }, 'Ocorrência Termina'),
-    meta: { class: 'text-center' },
-    cell: ({ row }) => {
-      const value = row.original.terminates_incident
-
-      const color = value ? 'success' : 'error'
-      const label = value ? 'Sim' : 'Não'
-
-      return h(
-        'div',
-        { class: 'flex justify-center' },
-        h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () => label)
-      )
-    }
   },
   {
     accessorKey: "is_active",
     header: () => h('div', { class: 'text-center w-full' }, 'Estado'),
     cell: ({ row }) => {
-      const value = row.original.is_active
-
-      const color = value ? 'success' : 'error'
-      const label = value ? 'Ativado' : 'Desativado'
+      const value = row.original.is_active;
+      const color = value ? 'success' : 'error';
+      const label = value ? 'Ativado' : 'Desativado';
 
       return h(
         'div',
         { class: 'flex justify-center' },
-        h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () => label)
+        h(UBadge, { class: 'rounded-full', variant: 'subtle', color }, () => label)
       )
     }
   },
@@ -96,126 +65,93 @@ const columns: TableColumn<States>[] = [
       return h(
         'div',
         { class: 'text-right' },
-        h(UButton, {
-          icon: 'i-lucide-info',
-          color: 'info',
-          variant: 'ghost',
-          onClick: () => {
-            navigateTo(`/administration/incidentStates/${row.original.id}`)
-          }
-        }),
-        h(UButton, {
-          icon: 'i-lucide-trash',
-          color: 'error',
-          variant: 'ghost',
-          onClick: () => {
-            selectedStateById.value = row.original
-            deleteModalOpen.value = true
-          }
-        })
+        [
+          h(UButton, {
+            icon: 'i-lucide-info',
+            color: 'info',
+            variant: 'ghost',
+            onClick: () => {
+              navigateTo(`/administration/incidentPriorities/${row.original.id}`)
+            }
+          }),
+          h(UButton, {
+            icon: 'i-lucide-trash',
+            color: 'error',
+            variant: 'ghost',
+            onClick: () => {
+              selectedPriorityById.value = row.original
+              deleteModalOpen.value = true
+            }
+          })
+        ]
       )
     }
   }
-];
+]
 
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10,
 })
 
-const fetch = async() => {
+const fetch = async () => {
   loading.value = true
   try {
     const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
-    };
+    }
     if (search.value) {
       params.filter = {
         search: search.value
-      };
+      }
     }
     if (statusFilter.value !== 'all') {
       params.filter = {
         ...params.filter,
         status: statusFilter.value === true ? 1 : 0
-      };
+      }
     }
-    if (terminatesFilter.value !== 'all') {
-      params.filter = {
-        ...params.filter,
-        terminates: terminatesFilter.value === true ? 1 : 0
-      };
-    }
-    const res = await api.getIncidentStates(params)
+    const res = await api.getIncidentPriorities(params)
 
-    states.value = res.data.data
+    priorities.value = res.data.data
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar estados: ", e)
+    console.error("Erro ao carregar prioridades: ", e)
   } finally {
     loading.value = false
   }
 }
 
-watch(pagination, fetch, {deep: true})
+watch(pagination, fetch, { deep: true })
 
-watch([search, statusFilter, terminatesFilter], () => {
-  pagination.value.pageIndex = 0
-  fetch()
+watch([search, statusFilter], () => {
+  pagination.value.pageIndex = 0;
+  fetch();
 })
 
 onMounted(fetch)
 </script>
 
 <template>
-  <UDashboardPanel id="estados-ocorrencias">
+  <UDashboardPanel id="prioridades-ocorrencias">
     <template #body>
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
-          <h2 class="text-lg font-semibold">Estados de Ocorrências</h2>
-          <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Estado de Ocorrências.</p>
+          <h2 class="text-lg font-semibold">Prioridades de Ocorrências</h2>
+          <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Prioridades.</p>
         </div>
-        <IncidentStatesAddModal @created="fetch" />
+          <IncidentPrioritiesAddModal @created="fetch" />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
           v-model="search"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filtrar estados..."
+          placeholder="Filtrar prioridades..."
         />
         <div class="flex flex-wrap items-center gap-1.5">
-          <USelect
-            v-model="terminatesFilter"
-            :items="[
-              { label: 'Ocorrência Terminada', value: 'all' },
-              { label: 'Sim', value: true },
-              { label: 'Não', value: false }
-            ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
-          />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            " :content="{ align: 'end' }">
-          </UDropdownMenu>
           <USelect
             v-model="statusFilter"
             :items="[
@@ -243,13 +179,15 @@ onMounted(fetch)
                     e?.preventDefault()
                   }
                 }))
-            " :content="{ align: 'end' }">
+            "
+            :content="{ align: 'end' }"
+          >
           </UDropdownMenu>
         </div>
       </div>
       <div class="overflow-x-auto">
         <UTable
-          :data="states"
+          :data="priorities"
           :columns="columns"
           :loading="loading"
           v-model:pagination="pagination"
@@ -279,10 +217,11 @@ onMounted(fetch)
         />
       </div>
 
-      <IncidentStatesDeleteModal
+      <IncidentPrioritiesDeleteModal
         v-model:open="deleteModalOpen"
-        :id="selectedStateById?.id"
-        :name="selectedStateById?.name"
+        :id="selectedPriorityById?.id"
+        :name="selectedPriorityById?.name"
+        :description="selectedPriorityById?.description"
         @deleted="fetch"
       />
     </template>

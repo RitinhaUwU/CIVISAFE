@@ -1,135 +1,70 @@
 <script setup lang="ts">
+import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { upperFirst } from 'scule'
 import { getPaginationRowModel } from '@tanstack/table-core'
-import type { Row } from '@tanstack/table-core'
-import type { User } from '~/types'
 
-const UButton = resolveComponent('UButton')
-const UBadge = resolveComponent('UBadge')
-const UDropdownMenu = resolveComponent('UDropdownMenu')
+const api = useApiStore()
+const incidents = ref<Incident[]>([])
+const loading = ref(false)
+const total = ref(0)
 
-const toast = useToast()
-const table = useTemplateRef('table')
+const search = ref('')
+const statusFilter = ref('all')
+const prioritiesFilter = ref('all')
 
-const columnFilters = ref([{
-  id: 'email',
-  value: ''
-}])
-const columnVisibility = ref()
-const rowSelection = ref({ 1: true })
+const deleteModalOpen = ref(false)
+const selectedIncidentById = ref<Incident>(null)
 
-const { data, status } = await useFetch<User[]>('/api/customers', {
-  lazy: true
-})
-
-function getRowItems(row: Row<User>) {
-  return [
-    {
-      type: 'label',
-      label: 'Actions'
-    },
-    {
-      label: 'Copy customer ID',
-      icon: 'i-lucide-copy',
-      onSelect() {
-        navigator.clipboard.writeText(row.original.id.toString())
-        toast.add({
-          title: 'Copied to clipboard',
-          description: 'Customer ID copied to clipboard'
-        })
-      }
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: 'View customer details',
-      icon: 'i-lucide-list'
-    },
-    {
-      label: 'View customer payments',
-      icon: 'i-lucide-wallet'
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: 'Delete customer',
-      icon: 'i-lucide-trash',
-      color: 'error',
-      onSelect() {
-        toast.add({
-          title: 'Customer deleted',
-          description: 'The customer has been deleted.'
-        })
-      }
-    }
-  ]
+type Incident = {
+  id: number;
+  identifier: string;
+  incident_type_code: number;
+  incident_state_id: number;
+  user_id: number;
+  incident_priority_id: number;
+  start_datetime: Date;
+  end_datetime: Date;
+  coordinates: string;
+  common_place: string;
+  address: string;
+  parish: string;
+  municipality: string;
+  district: string;
+  command_post: string;
+  is_major: boolean;
+  alert_source_relationship: string;
+  alert_source_name: string;
+  alert_source_contact: string;
+  obs: string;
+  incident_id: number;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date;
 }
 
-const columns: TableColumn<User>[] = [
+const columns: TableColumn<Incident>[] = [
   {
-    accessorKey: 'num_ocorrencias',
-    header: 'Nº Ocorrência',
-    cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-3' }, [
-        h('div', undefined, [
-          h('p', { class: 'font-medium text-highlighted' }, row.original.name),
-          h('p', { class: '' }, `@${row.original.name}`)
-        ])
-      ])
-    }
+    accessorKey: "identifier",
+    header: "Nº Ocorrência",
   },
   {
-    accessorKey: 'estado',
-    header: 'Estado',
-    filterFn: 'equals',
-    cell: ({ row }) => {
-      const color = {
-        subscribed: 'success' as const,
-        unsubscribed: 'error' as const,
-        bounced: 'warning' as const
-      }[row.original.status]
-
-      return h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () =>
-        row.original.status
-      )
-    }
+    accessorKey: "incident_state_id",
+    header: "Estado",
   },
   {
-    accessorKey: 'prioridade',
-    header: 'Prioridade',
-    filterFn: 'equals',
-    cell: ({ row }) => {
-      const color = {
-        subscribed: 'success' as const,
-        unsubscribed: 'error' as const,
-        bounced: 'warning' as const
-      }[row.original.status]
-
-      return h(UBadge, { class: 'capitalize, rounded-full', variant: 'solid', color }, () =>
-        row.original.status
-      )
-    }
+    accessorKey: "incident_priority_id",
+    header: "Prioridade",
   },
   {
-    accessorKey: 'categoria',
-    header: 'Categoria',
-    cell: ({ row }) => row.original.location
+    accessorKey: "incident_type_code",
+    header: "Categoria",
   },
   {
-    accessorKey: 'dataInicio',
-    header: () => {
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'Data Início',
-        icon: 'i-lucide-arrow-up-down',
-        class: '-mx-2.5'
-      })
+    accessorKey: "start_datetime",
+    header: "Data de Início",
+    cell: ({row}) => {
+      return new Date(row.getValue("start_datetime")).toLocaleString("pt-PT");
     },
-    cell: ({ row }) => row.original.email
   },
   {
     id: 'actions',
@@ -142,7 +77,7 @@ const columns: TableColumn<User>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            console.log('Editar', row.original)
+
           }
         }),
         h(UButton, {
@@ -150,12 +85,9 @@ const columns: TableColumn<User>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            console.log('Apagar', row.original)
-
-            toast.add({
-              title: 'Customer deleted',
-              description: 'The customer has been deleted.'
-            })
+            //?????????????????????????????????????????????
+            //selectedIncidentById.value = row.original
+            //deleteModalOpen.value = true
           }
         })
       )
@@ -163,12 +95,43 @@ const columns: TableColumn<User>[] = [
   }
 ]
 
-const statusFilter = ref('all')
-
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
+
+const fetch = async() => {
+  loading.value = true
+  try {
+    const params: any = {
+      page: pagination.value.pageIndex + 1,
+      per_page: pagination.value.pageSize,
+    }
+    if (search.value) {
+      params.filter = {
+        search: search.value
+      }
+    }
+    const res = await api.getIncidents(params)
+
+    incidents.value = res.data.data
+    total.value = res.data.meta.total
+    pagination.value.pageSize = res.data.meta.per_page
+  } catch (e) {
+    console.error("Erro ao carregar entidades: ", e)
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(pagination, fetch, {deep: true})
+
+watch(search, () => {
+  pagination.value.pageIndex = 0
+  fetch()
+})
+
+onMounted(fetch)
 </script>
 
 <template>
@@ -184,7 +147,7 @@ const pagination = ref({
     <template #body>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
-          v-model="email"
+          v-model="search"
           class="max-w-sm"
           icon="i-lucide-search"
           placeholder="Filtrar ocorrências..."
@@ -224,7 +187,7 @@ const pagination = ref({
           >
           </UDropdownMenu>
           <USelect
-            v-model="statusFilter"
+            v-model="prioritiesFilter"
             :items="[
               { label: 'Prioridade', value: 'all' },
               { label: 'Subscribed', value: 'subscribed' },
@@ -258,39 +221,45 @@ const pagination = ref({
         </div>
       </div>
 
-      <UTable
-        ref="table"
-        v-model:column-filters="columnFilters"
-        v-model:column-visibility="columnVisibility"
-        v-model:row-selection="rowSelection"
-        v-model:pagination="pagination"
-        :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
-        }"
-        class="shrink-0"
-        :data="data"
-        :columns="columns"
-        :loading="status === 'pending'"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
-          separator: 'h-0'
-        }"
-      />
-
-      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
-        <div class="flex items-center gap-1.5">
-          <UPagination
-            :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-            :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-            :total="table?.tableApi?.getFilteredRowModel().rows.length"
-            @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"
-          />
-        </div>
+      <div class="overflow-x-auto">
+        <UTable
+          :data="incidents"
+          :columns="columns"
+          :loading="loading"
+          v-model:pagination="pagination"
+          :pagination-options="{
+            getPaginationRowModel: getPaginationRowModel(),
+            rowCount: total,
+            manualPagination: true,
+          }"
+          :ui="{
+            base: 'table-fixed border-separate border-spacing-0',
+            thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+            tbody: '[&>tr]:last:[&>td]:border-b-0',
+            th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+            td: 'border-b border-default',
+            separator: 'h-0'
+          }"
+          class="w-full min-w-[640px]"
+        />
       </div>
+
+      <div class="flex justify-end border-t border-default pt-4 mt-auto">
+        <UPagination
+          :page="pagination.pageIndex + 1"
+          :items-per-page="pagination.pageSize"
+          :total="total"
+          @update:page="(p) => (pagination.pageIndex = p - 1)"
+        />
+      </div>
+
+      <!-- ????????????????????????????????????????
+      <EntitiesDeleteModal
+        v-model:open="deleteModalOpen"
+        :id="selectedEntityById?.id"
+        :name="selectedEntityById?.name"
+        @deleted="fetch"
+      />-->
     </template>
   </UDashboardPanel>
 </template>

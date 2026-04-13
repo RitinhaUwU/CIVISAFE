@@ -37,7 +37,7 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentTypes = (params?: { page?: number; per_page?: number }) => {
+  const getIncidentTypes = (params?: any) => {
     return axios.get(`${config.public.apiBase}/incidentTypes`, { params })
   }
 
@@ -63,7 +63,7 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getEntities = (params?: { page?: number; per_page?: number }) => {
+  const getEntities = (params?: any) => {
     return axios.get(`${config.public.apiBase}/entities`, { params })
   }
 
@@ -89,8 +89,12 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidents = (params?: { page?: number; per_page?: number }) => {
+  const getIncidents = (params?: any) => {
     return axios.get(`${config.public.apiBase}/incidents`, { params })
+  }
+
+  const getIncident = async (id, params) => {
+    return axios.get(`${config.public.apiBase}/incidents/${id}`, params)
   }
 
   /*************************
@@ -99,7 +103,7 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentStates = (params?: { page?: number; per_page?: number }) => {
+  const getIncidentStates = (params?: any) => {
     return axios.get(`${config.public.apiBase}/incidentStates`, { params })
   }
 
@@ -125,8 +129,24 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentPriorities = (params?: { page?: number; per_page?: number }) => {
+  const getIncidentPriorities = (params?: any) => {
     return axios.get(`${config.public.apiBase}/incidentPriorities`, { params })
+  }
+
+  const getIncidentPriority = async (id, params) => {
+    return axios.get(`${config.public.apiBase}/incidentPriorities/${id}`, params)
+  }
+
+  const createIncidentPriority = async (params) => {
+    return axios.post(`${config.public.apiBase}/incidentPriorities`, params)
+  }
+
+  const updateIncidentPriority = (id, params) => {
+    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, params)
+  }
+
+  const deleteIncidentPriority = (id) => {
+    return axios.delete(`${config.public.apiBase}/incidentPriorities/${id}`)
   }
 
   return {
@@ -146,11 +166,16 @@ export const useApiStore = defineStore('api', () => {
     deleteEntity,
     createEntity,
     getIncidents,
+    getIncident,
     getIncidentStates,
     getIncidentState,
     updateIncidentState,
     deleteIncidentState,
     createIncidentState,
-    getIncidentPriorities
+    getIncidentPriorities,
+    getIncidentPriority,
+    updateIncidentPriority,
+    deleteIncidentPriority,
+    createIncidentPriority
   }
 })

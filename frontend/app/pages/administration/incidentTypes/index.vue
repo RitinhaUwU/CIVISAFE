@@ -3,10 +3,12 @@ import {useApiStore} from "@/stores/api";
 import type {TableColumn} from "@nuxt/ui";
 import {getPaginationRowModel} from "@tanstack/table-core";
 
-const api = useApiStore();
-const categories = ref<Category[]>([]);
-const loading = ref(false);
-const total = ref(0);
+const api = useApiStore()
+const categories = ref<Category[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const search = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedTypeByCode = ref<Category>(null)
@@ -19,7 +21,7 @@ type Category = {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
-};
+}
 
 const columns: TableColumn<Category>[] = [
   {
@@ -87,34 +89,45 @@ const columns: TableColumn<Category>[] = [
       )
     }
   }
-];
+]
 
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10,
-});
+})
 
 const fetch = async() => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await api.getIncidentTypes({
+    const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
-    });
-    categories.value = res.data.data;
-    total.value = res.data.meta.total;
+    }
+    if (search.value) {
+      params.filter = {
+        search: search.value
+      }
+    }
+    const res = await api.getIncidentTypes(params)
 
-    pagination.value.pageSize = res.data.meta.per_page;
+    categories.value = res.data.data
+    total.value = res.data.meta.total
+    pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar tipos de ocorrências: ", e);
+    console.error("Erro ao carregar tipos de ocorrências: ", e)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-watch(pagination, fetch, {deep: true});
+watch(pagination, fetch, {deep: true})
 
-onMounted(fetch);
+watch(search, () => {
+  pagination.value.pageIndex = 0
+  fetch()
+})
+
+onMounted(fetch)
 </script>
 
 <template>
@@ -127,7 +140,14 @@ onMounted(fetch);
         </div>
         <IncidentTypesAddModal @created="fetch" />
       </div>
-
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <UInput
+          v-model="search"
+          class="max-w-sm"
+          icon="i-lucide-search"
+          placeholder="Filtrar tipos..."
+        />
+      </div>
       <div class="overflow-x-auto">
         <UTable
           :data="categories"

@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { useApiStore } from '@/stores/api';
-import type {TableColumn} from "@nuxt/ui";
-import {getPaginationRowModel} from "@tanstack/table-core";
+import {useApiStore} from '@/stores/api'
+import type {TableColumn} from '@nuxt/ui'
+import {getPaginationRowModel} from '@tanstack/table-core'
 
-const api = useApiStore();
-const entities = ref<Entity[]>([]);
-const loading = ref(false);
-const total = ref(0);
+const api = useApiStore()
+const entities = ref<Entity[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const search = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedEntityById = ref<Entity>(null)
@@ -24,7 +26,7 @@ type Entity = {
   poc_email: string;
   created_at: Date;
   updated_at: Date;
-};
+}
 
 const columns: TableColumn<Entity>[] = [
   {
@@ -76,34 +78,45 @@ const columns: TableColumn<Entity>[] = [
       )
     }
   }
-];
+]
 
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10,
-});
+})
 
 const fetch = async() => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await api.getEntities({
+    const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
-    });
-    entities.value = res.data.data;
-    total.value = res.data.meta.total;
+    }
+    if (search.value) {
+      params.filter = {
+        search: search.value
+      }
+    }
+    const res = await api.getEntities(params)
 
-    pagination.value.pageSize = res.data.meta.per_page;
+    entities.value = res.data.data
+    total.value = res.data.meta.total
+    pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar entidades: ", e);
+    console.error("Erro ao carregar entidades: ", e)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-watch(pagination, fetch, {deep: true});
+watch(pagination, fetch, {deep: true})
 
-onMounted(fetch);
+watch(search, () => {
+  pagination.value.pageIndex = 0
+  fetch()
+})
+
+onMounted(fetch)
 </script>
 
 <template>
@@ -116,7 +129,14 @@ onMounted(fetch);
         </div>
         <EntitiesAddModal @created="fetch" />
       </div>
-
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <UInput
+          v-model="search"
+          class="max-w-sm"
+          icon="i-lucide-search"
+          placeholder="Filtrar entidades..."
+        />
+      </div>
       <div class="overflow-x-auto">
         <UTable
           :data="entities"
