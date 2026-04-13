@@ -18,8 +18,6 @@ request:
   headers:
     - name: Accept
       value: application/json
-    - name: Content-Type
-      value: application/json
   auth:
     type: bearer
     token: 2|BHVyTAENG8O1jnjJ65ZhqxSBZZwz7HNlUPpp2TIYd11858a6
