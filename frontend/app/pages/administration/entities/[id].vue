@@ -7,6 +7,7 @@ const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
+const entityTypes = ref([])
 
 const state = reactive({
   name: '',
@@ -16,15 +17,20 @@ const state = reactive({
   poc_name: '',
   poc_email: '',
   poc_phone: '',
-  description: ''
+  description: '',
+  entity_type_id: null as number,
 })
 
 const toast = useToast()
 
 const fetchEntity = async () => {
   const res = await api.getEntity(route.params.id)
+  const data = res.data.data
 
-  Object.assign(state, res.data.data)
+  Object.assign(state, {
+    ...data,
+    entity_type_id: data.entityType?.id,
+  })
 }
 
 const handleSave = async () => {
@@ -52,7 +58,18 @@ const handleCancel = () => {
   router.back()
 }
 
-onMounted(fetchEntity)
+const fetchEntityTypes = async () => {
+  const res = await api.getEntityTypes()
+  entityTypes.value = res.data.data.map((t: any) => ({
+    label: t.name,
+    value: t.id
+  }))
+}
+
+onMounted(() => {
+  fetchEntity()
+  fetchEntityTypes()
+})
 </script>
 
 <template>
@@ -80,18 +97,22 @@ onMounted(fetchEntity)
             <section class="space-y-2">
               <h2 class="font-bold">Dados Gerais</h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <UFormField label="Tipo" class="sm:col-span-2">
+                  <USelect
+                    v-model="state.entity_type_id"
+                    :items="entityTypes"
+                    class="w-full"
+                  />
+                </UFormField>
                 <UFormField label="Nome" class="sm:col-span-2">
                   <UInput v-model="state.name" class="w-full" />
                 </UFormField>
-
                 <UFormField label="Email de contacto">
                   <UInput v-model="state.email_contact" class="w-full" />
                 </UFormField>
-
                 <UFormField label="Telefone">
                   <UInput v-model="state.phone_contact" class="w-full" />
                 </UFormField>
-
                 <UFormField label="Morada" class="sm:col-span-2">
                   <UInput v-model="state.address" class="w-full" />
                 </UFormField>

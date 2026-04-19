@@ -8,7 +8,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('incident_types', function (Blueprint $table) {
-            $table->integer('code')->primary();
+            $table->id();
+            $table->integer('code')->unique();
             $table->string('species');
             $table->string('type');
             $table->text('description');

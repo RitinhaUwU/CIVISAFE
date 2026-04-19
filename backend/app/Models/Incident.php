@@ -14,7 +14,7 @@ class Incident extends Model
 
     public function incidentType(): BelongsTo
     {
-        return $this->belongsTo(IncidentType::class);
+        return $this->belongsTo(IncidentType::class, 'incident_type_id', 'id');
     }
 
     public function incidentState(): BelongsTo
@@ -57,4 +57,27 @@ class Incident extends Model
             'is_major' => 'boolean',
         ];
     }
+
+    protected $fillable = [
+        'identifier',
+        'incident_type_id',
+        'incident_state_id',
+        'incident_priority_id',
+        'user_id',
+        'start_datetime',
+        'end_datetime',
+        'coordinates',
+        'common_place',
+        'address',
+        'parish',
+        'municipality',
+        'district',
+        'command_post',
+        'is_major',
+        'alert_source_relationship',
+        'alert_source_name',
+        'alert_source_contact',
+        'obs',
+        'incident_id',
+    ];
 }

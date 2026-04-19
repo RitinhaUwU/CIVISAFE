@@ -30,7 +30,6 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-
   try {
     await apiStore.createIncidentType(event.data)
 
@@ -73,23 +72,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal
-    v-model:open="open"
-    title="Novo Tipo"
-    description="Adicione um Novo Tipo de Incidente"
-  >
-    <UButton
-      icon="i-lucide-plus"
-      label="Novo Tipo"
-      color="primary"
-    />
+  <UModal v-model:open="open" title="Novo Tipo" description="Adicione um Novo Tipo de Incidente">
+    <UButton icon="i-lucide-plus" label="Novo Tipo" color="primary"/>
     <template #body>
-      <UForm
-        :state="state"
-        :schema="schema"
-        class="space-y-5"
-        @submit="onSubmit"
-      >
+      <UForm :state="state" :schema="schema" class="space-y-5" @submit="onSubmit">
         <UFormField label="Código" name="code">
           <UInput v-model="state.code" class="w-full" />
         </UFormField>

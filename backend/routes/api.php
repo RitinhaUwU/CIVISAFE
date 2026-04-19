@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntityController;
+use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentPriorityController;
 use App\Http\Controllers\IncidentStateController;
@@ -24,6 +25,7 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::apiResource('/entities', EntityController::class);
+        Route::apiResource('/entityTypes', EntityTypesController::class);
         Route::apiResource('/incidentTypes', IncidentTypeController::class);
         Route::apiResource('/incidentStates', IncidentStateController::class);
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);

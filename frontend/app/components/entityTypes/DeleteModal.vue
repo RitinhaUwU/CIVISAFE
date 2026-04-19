@@ -15,11 +15,11 @@ const onSubmit = async () => {
   if (!props.id) return
 
   try {
-    await api.deleteEntity(props.id)
+    await api.deleteEntityType(props.id)
 
     toast.add({
       title: 'Eliminado com sucesso',
-      description: `A Entidade foi eliminada.`,
+      description: `O tipo de entidade foi eliminada.`,
       color: 'success'
     })
 
@@ -29,7 +29,7 @@ const onSubmit = async () => {
   } catch (e: any) {
     toast.add({
       title: 'Erro',
-      description: 'Não foi possível eliminar o registo da Entidade.',
+      description: 'Não foi possível eliminar o registo do tipo de entidade.',
       color: 'error'
     })
   }
@@ -39,27 +39,15 @@ const onSubmit = async () => {
 <template>
   <UModal
     v-model:open="props.open"
-    :title="`Eliminar Entidade: ${props.name}`"
-    :description="`Tem certeza que deseja eliminar a Entidade '${props.name}'?`"
-    :ui="{
-      close: 'hidden'
-    }"
+    :title="`Eliminar Tipo de Entidade: ${props.name}`"
+    :description="`Tem certeza que deseja eliminar o Tipo de Entidade '${props.name}'?`"
+    :ui="{ close: 'hidden' }"
   >
 
     <template #body>
       <div class="flex justify-end gap-2">
-        <UButton
-          label="Cancelar"
-          color="neutral"
-          variant="subtle"
-          @click="emit('update:open', false)"
-        />
-        <UButton
-          label="Eliminar"
-          color="error"
-          loading-auto
-          @click="onSubmit"
-        />
+        <UButton label="Cancelar" color="neutral" variant="subtle" @click="emit('update:open', false)"/>
+        <UButton label="Eliminar" color="error" loading-auto @click="onSubmit"/>
       </div>
     </template>
   </UModal>

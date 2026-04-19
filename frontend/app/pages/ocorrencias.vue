@@ -11,6 +11,8 @@ const total = ref(0)
 const search = ref('')
 const statusFilter = ref('all')
 const prioritiesFilter = ref('all')
+const states = ref([])
+const priorities = ref([])
 
 const deleteModalOpen = ref(false)
 const selectedIncidentById = ref<Incident>(null)
@@ -18,7 +20,7 @@ const selectedIncidentById = ref<Incident>(null)
 type Incident = {
   id: number;
   identifier: string;
-  incident_type_code: number;
+  incident_type_id: number;
   incident_state_id: number;
   user_id: number;
   incident_priority_id: number;
@@ -48,16 +50,40 @@ const columns: TableColumn<Incident>[] = [
     header: "Nº Ocorrência",
   },
   {
-    accessorKey: "incident_state_id",
-    header: "Estado",
+    accessorKey: "state",
+    header: () => h('div', { class: 'text-center w-full' }, 'Estado'),
+    meta: { class: 'text-center' },
+    cell: ({ row }) => {
+      const state = row.original.incidentState
+      return h('div', { class: 'flex justify-center' },
+        h(UBadge,
+          {
+            class: 'capitalize rounded-full border',
+            style: {backgroundColor: `${state.hex_color}`}
+          }, () => state.name
+        )
+      )
+    }
   },
   {
-    accessorKey: "incident_priority_id",
     header: "Prioridade",
+    cell: ({ row }) => {
+      const p = row.original.incidentPriority
+      return h('div', { class: 'flex flex-col' }, [
+        h('p', { class: 'font-medium text-highlighted' }, p.name),
+        h('p', { class: 'text-xs text-muted' }, p.description)
+      ])
+    }
   },
   {
-    accessorKey: "incident_type_code",
     header: "Categoria",
+    cell: ({ row }) => {
+      const type = row.original.incidentType
+      return h('div', { class: 'flex flex-col' }, [
+        h('p', { class: 'font-medium text-highlighted' }, `${type.code} - ${type.species}`),
+        h('p', { class: 'text-xs text-muted' }, type.type)
+      ])
+    }
   },
   {
     accessorKey: "start_datetime",
@@ -100,17 +126,32 @@ const pagination = ref({
   pageSize: 10
 })
 
+const fetchFilters = async () => {
+  const [statesRes, prioritiesRes] = await Promise.all([
+    api.getIncidentStates(),
+    api.getIncidentPriorities(),
+  ])
+
+  states.value = statesRes.data.data
+  priorities.value = prioritiesRes.data.data
+}
+
 const fetch = async() => {
   loading.value = true
   try {
     const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
+      filter: {}
     }
     if (search.value) {
-      params.filter = {
-        search: search.value
-      }
+      params.filter.search = search.value
+    }
+    if (statusFilter.value !== 'all') {
+      params.filter.state = statusFilter.value
+    }
+    if (prioritiesFilter.value !== 'all') {
+      params.filter.priority = prioritiesFilter.value
     }
     const res = await api.getIncidents(params)
 
@@ -126,12 +167,15 @@ const fetch = async() => {
 
 watch(pagination, fetch, {deep: true})
 
-watch(search, () => {
+watch([search, statusFilter, prioritiesFilter], () => {
   pagination.value.pageIndex = 0
   fetch()
 })
 
-onMounted(fetch)
+onMounted(() => {
+  fetch()
+  fetchFilters()
+})
 </script>
 
 <template>
@@ -143,7 +187,6 @@ onMounted(fetch)
         </template>
       </UDashboardNavbar>
     </template>
-
     <template #body>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -152,19 +195,16 @@ onMounted(fetch)
           icon="i-lucide-search"
           placeholder="Filtrar ocorrências..."
         />
-
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
             v-model="statusFilter"
             :items="[
-              { label: 'Estado', value: 'all' },
-              { label: 'Subscribed', value: 'subscribed' },
-              { label: 'Unsubscribed', value: 'unsubscribed' },
-              { label: 'Bounced', value: 'bounced' }
+              { label: 'Todos', value: 'all' },
+              ...states.map(s => ({
+              label: s.name,
+              value: s.id
+              }))
             ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
           />
           <UDropdownMenu
             :items="
@@ -189,14 +229,12 @@ onMounted(fetch)
           <USelect
             v-model="prioritiesFilter"
             :items="[
-              { label: 'Prioridade', value: 'all' },
-              { label: 'Subscribed', value: 'subscribed' },
-              { label: 'Unsubscribed', value: 'unsubscribed' },
-              { label: 'Bounced', value: 'bounced' }
+              { label: 'Todas', value: 'all' },
+              ...priorities.map(p => ({
+              label: `${p.name} - ${p.description}`,
+              value: p.id
+              }))
             ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
           />
           <UDropdownMenu
             :items="

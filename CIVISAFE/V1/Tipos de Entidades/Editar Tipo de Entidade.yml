@@ -1,16 +1,17 @@
 info:
-  name: Atualizar Campo Especifico
+  name: Editar Tipo de Entidade
   type: http
-  seq: 5
+  seq: 4
 
 http:
-  method: PATCH
-  url: "{{BASE_URL}}/api/v1/entities/6"
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/entityTypes/1"
   body:
     type: json
     data: |-
       {
-        "entity_type_id": "1"
+        "name": "PSP",
+        "description": "Polícia de Segurança Publica"
       }
   auth: inherit
 

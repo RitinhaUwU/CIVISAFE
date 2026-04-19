@@ -5,12 +5,12 @@ info:
 
 http:
   method: PATCH
-  url: "{{BASE_URL}}/api/v1/entities/6"
+  url: "{{BASE_URL}}/api/v1/entityTypes/1"
   body:
     type: json
     data: |-
       {
-        "entity_type_id": "1"
+        "description": "Polícia de Segurança Pública"
       }
   auth: inherit
 

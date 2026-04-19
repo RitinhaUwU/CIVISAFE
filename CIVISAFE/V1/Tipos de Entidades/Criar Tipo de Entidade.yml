@@ -1,16 +1,17 @@
 info:
-  name: Atualizar Campo Especifico
+  name: Criar Tipo de Entidade
   type: http
-  seq: 5
+  seq: 3
 
 http:
-  method: PATCH
-  url: "{{BASE_URL}}/api/v1/entities/6"
+  method: POST
+  url: "{{BASE_URL}}/api/v1/entityTypes"
   body:
     type: json
     data: |-
       {
-        "entity_type_id": "1"
+        "name": "Bombeiros",
+        "description": "Bombeiros"
       }
   auth: inherit
 

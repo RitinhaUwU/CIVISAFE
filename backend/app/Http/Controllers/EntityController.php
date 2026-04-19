@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EntityRequest;
 use App\Http\Resources\EntityResource;
-use App\Http\Resources\IncidentTypeResource;
+use App\Http\Resources\IncidentResource;
 use App\Models\Entity;
-use App\Models\IncidentType;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -21,6 +20,9 @@ class EntityController extends Controller
         ]);
 
         $types = QueryBuilder::for(Entity::class)
+            ->with([
+                'entityType',
+            ])
             ->allowedFilters(
                 AllowedFilter::callback('search', function (Builder $query, $value) {
                     $query->where('name', 'ILIKE', "%{$value}%");
@@ -39,7 +41,9 @@ class EntityController extends Controller
 
     public function show(Entity $entity)
     {
-        return new EntityResource($entity);
+        return new EntityResource($entity->load([
+            'entityType',
+        ]));
     }
 
     public function update(EntityRequest $request, Entity $entity)

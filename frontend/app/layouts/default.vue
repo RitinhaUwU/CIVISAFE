@@ -78,10 +78,17 @@ const links = [[{
     ]
   }, {
     label: 'Entidades',
-    to: '/administration/entities',
-    onSelect: () => {
-      open.value = false
-    }
+    children: [
+      {
+        label: 'Entidades',
+        to: '/administration/entities',
+        exact: true
+      },
+      {
+        label: 'Tipos de Entidades',
+        to: '/administration/entityTypes'
+      }
+    ]
   }]
 }]] satisfies NavigationMenuItem[][]
 

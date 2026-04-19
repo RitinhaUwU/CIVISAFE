@@ -4,42 +4,31 @@ import type {TableColumn} from '@nuxt/ui'
 import {getPaginationRowModel} from '@tanstack/table-core'
 
 const api = useApiStore()
-const entities = ref<Entity[]>([])
+const entityTypes = ref<Types[]>([])
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedEntityById = ref<Entity>(null)
+const selectedEntityTypeById = ref<Types>(null)
 
-type Entity = {
+type Types = {
   id: number;
   name: string;
   description: string;
-  phone_contact: string;
-  email_contact: string;
-  address: string;
-  logo: string;
-  poc_name: string;
-  poc_phone: string;
-  poc_email: string;
   created_at: Date;
   updated_at: Date;
 }
 
-const columns: TableColumn<Entity>[] = [
-  {
-    accessorKey: "entityType.name",
-    header: "Tipo",
-  },
+const columns: TableColumn<Types>[] = [
   {
     accessorKey: "name",
     header: "Nome",
   },
   {
-    accessorKey: "phone_contact",
-    header: "Telefone",
+    accessorKey: "description",
+    header: "Descrição",
   },
   {
     accessorKey: "updated_at",
@@ -59,7 +48,7 @@ const columns: TableColumn<Entity>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            navigateTo(`/administration/entities/${row.original.id}`)
+            navigateTo(`/administration/entityTypes/${row.original.id}`)
           }
         }),
         h(UButton, {
@@ -67,7 +56,7 @@ const columns: TableColumn<Entity>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            selectedEntityById.value = row.original
+            selectedEntityTypeById.value = row.original
             deleteModalOpen.value = true
           }
         })
@@ -93,13 +82,13 @@ const fetch = async() => {
         search: search.value
       }
     }
-    const res = await api.getEntities(params)
+    const res = await api.getEntityTypes(params)
 
-    entities.value = res.data.data
+    entityTypes.value = res.data.data
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar entidades: ", e)
+    console.error("Erro ao carregar os tipos de entidade: ", e)
   } finally {
     loading.value = false
   }
@@ -120,22 +109,22 @@ onMounted(fetch)
     <template #body>
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
-          <h2 class="text-lg font-semibold">Entidades</h2>
-          <p class="text-sm text-muted max-w-md">Lista de todas as Entidades.</p>
+          <h2 class="text-lg font-semibold">Tipos de Entidades</h2>
+          <p class="text-sm text-muted max-w-md">Lista de todos os tipos de Entidade.</p>
         </div>
-        <EntitiesAddModal @created="fetch" />
+        <EntityTypesAddModal @created="fetch" />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
           v-model="search"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filtrar entidades..."
+          placeholder="Filtrar tipos..."
         />
       </div>
       <div class="overflow-x-auto">
         <UTable
-          :data="entities"
+          :data="entityTypes"
           :columns="columns"
           :loading="loading"
           v-model:pagination="pagination"
@@ -165,10 +154,10 @@ onMounted(fetch)
         />
       </div>
 
-      <EntitiesDeleteModal
+      <EntityTypesDeleteModal
         v-model:open="deleteModalOpen"
-        :id="selectedEntityById?.id"
-        :name="selectedEntityById?.name"
+        :id="selectedEntityTypeById?.id"
+        :name="selectedEntityTypeById?.name"
         @deleted="fetch"
       />
     </template>

@@ -85,6 +85,32 @@ export const useApiStore = defineStore('api', () => {
 
   /*************************
    *
+   *  Entities
+   *
+   *************************/
+
+  const getEntityTypes = (params?: any) => {
+    return axios.get(`${config.public.apiBase}/entityTypes`, { params })
+  }
+
+  const getEntityType = async (id, params) => {
+    return axios.get(`${config.public.apiBase}/entityTypes/${id}`, params)
+  }
+
+  const createEntityType = async (params) => {
+    return axios.post(`${config.public.apiBase}/entityTypes`, params)
+  }
+
+  const updateEntityType = (id, params) => {
+    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, params)
+  }
+
+  const deleteEntityType = (id) => {
+    return axios.delete(`${config.public.apiBase}/entityTypes/${id}`)
+  }
+
+  /*************************
+   *
    *  Incidents
    *
    *************************/
@@ -165,6 +191,11 @@ export const useApiStore = defineStore('api', () => {
     updateEntity,
     deleteEntity,
     createEntity,
+    getEntityTypes,
+    getEntityType,
+    updateEntityType,
+    deleteEntityType,
+    createEntityType,
     getIncidents,
     getIncident,
     getIncidentStates,

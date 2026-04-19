@@ -20,6 +20,7 @@ class EntityRequest extends FormRequest
             'poc_name' => ['sometimes', 'nullable'],
             'poc_phone' => ['sometimes', 'nullable'],
             'poc_email' => ['sometimes', 'nullable', 'email', 'max:254'],
+            'entity_type_id' => ['nullable', 'exists:entity_types,id'],
         ];
     }
 

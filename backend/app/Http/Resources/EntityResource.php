@@ -24,6 +24,8 @@ class EntityResource extends JsonResource
             'poc_email' => $this->poc_email,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'entityType' => new EntityTypesResource($this->whenLoaded('entityType')),
         ];
     }
 }

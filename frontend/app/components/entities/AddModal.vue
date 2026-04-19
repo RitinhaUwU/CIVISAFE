@@ -6,6 +6,7 @@ import { useApiStore } from '../../stores/api'
 const apiStore = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
+const entityTypes = ref([])
 
 const toast = useToast()
 
@@ -23,7 +24,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema>>({
+const state = reactive<Partial<Schema & { entity_type_id: number }>>({
   name: '',
   phone_contact: '',
   email_contact: '',
@@ -32,20 +33,21 @@ const state = reactive<Partial<Schema>>({
   poc_name: '',
   poc_phone: '',
   poc_email: '',
-  description: ''
+  description: '',
+  entity_type_id: null,
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await apiStore.createEntity(event.data)
 
+    emit('created')
+    open.value = false
     toast.add({
       title: 'Sucesso',
       description: 'Entidade criada com sucesso',
       color: 'success'
     })
-
-    open.value = false
 
     Object.assign(state, {
       name: '',
@@ -56,12 +58,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       poc_name: '',
       poc_phone: '',
       poc_email: '',
-      description: ''
+      description: '',
+      entity_type_id: null as number,
     })
-
   } catch (e: any) {
     console.log(e.response?.data)
-
+    console.log('SUBMIT PAYLOAD:', event.data)
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar entidade',
@@ -69,6 +71,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
   }
 }
+
+const fetchEntityTypes = async () => {
+  const res = await apiStore.getEntityTypes()
+  entityTypes.value = res.data.data.map((t: any) => ({
+    label: t.name,
+    value: t.id
+  }))
+}
+
+onMounted(() => {
+  fetchEntityTypes()
+})
 </script>
 
 <template>
@@ -86,36 +100,37 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         @submit="onSubmit"
       >
         <div class="space-y-5">
+          <UFormField label="Tipo de Entidade:" name="entity_type_id">
+            <USelect
+              v-model="state.entity_type_id"
+              :items="entityTypes"
+              placeholder="Seleciona o tipo"
+              class="w-full"
+            />
+          </UFormField>
           <UFormField label="Nome:" name="name">
             <UInput v-model="state.name" class="w-full" required />
           </UFormField>
-
           <UFormField label="Email:" name="email">
             <UInput v-model="state.email_contact" class="w-full" required />
           </UFormField>
-
           <UFormField label="Contacto:" name="phone_contact">
             <UInput v-model="state.phone_contact" class="w-full" required />
           </UFormField>
-
           <UFormField label="Morada:" name="address">
             <UInput v-model="state.address" class="w-full" required />
           </UFormField>
         </div>
-
         <div class="space-y-5">
           <UFormField label="Nome do Responsável:" name="poc_name">
             <UInput v-model="state.poc_name" class="w-full" required />
           </UFormField>
-
           <UFormField label="Email do Responsável:" name="poc_email">
             <UInput v-model="state.poc_email" class="w-full" required />
           </UFormField>
-
           <UFormField label="Contacto do Responsável:" name="poc_phone">
             <UInput v-model="state.poc_phone" class="w-full" required />
           </UFormField>
-
           <UFormField label="Observações:" name="description">
             <UTextarea v-model="state.description" class="w-full" />
           </UFormField>
