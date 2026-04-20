@@ -15,7 +15,7 @@ const states = ref([])
 const priorities = ref([])
 
 const deleteModalOpen = ref(false)
-const selectedIncidentById = ref<Incident>(null)
+const selectedIncidentById = ref<Incident | null>(null)
 
 type Incident = {
   id: number;
@@ -80,8 +80,8 @@ const columns: TableColumn<Incident>[] = [
     cell: ({ row }) => {
       const type = row.original.incidentType
       return h('div', { class: 'flex flex-col' }, [
-        h('p', { class: 'font-medium text-highlighted' }, `${type.code} - ${type.species}`),
-        h('p', { class: 'text-xs text-muted' }, type.type)
+        h('p', { class: 'font-medium text-highlighted' }, type ? `${type.code} - ${type.species}` : '—'),
+        h('p', { class: 'text-xs text-muted' }, type?.type ?? '—')
       ])
     }
   },
@@ -103,7 +103,7 @@ const columns: TableColumn<Incident>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-
+            navigateTo(`/ocorrencias/${row.original.id}`)
           }
         }),
         h(UButton, {
@@ -198,6 +198,7 @@ onMounted(() => {
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
             v-model="statusFilter"
+            class="w-48"
             :items="[
               { label: 'Todos', value: 'all' },
               ...states.map(s => ({
@@ -206,28 +207,9 @@ onMounted(() => {
               }))
             ]"
           />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            "
-            :content="{ align: 'end' }"
-          >
-          </UDropdownMenu>
           <USelect
             v-model="prioritiesFilter"
+            class="w-48"
             :items="[
               { label: 'Todas', value: 'all' },
               ...priorities.map(p => ({
@@ -236,29 +218,8 @@ onMounted(() => {
               }))
             ]"
           />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            "
-            :content="{ align: 'end' }"
-          >
-          </UDropdownMenu>
         </div>
       </div>
-
       <div class="overflow-x-auto">
         <UTable
           :data="incidents"
@@ -293,6 +254,7 @@ onMounted(() => {
 
       <!-- ????????????????????????????????????????
       <EntitiesDeleteModal
+        v-if="selectedEntityById"
         v-model:open="deleteModalOpen"
         :id="selectedEntityById?.id"
         :name="selectedEntityById?.name"

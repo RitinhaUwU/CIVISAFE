@@ -3,7 +3,9 @@ import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/table-core'
 
+const toast = useToast()
 const api = useApiStore()
+
 const priorities = ref<Priority[]>([])
 const loading = ref(false)
 const total = ref(0)
@@ -118,7 +120,11 @@ const fetch = async () => {
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar prioridades: ", e)
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar os tipos de prioridades',
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
@@ -163,26 +169,6 @@ onMounted(fetch)
             placeholder="Filter status"
             class="min-w-28"
           />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            "
-            :content="{ align: 'end' }"
-          >
-          </UDropdownMenu>
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -218,6 +204,7 @@ onMounted(fetch)
       </div>
 
       <IncidentPrioritiesDeleteModal
+        v-if="selectedPriorityById"
         v-model:open="deleteModalOpen"
         :id="selectedPriorityById?.id"
         :name="selectedPriorityById?.name"

@@ -33,7 +33,7 @@ const links = [[
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar v-if="route.path !== '/administration/entities' && route.path !== '/administration/entityTypes'">
+      <UDashboardToolbar v-if="route.path === '/administration/incidentTypes' || route.path === '/administration/incidentPriorities' || route.path === '/administration/incidentStates'">
         <!-- NOTE: The `-mx-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
         <UNavigationMenu :items="links" highlight class="-mx-1 flex-1"/>
       </UDashboardToolbar>

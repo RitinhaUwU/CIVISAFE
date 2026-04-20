@@ -101,7 +101,6 @@ onMounted(fetchEntity)
                           <p class="text-xs text-gray-500">{{ state.hex_color }}</p>
                         </div>
                       </div>
-
                       <template #content>
                         <div class="p-3">
                           <UColorPicker v-model="state.hex_color" />

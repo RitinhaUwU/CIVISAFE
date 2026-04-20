@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import {useApiStore} from '@/stores/api'
-import type {TableColumn} from '@nuxt/ui'
-import {getPaginationRowModel} from '@tanstack/table-core'
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
+const toast = useToast()
 const api = useApiStore()
+
 const entities = ref<Entity[]>([])
 const loading = ref(false)
 const total = ref(0)
@@ -11,7 +13,7 @@ const total = ref(0)
 const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedEntityById = ref<Entity>(null)
+const selectedEntityById = ref<Entity | null>(null)
 
 type Entity = {
   id: number;
@@ -99,7 +101,11 @@ const fetch = async() => {
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar entidades: ", e)
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar entidades',
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
@@ -166,6 +172,7 @@ onMounted(fetch)
       </div>
 
       <EntitiesDeleteModal
+        v-if="selectedEntityById"
         v-model:open="deleteModalOpen"
         :id="selectedEntityById?.id"
         :name="selectedEntityById?.name"

@@ -14,7 +14,7 @@ class Incident extends Model
 
     public function incidentType(): BelongsTo
     {
-        return $this->belongsTo(IncidentType::class, 'incident_type_id', 'id');
+        return $this->belongsTo(IncidentType::class, 'incident_type_id')->withTrashed();
     }
 
     public function incidentState(): BelongsTo
@@ -47,7 +47,15 @@ class Incident extends Model
         return $this->hasMany(IncidentParty::class);
     }
 
-    protected $with = ['incidentType', 'incidentState', 'incidentPriority', 'user', 'resources', 'parentIncident', 'childrenIncidents'];
+    protected $with = [
+        'incidentType',
+        'incidentState',
+        'incidentPriority',
+        'user',
+        'resources',
+        'parentIncident',
+        'childrenIncidents'
+    ];
 
     protected function casts(): array
     {

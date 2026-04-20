@@ -50,8 +50,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
 
   } catch (e: any) {
-    console.log(e.response?.data)
-
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar entidade',

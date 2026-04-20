@@ -38,8 +38,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       description: ''
     })
   } catch (e: any) {
-    console.log(e.response?.data)
-
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar o tipo de entidade',

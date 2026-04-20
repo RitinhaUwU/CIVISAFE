@@ -62,8 +62,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       entity_type_id: null as number,
     })
   } catch (e: any) {
-    console.log(e.response?.data)
-    console.log('SUBMIT PAYLOAD:', event.data)
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar entidade',

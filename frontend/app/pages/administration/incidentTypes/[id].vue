@@ -13,15 +13,13 @@ const state = reactive({
   species: '',
   type: '',
   description: '',
-  is_active: '',
-  created_at: '',
-  updated_at: ''
+  is_active: ''
 })
 
 const toast = useToast()
 
 const fetchEntity = async () => {
-  const res = await api.getIncidentType(route.params.code)
+  const res = await api.getIncidentType(route.params.id)
 
   Object.assign(state, res.data.data)
 }
@@ -29,7 +27,7 @@ const fetchEntity = async () => {
 const handleSave = async () => {
   saving.value = true
   try {
-    await api.updateIncidentType(route.params.code, state)
+    await api.updateIncidentType(route.params.id, state)
 
     toast.add({
       title: 'Sucesso',

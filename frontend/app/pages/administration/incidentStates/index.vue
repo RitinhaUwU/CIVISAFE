@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { useApiStore } from '@/stores/api';
-import type { TableColumn } from '@nuxt/ui';
-import { getPaginationRowModel } from '@tanstack/table-core';
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
+const toast = useToast()
 const api = useApiStore()
+
 const states = ref<States[]>([])
 const loading = ref(false)
 const total = ref(0)
@@ -13,7 +15,7 @@ const statusFilter = ref('all')
 const terminatesFilter = ref('all')
 
 const deleteModalOpen = ref(false)
-const selectedStateById = ref<States>(null)
+const selectedStateById = ref<States | null>(null)
 
 type States = {
   id: number;
@@ -153,7 +155,11 @@ const fetch = async() => {
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar estados: ", e)
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar os estados das ocorrências',
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
@@ -198,24 +204,6 @@ onMounted(fetch)
             placeholder="Filter status"
             class="min-w-28"
           />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            " :content="{ align: 'end' }">
-          </UDropdownMenu>
           <USelect
             v-model="statusFilter"
             :items="[
@@ -227,24 +215,6 @@ onMounted(fetch)
             placeholder="Filter status"
             class="min-w-28"
           />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            " :content="{ align: 'end' }">
-          </UDropdownMenu>
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -280,6 +250,7 @@ onMounted(fetch)
       </div>
 
       <IncidentStatesDeleteModal
+        v-if="selectedStateById"
         v-model:open="deleteModalOpen"
         :id="selectedStateById?.id"
         :name="selectedStateById?.name"

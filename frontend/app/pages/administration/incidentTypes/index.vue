@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import {useApiStore} from "@/stores/api";
-import type {TableColumn} from "@nuxt/ui";
-import {getPaginationRowModel} from "@tanstack/table-core";
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
+const toast = useToast()
 const api = useApiStore()
-const categories = ref<Category[]>([])
+
+const incidentTypes = ref<IncidentTypes[]>([])
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedTypeByCode = ref<Category>(null)
+const selectedTypeById = ref<IncidentTypes>(null)
 
-type Category = {
+type IncidentTypes = {
+  id: number;
   code: number;
   species: string;
   type: string;
@@ -23,7 +26,7 @@ type Category = {
   updated_at: Date;
 }
 
-const columns: TableColumn<Category>[] = [
+const columns: TableColumn<IncidentTypes | null>[] = [
   {
     accessorKey: "code",
     header: "Código",
@@ -74,7 +77,7 @@ const columns: TableColumn<Category>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            navigateTo(`/administration/incidentTypes/${row.original.code}`)
+            navigateTo(`/administration/incidentTypes/${row.original.id}`)
           }
         }),
         h(UButton, {
@@ -82,7 +85,7 @@ const columns: TableColumn<Category>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            selectedTypeByCode.value = row.original
+            selectedTypeById.value = row.original
             deleteModalOpen.value = true
           }
         })
@@ -110,11 +113,15 @@ const fetch = async() => {
     }
     const res = await api.getIncidentTypes(params)
 
-    categories.value = res.data.data
+    incidentTypes.value = res.data.data
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar tipos de ocorrências: ", e)
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar os tipos de ocorrências',
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
@@ -138,7 +145,11 @@ onMounted(fetch)
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesAddModal @created="fetch" />
+        <UButton
+          icon="i-lucide-upload"
+          label="Carregar Estados"
+          color="primary"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -150,7 +161,7 @@ onMounted(fetch)
       </div>
       <div class="overflow-x-auto">
         <UTable
-          :data="categories"
+          :data="incidentTypes"
           :columns="columns"
           :loading="loading"
           v-model:pagination="pagination"
@@ -181,9 +192,10 @@ onMounted(fetch)
       </div>
 
       <IncidentTypesDeleteModal
+        v-if="selectedTypeById"
         v-model:open="deleteModalOpen"
-        :code="selectedTypeByCode?.code"
-        :type="selectedTypeByCode?.type"
+        :id="selectedTypeById?.id"
+        :type="selectedTypeById?.type"
         @deleted="fetch"
       />
     </template>
