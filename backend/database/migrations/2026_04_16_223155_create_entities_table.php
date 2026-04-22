@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->foreignId('entity_type_id')->constrained('entity_types');
             $table->string('phone_contact')->nullable();
             $table->string('email_contact')->nullable();
             $table->text('address')->nullable();

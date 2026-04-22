@@ -35,7 +35,7 @@ class IncidentResource extends JsonResource
 
             'user_id' => $this->user_id,
 
-            'category' => new CategoryResource($this->whenLoaded('category')),
+            'incidentType' => new IncidentTypeResource($this->whenLoaded('incidentType')),
             'incidentPriority' => new IncidentPriorityResource($this->whenLoaded('incidentPriority')),
             'incidentState' => new IncidentStateResource($this->whenLoaded('incidentState')),
             'parentIncident' => new IncidentResource($this->whenLoaded('parentIncident')),

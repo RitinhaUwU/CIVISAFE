@@ -12,6 +12,14 @@ class IncidentState extends Model
 
     public $timestamps = false;
 
+    protected $fillable = [
+        'name',
+        'description',
+        'hex_color',
+        'terminates_incident',
+        'is_active'
+    ];
+
     protected function casts(): array
     {
         return [

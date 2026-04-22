@@ -92,7 +92,6 @@ watch(() => props.coords, (newCoords) => {
                   v-model="form.geral.is_major"
                   label="Ocorrência Major"
                 />
-
                 <UForm class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
                   <div class="space-y-5">
                     <UFormField label="Nº Ocorrência:" name="num_ocorrencia">
@@ -149,7 +148,6 @@ watch(() => props.coords, (newCoords) => {
                       />
                     </UFormField>
                   </div>
-
                   <div class="space-y-5">
                     <div class="grid grid-cols-2 gap-4 items-end">
                       <UFormField label="Data Alerta:" name="data_inicio">
@@ -169,7 +167,6 @@ watch(() => props.coords, (newCoords) => {
                       <UInput v-model="form.geral.alert_source_contact" class="w-full" />
                     </UFormField>
                   </div>
-
                   <div class="space-y-5">
                     <UFormField label="Coordenadas:" name="coordenadas">
                       <UInput v-model="form.geral.coordinates" class="w-full" />
@@ -193,7 +190,6 @@ watch(() => props.coords, (newCoords) => {
                 </UForm>
               </div>
             </template>
-
             <template #posto>
               <div class="mt-4 space-y-6">
                 <UForm class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
@@ -230,14 +226,12 @@ watch(() => props.coords, (newCoords) => {
               </div>
             </template>
           </UTabs>
-
           <Map
             :center="[props.coords?.lat, props.coords?.lng]"
             :zoom="13"
             class="w-full h-[400px] rounded-lg"
             @map-click="coordinates => props.coords"
           />
-
         </div>
         <div class="flex justify-end gap-2 p-4 bg-white shrink-0">
           <UButton color="neutral" variant="ghost" @click="emit('update:modelValue', false)">

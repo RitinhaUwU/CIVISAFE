@@ -14,12 +14,13 @@ class EntityRequest extends FormRequest
             'name' => [$is_patch ? 'sometimes' : 'required'],
             'description' => ['sometimes', 'nullable'],
             'phone_contact' => ['sometimes', 'nullable'],
-            'email_contact' => ['sometimes', 'nullable'],
+            'email_contact' => ['sometimes', 'nullable', 'email', 'max:254'],
             'address' => ['sometimes', 'nullable'],
             'logo' => ['sometimes', 'nullable'],
             'poc_name' => ['sometimes', 'nullable'],
             'poc_phone' => ['sometimes', 'nullable'],
             'poc_email' => ['sometimes', 'nullable', 'email', 'max:254'],
+            'entity_type_id' => ['nullable', 'exists:entity_types,id'],
         ];
     }
 

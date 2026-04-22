@@ -2,28 +2,49 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EntityRequest;
+use App\Http\Requests\IncidentStatesRequest;
+use App\Http\Resources\EntityResource;
 use App\Http\Resources\IncidentStateResource;
+use App\Models\Entity;
+use App\Models\IncidentPriority;
 use App\Models\IncidentState;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentStateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return IncidentStateResource::collection(IncidentState::all());
+        $types = QueryBuilder::for(IncidentState::class)
+            ->allowedFilters(
+                AllowedFilter::callback('search', function (Builder $query, $value) {
+                    $query->where('name', 'ILIKE', "%{$value}%");
+                }),
+                AllowedFilter::callback('status', function (Builder $query, $value) {
+                    if ($value === 'all' || $value === null) {
+                        return;
+                    }
+                    $query->where('is_active', $value);
+                }),
+                AllowedFilter::callback('terminates', function (Builder $query, $value) {
+                    if ($value === 'all' || $value === null) {
+                        return;
+                    }
+                    $query->where('terminates_incident', $value);
+                }),
+            )
+            ->paginate($request->input('per_page', 10))
+            ->appends($request->query());
+
+        return IncidentStateResource::collection($types);
     }
 
-    public function store(Request $request)
+    public function store(IncidentStatesRequest $request)
     {
-        $data = $request->validate([
-            'name' => ['required'],
-            'description' => ['required'],
-            'rgb_color' => ['required'],
-            'terminates_incident' => ['boolean'],
-            'is_active' => ['boolean'],
-        ]);
-
-        return new IncidentStateResource(IncidentState::create($data));
+        return new IncidentStateResource(IncidentState::create($request->validated()));
     }
 
     public function show(IncidentState $incidentState)
@@ -31,17 +52,9 @@ class IncidentStateController extends Controller
         return new IncidentStateResource($incidentState);
     }
 
-    public function update(Request $request, IncidentState $incidentState)
+    public function update(IncidentStatesRequest $request, IncidentState $incidentState)
     {
-        $data = $request->validate([
-            'name' => ['required'],
-            'description' => ['required'],
-            'rgb_color' => ['required'],
-            'terminates_incident' => ['boolean'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $incidentState->update($data);
+        $incidentState->update($request->validated());
 
         return new IncidentStateResource($incidentState);
     }

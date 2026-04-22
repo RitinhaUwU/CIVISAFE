@@ -10,7 +10,7 @@ class IncidentRequest extends FormRequest
     {
         return [
             'identifier' => ['required'],
-            'category_code' => ['required', 'integer'],
+            'incident_type_id' => ['required', 'exists:incident_types,id'],
             'incident_state_id' => ['required', 'exists:incident_states'],
             'user_id' => ['required', 'exists:users'],
             'start_datetime' => ['required', 'date'],

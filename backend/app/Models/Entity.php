@@ -4,11 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Entity extends Model
 {
     use HasFactory, SoftDeletes;
+
+    public function entityType(): BelongsTo
+    {
+        return $this->belongsTo(EntityType::class);
+    }
 
     protected $fillable = [
         'name',
@@ -19,6 +25,7 @@ class Entity extends Model
         'logo',
         'poc_name',
         'poc_phone',
-        'poc_email'
+        'poc_email',
+        'entity_type_id',
     ];
 }

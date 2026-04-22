@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import type {NavigationMenuItem} from '@nuxt/ui'
 
+const route = useRoute()
 const links = [[
-  {
-    label: 'Entidades',
-    icon: 'i-lucide-building-2',
-    to: '/administration/entities'
-  },
   {
     label: 'Tipos',
     icon: 'i-lucide-book',
@@ -26,24 +22,25 @@ const links = [[
 </script>
 
 <template>
-  <UDashboardPanel id="settings" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel
+    id="settings"
+    :ui="{ body: 'w-full max-w-none px-0 lg:py-12' }"
+  >
     <template #header>
-      <UDashboardNavbar title="Settings">
+      <UDashboardNavbar title="Administração">
         <template #leading>
           <UDashboardSidebarCollapse/>
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <UDashboardToolbar v-if="route.path === '/administration/incidentTypes' || route.path === '/administration/incidentPriorities' || route.path === '/administration/incidentStates'">
         <!-- NOTE: The `-mx-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
         <UNavigationMenu :items="links" highlight class="-mx-1 flex-1"/>
       </UDashboardToolbar>
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 w-full mx-auto">
-        <NuxtPage/>
-      </div>
+      <NuxtPage/>
     </template>
   </UDashboardPanel>
 </template>
