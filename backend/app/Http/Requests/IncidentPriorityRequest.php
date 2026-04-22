@@ -11,7 +11,7 @@ class IncidentPriorityRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'name' => [$is_patch ? 'sometimes' : 'required'],
+            'name' => [$is_patch ? 'sometimes' : 'required', 'unique:incident_priorities,name'],
             'description' => [$is_patch ? 'sometimes' : 'required'],
             'hex_color' => [$is_patch ? 'sometimes' : 'required'],
             'is_active' => [$is_patch ? 'sometimes' : 'required', 'boolean'],

@@ -4,6 +4,12 @@ import axios from 'axios'
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
 
+  interface QueryParams {
+    page?: number
+    per_page?: number
+    search?: string
+  }
+
   const setBearerToken = (token: string) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
   }
@@ -37,24 +43,24 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentTypes = (params?: { page?: number; per_page?: number }) => {
+  const getIncidentTypes = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/incidentTypes`, { params })
   }
 
-  const getIncidentType = (code, params) => {
-    return axios.get(`${config.public.apiBase}/incidentTypes/${code}`, params)
+  const getIncidentType = (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/incidentTypes/${id}`, params)
   }
 
   const createIncidentType = (params) => {
     return axios.post(`${config.public.apiBase}/incidentTypes`, params)
   }
 
-  const updateIncidentType = (code, params) => {
-    return axios.put(`${config.public.apiBase}/incidentTypes/${code}`, params)
+  const updateIncidentType = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/incidentTypes/${id}`, params)
   }
 
-  const deleteIncidentType = (code) => {
-    return axios.delete(`${config.public.apiBase}/incidentTypes/${code}`)
+  const deleteIncidentType = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/incidentTypes/${id}`)
   }
 
   /*************************
@@ -63,11 +69,11 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getEntities = (params?: { page?: number; per_page?: number }) => {
+  const getEntities = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/entities`, { params })
   }
 
-  const getEntity = async (id, params) => {
+  const getEntity = async (id: number, params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/entities/${id}`, params)
   }
 
@@ -75,12 +81,38 @@ export const useApiStore = defineStore('api', () => {
     return axios.post(`${config.public.apiBase}/entities`, params)
   }
 
-  const updateEntity = (id, params) => {
+  const updateEntity = (id: number, params) => {
     return axios.put(`${config.public.apiBase}/entities/${id}`, params)
   }
 
-  const deleteEntity = (id) => {
+  const deleteEntity = (id: number) => {
     return axios.delete(`${config.public.apiBase}/entities/${id}`)
+  }
+
+  /*************************
+   *
+   *  Entities
+   *
+   *************************/
+
+  const getEntityTypes = (params?: any) => {
+    return axios.get(`${config.public.apiBase}/entityTypes`, { params })
+  }
+
+  const getEntityType = async (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/entityTypes/${id}`, params)
+  }
+
+  const createEntityType = async (params) => {
+    return axios.post(`${config.public.apiBase}/entityTypes`, params)
+  }
+
+  const updateEntityType = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, params)
+  }
+
+  const deleteEntityType = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/entityTypes/${id}`)
   }
 
   /*************************
@@ -89,8 +121,12 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidents = (params?: { page?: number; per_page?: number }) => {
+  const getIncidents = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/incidents`, { params })
+  }
+
+  const getIncident = async (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/incidents/${id}`, params)
   }
 
   /*************************
@@ -99,11 +135,11 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentStates = (params?: { page?: number; per_page?: number }) => {
+  const getIncidentStates = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/incidentStates`, { params })
   }
 
-  const getIncidentState = async (id, params) => {
+  const getIncidentState = async (id: number, params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/incidentStates/${id}`, params)
   }
 
@@ -111,11 +147,11 @@ export const useApiStore = defineStore('api', () => {
     return axios.post(`${config.public.apiBase}/incidentStates`, params)
   }
 
-  const updateIncidentState = (id, params) => {
+  const updateIncidentState = (id: number, params) => {
     return axios.put(`${config.public.apiBase}/incidentStates/${id}`, params)
   }
 
-  const deleteIncidentState = (id) => {
+  const deleteIncidentState = (id: number) => {
     return axios.delete(`${config.public.apiBase}/incidentStates/${id}`)
   }
 
@@ -125,8 +161,24 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentPriorities = (params?: { page?: number; per_page?: number }) => {
+  const getIncidentPriorities = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/incidentPriorities`, { params })
+  }
+
+  const getIncidentPriority = async (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/incidentPriorities/${id}`, params)
+  }
+
+  const createIncidentPriority = async (params) => {
+    return axios.post(`${config.public.apiBase}/incidentPriorities`, params)
+  }
+
+  const updateIncidentPriority = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, params)
+  }
+
+  const deleteIncidentPriority = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/incidentPriorities/${id}`)
   }
 
   return {
@@ -145,12 +197,22 @@ export const useApiStore = defineStore('api', () => {
     updateEntity,
     deleteEntity,
     createEntity,
+    getEntityTypes,
+    getEntityType,
+    updateEntityType,
+    deleteEntityType,
+    createEntityType,
     getIncidents,
+    getIncident,
     getIncidentStates,
     getIncidentState,
     updateIncidentState,
     deleteIncidentState,
     createIncidentState,
-    getIncidentPriorities
+    getIncidentPriorities,
+    getIncidentPriority,
+    updateIncidentPriority,
+    deleteIncidentPriority,
+    createIncidentPriority
   }
 })

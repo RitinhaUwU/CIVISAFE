@@ -4,7 +4,7 @@ import { useApiStore } from "@/stores/api"
 const api = useApiStore()
 const toast = useToast()
 const props = defineProps<{
-  code: number
+  id: number
   type: string
   open: boolean
 }>()
@@ -12,10 +12,10 @@ const props = defineProps<{
 const emit = defineEmits(['update:open', 'deleted'])
 
 const onSubmit = async () => {
-  if (!props.code) return
+  if (!props.id) return
 
   try {
-    await api.deleteIncidentType(props.code)
+    await api.deleteIncidentType(props.id)
 
     toast.add({
       title: 'Eliminado com sucesso',

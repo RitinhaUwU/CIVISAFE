@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             IncidentTypesSeeder::class,
             IncidentStateSeeder::class,
             IncidentPrioritySeeder::class,
+            EntityTypesSeeder::class,
         ]);
 
         User::factory()->create([

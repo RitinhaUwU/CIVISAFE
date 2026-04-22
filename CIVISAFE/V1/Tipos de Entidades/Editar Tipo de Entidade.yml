@@ -1,0 +1,22 @@
+info:
+  name: Editar Tipo de Entidade
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/entityTypes/1"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "PSP",
+        "description": "Polícia de Segurança Publica"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

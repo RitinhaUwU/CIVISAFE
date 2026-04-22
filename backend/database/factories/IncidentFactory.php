@@ -41,7 +41,7 @@ class IncidentFactory extends Factory
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 
-            'incident_type_code' => IncidentType::inRandomOrder()->first()->code,
+            'incident_type_id' => IncidentType::inRandomOrder()->first()->id,
             'incident_state_id' => IncidentState::inRandomOrder()->first()->id,
             'user_id' => User::inRandomOrder()->first()->id,
             'incident_priority_id' => IncidentPriority::inRandomOrder()->first()->id,

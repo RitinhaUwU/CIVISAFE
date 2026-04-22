@@ -3,7 +3,7 @@
 "Alerta Prazo","","false","#eb144c"
 "Em Averiguação","","false","#ff6900"
 "Em Conclusão","","false","#fcb900"
-"Em Espera","","true","#f78da7"
+"Em Espera","","false","#f78da7"
 "Em Resolução","","false","#7bdcb5"
 "Em Tratamento","","false","#8ed1fc"
 "Meios a Caminho","","false","#3498db"

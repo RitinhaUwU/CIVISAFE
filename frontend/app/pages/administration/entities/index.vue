@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { useApiStore } from '@/stores/api';
-import type {TableColumn} from "@nuxt/ui";
-import {getPaginationRowModel} from "@tanstack/table-core";
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
-const api = useApiStore();
-const entities = ref<Entity[]>([]);
-const loading = ref(false);
-const total = ref(0);
+const toast = useToast()
+const api = useApiStore()
+
+const entities = ref<Entity[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedEntityById = ref<Entity>(null)
+const selectedEntityById = ref<Entity | null>(null)
 
 type Entity = {
   id: number;
@@ -24,9 +28,13 @@ type Entity = {
   poc_email: string;
   created_at: Date;
   updated_at: Date;
-};
+}
 
 const columns: TableColumn<Entity>[] = [
+  {
+    accessorKey: "entityType.name",
+    header: "Tipo",
+  },
   {
     accessorKey: "name",
     header: "Nome",
@@ -34,14 +42,6 @@ const columns: TableColumn<Entity>[] = [
   {
     accessorKey: "phone_contact",
     header: "Telefone",
-  },
-  {
-    accessorKey: "poc_name",
-    header: "Nome do Responsável",
-  },
-  {
-    accessorKey: "poc_phone",
-    header: "Telefone Responsável",
   },
   {
     accessorKey: "updated_at",
@@ -76,34 +76,49 @@ const columns: TableColumn<Entity>[] = [
       )
     }
   }
-];
+]
 
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10,
-});
+})
 
 const fetch = async() => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await api.getEntities({
+    const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
-    });
-    entities.value = res.data.data;
-    total.value = res.data.meta.total;
+    }
+    if (search.value) {
+      params.filter = {
+        search: search.value
+      }
+    }
+    const res = await api.getEntities(params)
 
-    pagination.value.pageSize = res.data.meta.per_page;
+    entities.value = res.data.data
+    total.value = res.data.meta.total
+    pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar entidades: ", e);
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar entidades',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-watch(pagination, fetch, {deep: true});
+watch(pagination, fetch, {deep: true})
 
-onMounted(fetch);
+watch(search, () => {
+  pagination.value.pageIndex = 0
+  fetch()
+})
+
+onMounted(fetch)
 </script>
 
 <template>
@@ -116,7 +131,14 @@ onMounted(fetch);
         </div>
         <EntitiesAddModal @created="fetch" />
       </div>
-
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <UInput
+          v-model="search"
+          class="max-w-sm"
+          icon="i-lucide-search"
+          placeholder="Filtrar entidades..."
+        />
+      </div>
       <div class="overflow-x-auto">
         <UTable
           :data="entities"
@@ -150,6 +172,7 @@ onMounted(fetch);
       </div>
 
       <EntitiesDeleteModal
+        v-if="selectedEntityById"
         v-model:open="deleteModalOpen"
         :id="selectedEntityById?.id"
         :name="selectedEntityById?.name"

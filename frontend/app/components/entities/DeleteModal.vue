@@ -15,7 +15,7 @@ const onSubmit = async () => {
   if (!props.id) return
 
   try {
-    await api.deleteIncidentState(props.id)
+    await api.deleteEntity(props.id)
 
     toast.add({
       title: 'Eliminado com sucesso',

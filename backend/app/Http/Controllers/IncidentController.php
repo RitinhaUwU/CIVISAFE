@@ -5,17 +5,39 @@ namespace App\Http\Controllers;
 use App\Http\Requests\IncidentRequest;
 use App\Http\Resources\IncidentResource;
 use App\Models\Incident;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return IncidentResource::collection(Incident::with([
-            'category',
-            'incidentState',
-            'incidentPriority',
-            'parentIncident',
-        ])->paginate(15));
+        $incidents = QueryBuilder::for(Incident::class)
+            ->with([
+                'incidentType',
+                'incidentState',
+                'incidentPriority',
+                'parentIncident',
+            ])
+            ->allowedFilters(
+                AllowedFilter::callback('search', function (Builder $query, $value) {
+                    $query->where('identifier', 'ILIKE', "%{$value}%");
+                }),
+                AllowedFilter::callback('state', function (Builder $query, $value) {
+                    if ($value === 'all' || !$value) return;
+                    $query->where('incident_state_id', $value);
+                }),
+                AllowedFilter::callback('priority', function (Builder $query, $value) {
+                    if ($value === 'all' || !$value) return;
+                    $query->where('incident_priority_id', $value);
+                })
+            )
+            ->paginate($request->input('per_page', 15))
+            ->appends($request->query());
+
+        return IncidentResource::collection($incidents);
     }
 
     public function store(IncidentRequest $request)
@@ -26,7 +48,7 @@ class IncidentController extends Controller
     public function show(Incident $incident)
     {
         return new IncidentResource($incident->load([
-            'category',
+            'incidentType',
             'incidentState',
             'incidentPriority',
             'resources',

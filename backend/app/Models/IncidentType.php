@@ -8,11 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class IncidentType extends Model
 {
-    use HasFactory;
-
-    protected $primaryKey = 'code';
-    public $incrementing = false;
-    protected $keyType = 'int';
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'code',

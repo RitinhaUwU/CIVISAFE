@@ -5,12 +5,12 @@ info:
 
 http:
   method: PATCH
-  url: "{{BASE_URL}}/api/v1/entities/11"
+  url: "{{BASE_URL}}/api/v1/entities/6"
   body:
     type: json
     data: |-
       {
-        "poc_name": "Sr. Guarda"
+        "entity_type_id": "1"
       }
   auth: inherit
 

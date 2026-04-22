@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import {useApiStore} from "@/stores/api";
-import type {TableColumn} from "@nuxt/ui";
-import {getPaginationRowModel} from "@tanstack/table-core";
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
-const api = useApiStore();
-const categories = ref<Category[]>([]);
-const loading = ref(false);
-const total = ref(0);
+const toast = useToast()
+const api = useApiStore()
+
+const incidentTypes = ref<IncidentTypes[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedTypeByCode = ref<Category>(null)
+const selectedTypeById = ref<IncidentTypes>(null)
 
-type Category = {
+type IncidentTypes = {
+  id: number;
   code: number;
   species: string;
   type: string;
@@ -19,9 +24,9 @@ type Category = {
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
-};
+}
 
-const columns: TableColumn<Category>[] = [
+const columns: TableColumn<IncidentTypes | null>[] = [
   {
     accessorKey: "code",
     header: "Código",
@@ -72,7 +77,7 @@ const columns: TableColumn<Category>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            navigateTo(`/administration/incidentTypes/${row.original.code}`)
+            navigateTo(`/administration/incidentTypes/${row.original.id}`)
           }
         }),
         h(UButton, {
@@ -80,41 +85,56 @@ const columns: TableColumn<Category>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            selectedTypeByCode.value = row.original
+            selectedTypeById.value = row.original
             deleteModalOpen.value = true
           }
         })
       )
     }
   }
-];
+]
 
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10,
-});
+})
 
 const fetch = async() => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await api.getIncidentTypes({
+    const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
-    });
-    categories.value = res.data.data;
-    total.value = res.data.meta.total;
+    }
+    if (search.value) {
+      params.filter = {
+        search: search.value
+      }
+    }
+    const res = await api.getIncidentTypes(params)
 
-    pagination.value.pageSize = res.data.meta.per_page;
+    incidentTypes.value = res.data.data
+    total.value = res.data.meta.total
+    pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar tipos de ocorrências: ", e);
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar os tipos de ocorrências',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-watch(pagination, fetch, {deep: true});
+watch(pagination, fetch, {deep: true})
 
-onMounted(fetch);
+watch(search, () => {
+  pagination.value.pageIndex = 0
+  fetch()
+})
+
+onMounted(fetch)
 </script>
 
 <template>
@@ -125,12 +145,23 @@ onMounted(fetch);
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesAddModal @created="fetch" />
+        <UButton
+          icon="i-lucide-upload"
+          label="Carregar Estados"
+          color="primary"
+        />
       </div>
-
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <UInput
+          v-model="search"
+          class="max-w-sm"
+          icon="i-lucide-search"
+          placeholder="Filtrar tipos..."
+        />
+      </div>
       <div class="overflow-x-auto">
         <UTable
-          :data="categories"
+          :data="incidentTypes"
           :columns="columns"
           :loading="loading"
           v-model:pagination="pagination"
@@ -161,9 +192,10 @@ onMounted(fetch);
       </div>
 
       <IncidentTypesDeleteModal
+        v-if="selectedTypeById"
         v-model:open="deleteModalOpen"
-        :code="selectedTypeByCode?.code"
-        :type="selectedTypeByCode?.type"
+        :id="selectedTypeById?.id"
+        :type="selectedTypeById?.type"
         @deleted="fetch"
       />
     </template>

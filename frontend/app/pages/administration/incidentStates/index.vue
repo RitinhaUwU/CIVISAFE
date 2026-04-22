@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { useApiStore } from '@/stores/api';
-import type { TableColumn } from '@nuxt/ui';
-import { getPaginationRowModel } from '@tanstack/table-core';
+import { useApiStore } from '@/stores/api'
+import type { TableColumn } from '@nuxt/ui'
+import { getPaginationRowModel } from '@tanstack/table-core'
 
-const api = useApiStore();
-const states = ref<States[]>([]);
-const loading = ref(false);
-const total = ref(0);
+const toast = useToast()
+const api = useApiStore()
+
+const states = ref<States[]>([])
+const loading = ref(false)
+const total = ref(0)
+
+const search = ref('')
+const statusFilter = ref('all')
+const terminatesFilter = ref('all')
 
 const deleteModalOpen = ref(false)
-const selectedStateById = ref<States>(null)
+const selectedStateById = ref<States | null>(null)
 
 type States = {
   id: number;
@@ -18,7 +24,7 @@ type States = {
   hex_color: string;
   terminates_incident: boolean;
   is_active: boolean;
-};
+}
 
 const columns: TableColumn<States>[] = [
   {
@@ -117,29 +123,56 @@ const columns: TableColumn<States>[] = [
 const pagination = ref({
   pageIndex: 0,
   pageSize: 10,
-});
+})
 
 const fetch = async() => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await api.getIncidentStates({
+    const params: any = {
       page: pagination.value.pageIndex + 1,
       per_page: pagination.value.pageSize,
-    });
-    states.value = res.data.data;
-    total.value = res.data.meta.total;
+    };
+    if (search.value) {
+      params.filter = {
+        search: search.value
+      };
+    }
+    if (statusFilter.value !== 'all') {
+      params.filter = {
+        ...params.filter,
+        status: statusFilter.value === true ? 1 : 0
+      };
+    }
+    if (terminatesFilter.value !== 'all') {
+      params.filter = {
+        ...params.filter,
+        terminates: terminatesFilter.value === true ? 1 : 0
+      };
+    }
+    const res = await api.getIncidentStates(params)
 
-    pagination.value.pageSize = res.data.meta.per_page;
+    states.value = res.data.data
+    total.value = res.data.meta.total
+    pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar estados: ", e);
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao carregar os estados das ocorrências',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-watch(pagination, fetch, {deep: true});
+watch(pagination, fetch, {deep: true})
 
-onMounted(fetch);
+watch([search, statusFilter, terminatesFilter], () => {
+  pagination.value.pageIndex = 0
+  fetch()
+})
+
+onMounted(fetch)
 </script>
 
 <template>
@@ -152,7 +185,38 @@ onMounted(fetch);
         </div>
         <IncidentStatesAddModal @created="fetch" />
       </div>
-
+      <div class="flex flex-wrap items-center justify-between gap-1.5">
+        <UInput
+          v-model="search"
+          class="max-w-sm"
+          icon="i-lucide-search"
+          placeholder="Filtrar estados..."
+        />
+        <div class="flex flex-wrap items-center gap-1.5">
+          <USelect
+            v-model="terminatesFilter"
+            :items="[
+              { label: 'Ocorrência Terminada', value: 'all' },
+              { label: 'Sim', value: true },
+              { label: 'Não', value: false }
+            ]"
+            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+            placeholder="Filter status"
+            class="min-w-28"
+          />
+          <USelect
+            v-model="statusFilter"
+            :items="[
+              { label: 'Estado', value: 'all' },
+              { label: 'Ativo', value: true },
+              { label: 'Desativado', value: false }
+            ]"
+            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+            placeholder="Filter status"
+            class="min-w-28"
+          />
+        </div>
+      </div>
       <div class="overflow-x-auto">
         <UTable
           :data="states"
@@ -186,6 +250,7 @@ onMounted(fetch);
       </div>
 
       <IncidentStatesDeleteModal
+        v-if="selectedStateById"
         v-model:open="deleteModalOpen"
         :id="selectedStateById?.id"
         :name="selectedStateById?.name"
