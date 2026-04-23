@@ -1,7 +1,7 @@
 info:
-  name: Prioridades para Ocorrências
+  name: Utilizadores
   type: folder
-  seq: 5
+  seq: 8
 
 request:
   auth: inherit

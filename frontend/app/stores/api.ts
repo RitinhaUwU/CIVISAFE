@@ -36,6 +36,15 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/user`)
   }
 
+  /*************************
+   *
+   *  Users
+   *
+   *************************/
+
+  const getUsers = (params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/users`, { params })
+  }
 
   /*************************
    *
@@ -187,6 +196,7 @@ export const useApiStore = defineStore('api', () => {
     postLogin,
     postLogout,
     getAuthUser,
+    getUsers,
     getIncidentTypes,
     getIncidentType,
     updateIncidentType,
