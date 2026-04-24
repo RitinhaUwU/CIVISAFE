@@ -26,7 +26,6 @@ class IncidentPriorityController extends Controller
                     if ($value === 'all' || $value === null) {
                         return;
                     }
-
                     $query->where('is_active', $value);
                 }),
             )

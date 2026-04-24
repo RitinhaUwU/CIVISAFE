@@ -1,0 +1,31 @@
+info:
+  name: Editar Voluntário
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/volunteers/11"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "João Silva",
+        "contact": "912345678",
+        "email": "joao@example.com",
+        "classification": "org",
+        "num_elements": 8,
+        "mission": "Apoio logístico",
+        "team_identification": "Team A",
+        "start_datetime": "2026-04-20 10:00:00",
+        "has_accommodation": true,
+        "location": "Lisboa",
+        "incident_id": 1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

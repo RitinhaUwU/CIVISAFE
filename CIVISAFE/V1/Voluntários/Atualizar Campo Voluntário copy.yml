@@ -1,0 +1,25 @@
+info:
+  name: Atualizar Campo Voluntário copy
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/volunteers/11"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "João Silva",
+        "contact": "912345678",
+        "email": "joao@example.com",
+        "classification": "org",
+        "num_elements": 2
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

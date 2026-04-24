@@ -8,6 +8,7 @@ use App\Http\Controllers\IncidentPriorityController;
 use App\Http\Controllers\IncidentStateController;
 use App\Http\Controllers\IncidentTypeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VolunteerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,7 @@ Route::prefix('v1')->group(function () {
             return $request->user();
         });
 
+        Route::apiResource('/volunteers', VolunteerController::class);
         Route::apiResource('/entities', EntityController::class);
         Route::apiResource('/entityTypes', EntityTypesController::class);
         Route::apiResource('/incidentTypes', IncidentTypeController::class);

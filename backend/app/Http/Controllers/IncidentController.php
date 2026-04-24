@@ -34,7 +34,7 @@ class IncidentController extends Controller
                     $query->where('incident_priority_id', $value);
                 })
             )
-            ->paginate($request->input('per_page', 15))
+            ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 
         return IncidentResource::collection($incidents);

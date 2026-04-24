@@ -89,6 +89,9 @@ const links = [[{
         to: '/administration/entityTypes'
       }
     ]
+  }, {
+    label: 'Voluntário',
+    to: '/volunteers'
   }]
 }]] satisfies NavigationMenuItem[][]
 

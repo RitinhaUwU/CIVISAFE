@@ -5,8 +5,7 @@ const api = useApiStore()
 const toast = useToast()
 const props = defineProps<{
   id: number
-  name: string
-  description: string
+  team_identification: string
   open: boolean
 }>()
 
@@ -16,32 +15,34 @@ const onSubmit = async () => {
   if (!props.id) return
 
   try {
-    await api.deleteIncidentPriority(props.id)
+    await api.deleteVolunteer(props.id)
 
     toast.add({
-      title: 'Eliminado com sucesso',
-      description: `O Estado foi eliminado.`,
+      title: 'Voluntário eliminado',
+      description: `${props.team_identification} foi removido com sucesso.`,
       color: 'success'
     })
 
     emit('deleted')
     emit('update:open', false)
 
-  } catch (e: any) {
+  } catch (e) {
     toast.add({
       title: 'Erro',
-      description: 'Não foi possível eliminar o registo de Estado.',
+      description: 'Não foi possível eliminar o voluntário.',
       color: 'error'
     })
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <template>
   <UModal
-    v-model:open="props.open"
-    :title="`Eliminar tipo de Estado: ${props.name} - ${props.description}`"
-    :description="`Tem certeza que deseja eliminar este tipo de estado '${props.name} - ${props.description}'?`"
+    :open="props.open"
+    :title="`Eliminar Voluntário: ${props.team_identification}`"
+    :description="`Tens a certeza que queres eliminar o voluntário '${props.team_identification}'?`"
     :ui="{ close: 'hidden' }"
   >
     <template #body>
