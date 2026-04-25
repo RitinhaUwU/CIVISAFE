@@ -9,6 +9,7 @@ use App\Http\Controllers\IncidentStateController;
 use App\Http\Controllers\IncidentTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,7 +23,7 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('/users', UserController::class);
         Route::get('/user', function (Request $request) {
-            return $request->user();
+            return new UserResource($request->user()->load('roles'));
         });
 
         Route::apiResource('/volunteers', VolunteerController::class);

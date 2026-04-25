@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       apiStore.setBearerToken(token.value)
       const res = await apiStore.getAuthUser()
-      currentUser.value = res.data
+      currentUser.value = res.data.data
       return true
     } catch (err) {
       reset()
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const getUser = async () => {
     const res = await apiStore.getAuthUser()
-    currentUser.value = res.data
+    currentUser.value = res.data.data
     return currentUser.value
   }
 
