@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/table-core'
+import { useAuthStore } from '@/stores/auth'
+import { useApiStore } from '@/stores/api'
 
 const api = useApiStore()
+const auth = useAuthStore()
 const users = ref<User[]>([])
 const loading = ref(false)
 const total = ref(0)
@@ -13,16 +15,22 @@ const search = ref('')
 const deleteModalOpen = ref(false)
 const selectedUserById = ref<User | null>(null)
 
+const roleLabels = {
+  admin: 'Administrador',
+  manager: 'Gestor',
+  user: 'Utilizador',
+}
+
 type User = {
   id: number;
   name: string;
   email: string;
-  password: string;
   mobile: string;
   locked: boolean;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date;
+  roles: string[];
 }
 
 const columns: TableColumn<User>[] = [
@@ -32,45 +40,62 @@ const columns: TableColumn<User>[] = [
   },
   {
     accessorKey: "name",
-    header: "Nome",
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
+    header: "Responsável",
+    cell: ({ row }) => {
+      return h('div', { class: 'flex flex-col' }, [
+        h('span', { class: 'font-medium text-highlighted' }, row.original.name),
+        h('span', { class: 'text-xs text-muted' }, row.original.email),
+      ])
+    }
   },
   {
     accessorKey: "mobile",
     header: "Contacto",
   },
   {
-    accessorKey: "locked",
-    header: () => h('div', { class: 'text-center w-full' }, 'Estado'),
+    accessorKey: "roles",
+    header: () => h('div', { class: 'text-center w-full' }, 'Função'),
     cell: ({ row }) => {
-      const value = row.original.locked
+      const roles = row.original.roles || []
+      return h('div', { class: 'flex gap-2 justify-center' },
+        roles.map(role => {
+          const label = roleLabels[role] || role
+          let color = 'neutral'
+          if (role === 'admin') color = 'error'
+          if (role === 'manager') color = 'warning'
+          if (role === 'user') color = 'success'
 
-      const color = value ? 'success' : 'error'
-      const label = value ? 'Ativado' : 'Desativado'
-
-      return h('div', { class: 'flex justify-center' },
-        h(UButton, {
-          color,
-          onClick: () => { toggleUserLock(row.original) }
-        }, () => label)
+          return h(UBadge, {class: 'capitalize rounded-full', variant: 'subtle', color}, () => label)
+        })
       )
     }
   },
   {
     id: 'actions',
     cell: ({ row }) => {
+      const isLocked  = row.original.locked
+      const label = isLocked ? 'Clique para ativar conta' : 'Clique para desativar conta'
+      const icon = isLocked ? 'i-lucide-lock-keyhole-open' : 'i-lucide-lock-keyhole'
       return h(
         'div',
         { class: 'text-right' },
+        h(UTooltip, {
+          text: row.original.id === auth.currentUserID ? 'Não podes alterar a tua própria conta' : label
+          },
+          h(UButton, {
+            icon,
+            variant: 'ghost',
+            color: 'primary',
+            onClick: () => patchUser(row.original),
+            disabled: row.original.id === auth.currentUserID,
+          })
+        ),
         h(UButton, {
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            //navigateTo(`/costumers/${row.original.id}`)
+            navigateTo(`/customers/${row.original.id}`)
           }
         }),
         h(UButton, {
@@ -78,9 +103,8 @@ const columns: TableColumn<User>[] = [
           color: 'error',
           variant: 'ghost',
           onClick: () => {
-            //?????????????????????????????????????????????
-            //selectedIncidentById.value = row.original
-            //deleteModalOpen.value = true
+            selectedUserById.value = row.original
+            deleteModalOpen.value = true
           }
         })
       )
@@ -92,15 +116,6 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
-
-/*const toggleUserLock = async (user: User) => {
-  try {
-    await api.userUpdate(user.id)
-    fetch()
-  } catch (e) {
-    console.error(e)
-  }
-}*/
 
 const fetch = async() => {
   loading.value = true
@@ -124,6 +139,17 @@ const fetch = async() => {
   }
 }
 
+const patchUser = async (user: User) => {
+  try {
+    await api.patchUser(user.id, {
+      locked: !user.locked
+    })
+    await fetch()
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 watch(pagination, fetch, {deep: true})
 
 watch(search, () => {
@@ -139,7 +165,10 @@ onMounted(fetch)
     <template #header>
       <UDashboardNavbar title="Utilizadores">
         <template #leading>
-          <UDashboardSidebarCollapse />
+          <UDashboardSidebarCollapse @created="fetch" />
+        </template>
+        <template #right>
+          <CustomersAddModal @created="fetch" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -184,14 +213,13 @@ onMounted(fetch)
         />
       </div>
 
-      <!-- ????????????????????????????????????????
-      <EntitiesDeleteModal
-        v-if="selectedEntityById"
+      <CustomersDeleteModal
+        v-if="selectedUserById"
         v-model:open="deleteModalOpen"
-        :id="selectedEntityById?.id"
-        :name="selectedEntityById?.name"
+        :id="selectedUserById?.id"
+        :name="selectedUserById?.name"
         @deleted="fetch"
-      />-->
+      />
     </template>
   </UDashboardPanel>
 </template>

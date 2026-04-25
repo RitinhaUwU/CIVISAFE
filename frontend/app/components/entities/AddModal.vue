@@ -90,7 +90,6 @@ onMounted(() => {
       label="Nova Entidade"
       color="primary"
     />
-
     <template #body>
       <UForm
         :state="state"
@@ -135,20 +134,8 @@ onMounted(() => {
         </div>
 
         <div class="col-span-1 lg:col-span-2 flex justify-between gap-2">
-          <UButton
-            label="Cancelar"
-            color="neutral"
-            variant="subtle"
-            class="flex-1 justify-center"
-            @click="open = false"
-          />
-
-          <UButton
-            label="Guardar"
-            color="primary"
-            type="submit"
-            class="flex-1 justify-center"
-          />
+          <UButton label="Cancelar" color="neutral" variant="subtle" class="flex-1 justify-center" @click="open = false"/>
+          <UButton label="Guardar" color="primary" type="submit" class="flex-1 justify-center"/>
         </div>
       </UForm>
     </template>

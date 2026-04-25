@@ -11,6 +11,11 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open', 'deleted'])
 
+const openModel = computed({
+  get: () => props.open,
+  set: (value: boolean) => emit('update:open', value)
+})
+
 const onSubmit = async () => {
   if (!props.id) return
 
@@ -40,25 +45,15 @@ const onSubmit = async () => {
 
 <template>
   <UModal
-    :open="props.open"
+    :open="openModel"
     :title="`Eliminar Voluntário: ${props.team_identification}`"
     :description="`Tens a certeza que queres eliminar o voluntário '${props.team_identification}'?`"
     :ui="{ close: 'hidden' }"
   >
     <template #body>
       <div class="flex justify-end gap-2">
-        <UButton
-          label="Cancelar"
-          color="neutral"
-          variant="subtle"
-          @click="emit('update:open', false)"
-        />
-        <UButton
-          label="Eliminar"
-          color="error"
-          loading-auto
-          @click="onSubmit"
-        />
+        <UButton label="Cancelar" color="neutral" variant="subtle" @click="emit('update:open', false)" />
+        <UButton label="Eliminar" color="error" loading-auto @click="onSubmit" />
       </div>
     </template>
   </UModal>

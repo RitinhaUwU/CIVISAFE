@@ -6,6 +6,18 @@ info:
 http:
   method: POST
   url: "{{BASE_URL}}/api/v1/users"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Rute Marques Cardoso",
+        "email": "rute@example.com",
+        "password": "password",
+        "password_confirmation": "password",
+        "mobile": "925786321",
+        "locked": true,
+        "role": "admin"
+      }
   auth: inherit
 
 settings:

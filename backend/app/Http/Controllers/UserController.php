@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UserRequest;
+use App\Http\Requests\UserCreateRequest;
+use App\Http\Requests\UserUpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,16 +34,34 @@ class UserController extends Controller
         return UserResource::collection($types);
     }
 
-    public function store(UserRequest $request){
-        return new UserResource(User::create($request->validated()));
+    public function store(UserCreateRequest $request){
+        $data = $request->validated();
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => bcrypt($data['password']),
+            'mobile' => $data['mobile'],
+            'locked' => $data['locked'],
+        ]);
+
+        $user->assignRole($data['role']);
+
+        return new UserResource($user);
     }
 
     public function show(User $user){
         return new UserResource($user);
     }
 
-    public function update(UserRequest $request, User $user){
-        $user->update($request->validated());
+    public function update(UserUpdateRequest $request, User $user){
+        $data = $request->validated();
+
+        $user->update($data);
+
+        if (isset($data['role'])) {
+            $user->syncRoles([$data['role']]);
+        }
 
         return new UserResource($user->fresh());
     }

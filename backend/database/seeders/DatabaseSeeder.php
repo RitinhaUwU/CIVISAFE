@@ -36,14 +36,18 @@ class DatabaseSeeder extends Seeder
             EntityTypesSeeder::class,
         ]);
 
-        User::factory()->create([
+        $admin = User::factory()->create([
             'name' => 'Utilizador Administrador',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'locked' => false,
         ]);
+        $admin->assignRole(enum_value(RolesEnum::ADMIN));
 
-        User::factory(10)->create();
+        User::factory(10)->create()->each(function ($user) {
+            $role = Role::inRandomOrder()->first();
+            $user->assignRole($role->name);
+        });
         Entity::factory(10)->create();
         Incident::factory(60)->create();
         Volunteer::factory(10)->create();

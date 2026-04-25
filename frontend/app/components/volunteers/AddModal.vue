@@ -97,7 +97,7 @@ onMounted(() => {
   <UModal v-model:open="open" title="Novo Voluntário" description="Criar Voluntário">
     <UButton icon="i-lucide-plus" label="Novo Voluntário" color="primary"/>
     <template #body>
-      <UForm :state="state" class="space-y-4" @submit="onSubmit">
+      <UForm :state="state" :schema="schema" class="space-y-4" @submit="onSubmit">
         <h3 class="text-sm font-semibold text-muted">Dados do responsável</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <UFormField label="Nome" name="name">

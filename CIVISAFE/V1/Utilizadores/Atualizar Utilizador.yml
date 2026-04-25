@@ -5,7 +5,13 @@ info:
 
 http:
   method: PATCH
-  url: "{{BASE_URL}}/api/v1/users/3"
+  url: "{{BASE_URL}}/api/v1/users/12"
+  body:
+    type: json
+    data: |-
+      {
+        "locked": false
+      }
   auth: inherit
 
 settings:

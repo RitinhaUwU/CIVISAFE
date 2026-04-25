@@ -46,6 +46,26 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/users`, { params })
   }
 
+  const getUser = (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/users/${id}`, params)
+  }
+
+  const createUser = (params) => {
+    return axios.post(`${config.public.apiBase}/users`, params)
+  }
+
+  const updateUser = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/users/${id}`, params)
+  }
+
+  const patchUser = (id: number, params: any) => {
+    return axios.patch(`${config.public.apiBase}/users/${id}`, params)
+  }
+
+  const deleteUser = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/users/${id}`)
+  }
+
   /*************************
    *
    *  Categories
@@ -223,6 +243,11 @@ export const useApiStore = defineStore('api', () => {
     postLogout,
     getAuthUser,
     getUsers,
+    getUser,
+    patchUser,
+    updateUser,
+    deleteUser,
+    createUser,
     getIncidentTypes,
     getIncidentType,
     updateIncidentType,
