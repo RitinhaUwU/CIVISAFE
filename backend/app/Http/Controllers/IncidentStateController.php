@@ -16,6 +16,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentStateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:INCIDENT_STATES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:INCIDENT_STATES_CREATE')->only(['store']);
+        $this->middleware('permission:INCIDENT_STATES_UPDATE')->only(['update']);
+        $this->middleware('permission:INCIDENT_STATES_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $types = QueryBuilder::for(IncidentState::class)

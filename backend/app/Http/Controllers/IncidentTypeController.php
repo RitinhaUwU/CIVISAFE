@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:INCIDENT_TYPES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:INCIDENT_TYPES_CREATE')->only(['store']);
+        $this->middleware('permission:INCIDENT_TYPES_UPDATE')->only(['update']);
+        $this->middleware('permission:INCIDENT_TYPES_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $request->validate([

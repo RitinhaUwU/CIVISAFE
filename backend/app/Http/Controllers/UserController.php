@@ -13,6 +13,16 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends Controller
 {
+    // https://spatie.be/docs/laravel-permission/v7/basic-usage/middleware
+    public function __construct()
+    {
+        $this->middleware('permission:USERS_VIEW_ANY')->only(['index']);
+        $this->middleware('permission:USERS_VIEW_OWN')->only(['show']);
+        $this->middleware('permission:USERS_CREATE')->only(['store']);
+        $this->middleware('permission:USERS_UPDATE_ANY|USERS_UPDATE_OWN')->only(['update']);
+        $this->middleware('permission:USERS_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $request->validate([
@@ -51,10 +61,22 @@ class UserController extends Controller
     }
 
     public function show(User $user){
+        if (auth()->id() === $user->id) {
+            abort_if(!auth()->user()->can('USERS_VIEW_OWN'), 403, 'User does not have the right permissions.');
+        } else {
+            abort_if(!auth()->user()->can('USERS_VIEW_ANY'), 403, 'User does not have the right permissions.');
+        }
+
         return new UserResource($user);
     }
 
     public function update(UserUpdateRequest $request, User $user){
+        if (auth()->id() === $user->id) {
+            abort_if(!auth()->user()->can('USERS_UPDATE_OWN'), 403, 'User does not have the right permissions.');
+        } else {
+            abort_if(!auth()->user()->can('USERS_UPDATE_ANY'), 403, 'User does not have the right permissions.');
+        }
+
         $data = $request->validated();
 
         $user->update($data);

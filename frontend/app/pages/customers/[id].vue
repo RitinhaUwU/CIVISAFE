@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { useApiStore } from '@/stores/api'
+import { useApiStore } from '../../stores/api'
+import {useAuthStore} from '../../stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const api = useApiStore()
 const toast = useToast()
 
@@ -14,13 +16,29 @@ const state = reactive({
   email: '',
   mobile: '',
   locked: false,
-  role: 'user'
+  role: 'user',
+  password: '',
+  password_confirmation: ''
 })
 
 const handleSave = async () => {
+  if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
   saving.value = true
   try {
-    await api.updateUser(route.params.id, state)
+    const payload: any = {
+      name: state.name,
+      email: state.email,
+      mobile: state.mobile,
+      locked: state.locked,
+      role: state.role,
+    }
+
+    if (state.password) {
+      payload.password = state.password
+      payload.password_confirmation = state.password_confirmation
+    }
+
+    await api.updateUser(route.params.id, payload)
 
     toast.add({
       title: 'Sucesso',
@@ -51,7 +69,9 @@ const fetchUser = async () => {
     email: data.email,
     mobile: data.mobile,
     locked: data.locked,
-    role: data.roles?.[0]
+    role: data.roles?.[0],
+    password: '',
+    password_confirmation: ''
   })
 }
 
@@ -112,6 +132,17 @@ onMounted(async () => {
               ]"
               class="w-full"
             />
+          </UFormField>
+        </div>
+      </section>
+      <section class="space-y-3">
+        <h2 class="font-bold">Alterar Palavra-Passe</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <UFormField label="Nova Palavra-Passe">
+            <UInput v-model="state.password" type="password" class="w-full" />
+          </UFormField>
+          <UFormField label="Confirmar Palavra-Passe">
+            <UInput v-model="state.password_confirmation" type="password" class="w-full" />
           </UFormField>
         </div>
       </section>

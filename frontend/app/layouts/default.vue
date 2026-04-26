@@ -1,99 +1,98 @@
 <script setup lang="ts">
 import type {NavigationMenuItem} from '@nuxt/ui'
+import { useAuthStore } from '../stores/auth'
 
+const auth = useAuthStore()
 const open = ref(false)
 
-const links = [[{
-  label: 'Início',
-  icon: 'i-lucide-house',
-  to: '/inicio',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Utilizadores',
-  icon: 'i-lucide-user',
-  to: '/customers',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Ocorrências',
-  icon: 'i-lucide-flame',
-  to: '/ocorrencias',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Definições',
-  to: '/settings',
-  icon: 'i-lucide-settings',
-  type: 'trigger',
-  children: [{
-    label: 'General',
-    to: '/settings',
-    exact: true,
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Members',
-    to: '/settings/members',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Notifications',
-    to: '/settings/notifications',
-    onSelect: () => {
-      open.value = false
-    }
-  }, {
-    label: 'Security',
-    to: '/settings/security',
-    onSelect: () => {
-      open.value = false
-    }
-  }]
-}, {
-  label: 'Administração',
-  icon: 'i-lucide-wrench',
-  type: 'trigger',
-  children: [{
-    label: 'Ocorrências',
-    children: [
-      {
-        label: 'Tipos',
-        to: '/administration/incidentTypes',
-        exact: true
-      },
-      {
-        label: 'Prioridades',
-        to: '/administration/incidentPriorities'
-      },
-      {
-        label: 'Estados',
-        to: '/administration/incidentStates'
-      }
-    ]
-  }, {
-    label: 'Entidades',
-    children: [
-      {
+const links = [
+  [
+    {
+      label: 'Início',
+      icon: 'i-lucide-house',
+      to: '/inicio', onSelect: () => { open.value = false }
+    },
+    auth.hasPermission('USERS_VIEW_ANY') && {
+      label: 'Utilizadores',
+      icon: 'i-lucide-user',
+      to: '/customers',
+      onSelect: () => (open.value = false)
+    },
+    auth.hasPermission('INCIDENTS_LIST') && {
+      label: 'Ocorrências',
+      icon: 'i-lucide-flame',
+      to: '/ocorrencias',
+      onSelect: () => (open.value = false)
+    }, {
+      label: 'Definições',
+      to: '/settings',
+      icon: 'i-lucide-settings',
+      type: 'trigger',
+      children: [{
+        label: 'General',
+        to: '/settings',
+        exact: true,
+        onSelect: () => {
+          open.value = false
+        }
+      }, {
+        label: 'Members',
+        to: '/settings/members',
+        onSelect: () => {
+          open.value = false
+        }
+      }, {
+        label: 'Notifications',
+        to: '/settings/notifications',
+        onSelect: () => {
+          open.value = false
+        }
+      }, {
+        label: 'Security',
+        to: '/settings/security',
+        onSelect: () => { open.value = false }
+      }]
+    }, {
+      label: 'Administração',
+      icon: 'i-lucide-wrench',
+      type: 'trigger',
+      children: [{
+        label: 'Ocorrências',
+        children: [
+          {
+            label: 'Tipos',
+            to: '/administration/incidentTypes',
+            exact: true
+          },
+          {
+            label: 'Prioridades',
+            to: '/administration/incidentPriorities'
+          },
+          {
+            label: 'Estados',
+            to: '/administration/incidentStates'
+          }
+        ]
+      }, {
         label: 'Entidades',
-        to: '/administration/entities',
-        exact: true
-      },
-      {
-        label: 'Tipos de Entidades',
-        to: '/administration/entityTypes'
-      }
-    ]
-  }, {
-    label: 'Voluntário',
-    to: '/volunteers'
-  }]
-}]] satisfies NavigationMenuItem[][]
+        children: [
+          {
+            label: 'Entidades',
+            to: '/administration/entities',
+            exact: true
+          },
+          {
+            label: 'Tipos de Entidades',
+            to: '/administration/entityTypes'
+          }
+        ]
+      }, {
+        label: 'Voluntário',
+        to: '/volunteers'
+      }]
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
   id: 'links',

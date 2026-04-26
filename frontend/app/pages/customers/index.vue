@@ -73,32 +73,27 @@ const columns: TableColumn<User>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
-      const isLocked  = row.original.locked
-      const label = isLocked ? 'Clique para ativar conta' : 'Clique para desativar conta'
-      const icon = isLocked ? 'i-lucide-lock-keyhole-open' : 'i-lucide-lock-keyhole'
-      return h(
-        'div',
-        { class: 'text-right' },
-        h(UTooltip, {
-          text: row.original.id === auth.currentUserID ? 'Não podes alterar a tua própria conta' : label
-          },
-          h(UButton, {
-            icon,
-            variant: 'ghost',
-            color: 'primary',
-            onClick: () => patchUser(row.original),
-            disabled: row.original.id === auth.currentUserID,
-          })
+      const isLocked = row.original.locked
+      return h('div', { class: 'text-right flex gap-1 justify-end' }, [
+        (auth.hasPermission('USERS_UPDATE_ANY') || auth.hasPermission('USERS_UPDATE_OWN')) && h(
+          UTooltip,
+          { text: row.original.id === auth.currentUserID ? 'Não podes alterar a tua própria conta' : (isLocked ? 'Clique para ativar conta' : 'Clique para desativar conta') },
+          { default: () => h(UButton, {
+              icon: isLocked ? 'i-lucide-lock-keyhole-open' : 'i-lucide-lock-keyhole',
+              variant: 'ghost',
+              color: 'primary',
+              onClick: () => patchUser(row.original),
+              disabled: row.original.id === auth.currentUserID
+            })
+          }
         ),
-        h(UButton, {
+        auth.hasPermission('USERS_VIEW_ANY') && (auth.hasPermission('USERS_UPDATE_ANY') || auth.hasPermission('USERS_UPDATE_OWN')) && h(UButton, {
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
-          onClick: () => {
-            navigateTo(`/customers/${row.original.id}`)
-          }
+          onClick: () => navigateTo(`/customers/${row.original.id}`)
         }),
-        h(UButton, {
+        auth.hasPermission('USERS_DELETE') && h(UButton, {
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
@@ -107,7 +102,7 @@ const columns: TableColumn<User>[] = [
             deleteModalOpen.value = true
           }
         })
-      )
+      ].filter(Boolean))
     }
   }
 ]
@@ -140,6 +135,8 @@ const fetch = async() => {
 }
 
 const patchUser = async (user: User) => {
+  if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
+
   try {
     await api.patchUser(user.id, {
       locked: !user.locked
@@ -168,7 +165,7 @@ onMounted(fetch)
           <UDashboardSidebarCollapse @created="fetch" />
         </template>
         <template #right>
-          <CustomersAddModal @created="fetch" />
+          <CustomersAddModal @created="fetch" v-if="auth.hasPermission('USERS_CREATE')" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -214,7 +211,7 @@ onMounted(fetch)
       </div>
 
       <CustomersDeleteModal
-        v-if="selectedUserById"
+        v-if="auth.hasPermission('USERS_DELETE') && selectedUserById"
         v-model:open="deleteModalOpen"
         :id="selectedUserById?.id"
         :name="selectedUserById?.name"

@@ -12,6 +12,14 @@ use Illuminate\Database\Eloquent\Builder;
 
 class VolunteerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:VOLUNTEERS_LIST')->only(['index', 'show']);
+        $this->middleware('permission:VOLUNTEERS_CREATE')->only(['store']);
+        $this->middleware('permission:VOLUNTEERS_UPDATE')->only(['update']);
+        $this->middleware('permission:VOLUNTEERS_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $volunteer = QueryBuilder::for(Volunteer::class)

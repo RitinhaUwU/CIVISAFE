@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Data Import
         $this->call([
             PermissionSeeder::class,
             RoleSeeder::class,
@@ -36,13 +35,27 @@ class DatabaseSeeder extends Seeder
             EntityTypesSeeder::class,
         ]);
 
-        $admin = User::factory()->create([
+
+        User::factory()->create([
             'name' => 'Utilizador Administrador',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'locked' => false,
-        ]);
-        $admin->assignRole(enum_value(RolesEnum::ADMIN));
+        ])->assignRole(enum_value(RolesEnum::ADMIN));
+
+        User::factory()->create([
+            'name' => 'Utilizador Manager',
+            'email' => 'manager@example.com',
+            'password' => bcrypt('password'),
+            'locked' => false,
+        ])->assignRole(enum_value(RolesEnum::MANAGER));
+
+        User::factory()->create([
+            'name' => 'Utilizador User',
+            'email' => 'user@example.com',
+            'password' => bcrypt('password'),
+            'locked' => false,
+        ])->assignRole(enum_value(RolesEnum::USER));
 
         User::factory(10)->create()->each(function ($user) {
             $role = Role::inRandomOrder()->first();

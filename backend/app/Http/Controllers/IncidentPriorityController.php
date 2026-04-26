@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentPriorityController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:INCIDENT_PRIORITIES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:INCIDENT_PRIORITIES_CREATE')->only(['store']);
+        $this->middleware('permission:INCIDENT_PRIORITIES_UPDATE')->only(['update']);
+        $this->middleware('permission:INCIDENT_PRIORITIES_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $types = QueryBuilder::for(IncidentPriority::class)

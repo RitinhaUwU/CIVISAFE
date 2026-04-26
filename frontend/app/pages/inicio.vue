@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { isNotificationsSlideoverOpen } = useDashboard()
+import InicioStats from '../components/inicio/InicioStats.vue'
+import InicioFormRegisto from '../components/inicio/InicioFormRegisto.vue'
 
 const selectedCoords = ref<{ lat: number, lng: number }>({lat: 0, lng: 0})
 const openModal = ref(false)
@@ -17,31 +18,12 @@ function handleMapClick(coords: { lat: number, lng: number }) {
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
-
-        <template #right>
-          <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
-        </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
       <InicioStats />
-      <InicioFormRegisto
-        v-model="openModal"
-        :coords="selectedCoords"
-      />
+      <InicioFormRegisto v-model="openModal" :coords="selectedCoords" />
       <Map @map-click="handleMapClick"/>
     </template>
   </UDashboardPanel>

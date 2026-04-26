@@ -32,4 +32,26 @@ class UserFactory extends Factory
             'locked' => fake()->boolean(),
         ];
     }
+
+    public function withRole(string $role): static
+    {
+        return $this->afterCreating(function (User $user) use ($role) {
+            $user->assignRole($role);
+        });
+    }
+
+    public function admin(): static
+    {
+        return $this->withRole('admin');
+    }
+
+    public function manager(): static
+    {
+        return $this->withRole('manager');
+    }
+
+    public function user(): static
+    {
+        return $this->withRole('user');
+    }
 }
