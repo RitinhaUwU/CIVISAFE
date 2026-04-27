@@ -2,6 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useApiStore } from '../../stores/api'
 import {useAuthStore} from '../../stores/auth'
+import * as z from "zod";
 
 const route = useRoute()
 const router = useRouter()
@@ -11,7 +12,22 @@ const toast = useToast()
 
 const saving = ref(false)
 
-const state = reactive({
+const schema = z.object({
+  name: z.string().min(2, 'Nome demasiado curto'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres').optional().or(z.literal('')),
+  password_confirmation: z.string().optional(),
+  mobile: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
+  locked: z.boolean(),
+  role: z.enum(['admin', 'manager', 'user'])
+}).refine((data) => data.password === data.password_confirmation, {
+  message: 'Passwords não coincidem',
+  path: ['password_confirmation']
+})
+
+type Schema = z.output<typeof schema>
+
+const state = reactive<Partial<Schema>>({
   name: '',
   email: '',
   mobile: '',
@@ -23,6 +39,20 @@ const state = reactive({
 
 const handleSave = async () => {
   if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
+
+  const result = schema.safeParse(state)
+
+  if (!result.success) {
+    result.error.issues.forEach((err) => {
+      toast.add({
+        title: 'Erro de validação',
+        description: err.message,
+        color: 'error'
+      })
+    })
+    return
+  }
+
   saving.value = true
   try {
     const payload: any = {
@@ -56,10 +86,6 @@ const handleSave = async () => {
   }
 }
 
-const handleCancel = () => {
-  router.back()
-}
-
 const fetchUser = async () => {
   const res = await api.getUser(route.params.id)
   const data = res.data.data
@@ -75,6 +101,18 @@ const fetchUser = async () => {
   })
 }
 
+const items = ref<BreadcrumbItem[]>([
+  {
+    label: 'Utilizadores',
+    icon: 'i-lucide-users',
+    to: '/customers'
+  },
+  {
+    label: 'Dados do Utilizador',
+    icon: 'i-lucide-user',
+  }
+])
+
 onMounted(async () => {
   await fetchUser()
 })
@@ -88,17 +126,17 @@ onMounted(async () => {
           Utilizador
         </p>
         <div class="flex items-center justify-between w-full gap-4">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight truncate max-w-full">
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel" />
             <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
           </div>
         </div>
       </div>
     </header>
     <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
+      <UBreadcrumb :items="items" />
       <UFormField label="Ativo?" name="locked">
         <div class="flex items-center gap-3">
           <USwitch

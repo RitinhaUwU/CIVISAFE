@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('classification');
             $table->string('location')->nullable();
             $table->boolean('has_accommodation');
+            $table->string('meal_location')->nullable();
+            $table->string('meal_notes')->nullable();
+            $table->boolean('has_meal');
             $table->dateTime('start_datetime');
             $table->dateTime('end_datetime')->nullable();
             $table->foreignId('incident_id')->nullable()->constrained('incidents');

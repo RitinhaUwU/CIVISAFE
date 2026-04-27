@@ -103,7 +103,7 @@ const columns: TableColumn<Incident>[] = [
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            navigateTo(`/ocorrencias/${row.original.id}`)
+            navigateTo(`/incidents/${row.original.id}`)
           }
         }),
         h(UButton, {

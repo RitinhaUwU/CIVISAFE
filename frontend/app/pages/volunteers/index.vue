@@ -10,6 +10,7 @@ const total = ref(0)
 
 const search = ref('')
 const accommodationFilter = ref('all')
+const mealFilter = ref('all')
 const classificationFilter = ref('all')
 
 const deleteModalOpen = ref(false)
@@ -28,6 +29,9 @@ type Volunteer = {
   classification: string
   has_accommodation: boolean;
   location: string;
+  has_meal: boolean;
+  meal_notes: string;
+  meal_location: string;
   incident_id: number;
   created_at: Date;
   updated_at: Date;
@@ -98,6 +102,23 @@ const columns: TableColumn<Volunteer>[] = [
     }
   },
   {
+    accessorKey: "has_meal",
+    header: () => h('div', { class: 'text-center w-full' }, 'Refeição'),
+    meta: { class: 'text-center' },
+    cell: ({ row }) => {
+      const value = row.original.has_meal
+
+      const color = value ? 'success' : 'error'
+      const label = value ? 'Sim' : 'Não'
+
+      return h(
+        'div',
+        { class: 'flex justify-center' },
+        h(UBadge, { class: 'capitalize, rounded-full', variant: 'subtle', color }, () => label)
+      )
+    }
+  },
+  {
     id: 'actions',
     cell: ({ row }) => {
       return h(
@@ -147,6 +168,9 @@ const fetch = async() => {
     if (accommodationFilter.value !== 'all') {
       params.filter.has_accommodation = accommodationFilter.value
     }
+    if (mealFilter.value !== 'all') {
+      params.filter.has_meal = mealFilter.value
+    }
     const res = await api.getVolunteers(params)
 
     volunteers.value = res.data.data
@@ -161,7 +185,7 @@ const fetch = async() => {
 
 watch(pagination, fetch, {deep: true})
 
-watch([search, accommodationFilter, classificationFilter], () => {
+watch([search, accommodationFilter, mealFilter, classificationFilter], () => {
   pagination.value.pageIndex = 0
   fetch()
 })
@@ -170,9 +194,9 @@ onMounted(fetch)
 </script>
 
 <template>
-  <UDashboardPanel id="ocorrencia">
+  <UDashboardPanel id="voluntario">
     <template #header>
-      <UDashboardNavbar title="Ocorrências">
+      <UDashboardNavbar title="Voluntários">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -191,6 +215,15 @@ onMounted(fetch)
         />
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
+            v-model="classificationFilter"
+            :items="[
+              { label: 'Classificação', value: 'all' },
+              { label: 'Individual', value: 'single' },
+              { label: 'Organização', value: 'org' },
+              { label: 'Outro', value: 'misc' }
+            ]"
+          />
+          <USelect
             v-model="accommodationFilter"
             :items="[
               { label: 'Alojamento', value: 'all' },
@@ -199,12 +232,11 @@ onMounted(fetch)
             ]"
           />
           <USelect
-            v-model="classificationFilter"
+            v-model="mealFilter"
             :items="[
-              { label: 'Classificação', value: 'all' },
-              { label: 'Individual', value: 'single' },
-              { label: 'Organização', value: 'org' },
-              { label: 'Outro', value: 'misc' }
+              { label: 'Refeição', value: 'all' },
+              { label: 'Sim', value: true },
+              { label: 'Não', value: false }
             ]"
           />
         </div>

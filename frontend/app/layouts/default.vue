@@ -21,7 +21,7 @@ const links = [
     auth.hasPermission('INCIDENTS_LIST') && {
       label: 'Ocorrências',
       icon: 'i-lucide-flame',
-      to: '/ocorrencias',
+      to: '/incidents',
       onSelect: () => (open.value = false)
     }, {
       label: 'Definições',

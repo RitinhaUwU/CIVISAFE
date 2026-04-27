@@ -6,6 +6,8 @@ import { useApiStore } from '@/stores/api'
 
 const api = useApiStore()
 const auth = useAuthStore()
+const toast = useToast()
+
 const users = ref<User[]>([])
 const loading = ref(false)
 const total = ref(0)
@@ -25,7 +27,7 @@ type User = {
   id: number;
   name: string;
   email: string;
-  mobile: string;
+  mobile: number;
   locked: boolean;
   created_at: Date;
   updated_at: Date;
@@ -138,12 +140,25 @@ const patchUser = async (user: User) => {
   if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
 
   try {
+    const updated = !user.locked
+
     await api.patchUser(user.id, {
-      locked: !user.locked
+      locked: updated
     })
+
+    toast.add({
+      title: updated ? 'Conta ativada' : 'Conta bloqueada',
+      description: `${user.name} foi ${updated ? 'ativado(a)' : 'bloqueado(a)'} com sucesso`,
+      color: updated ? 'success' : 'warning'
+    })
+
     await fetch()
   } catch (e) {
-    console.error(e)
+    toast.add({
+      title: 'Erro',
+      description: 'Não foi possível atualizar o utilizador',
+      color: 'error'
+    })
   }
 }
 

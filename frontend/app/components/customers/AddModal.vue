@@ -15,7 +15,7 @@ const schema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
   password_confirmation: z.string(),
-  mobile: z.string().min(9, 'Número inválido'),
+  mobile: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
   locked: z.boolean(),
   role: z.enum(['admin', 'manager', 'user'])
 }).refine((data) => data.password === data.password_confirmation, {

@@ -14,12 +14,13 @@ VolunteerFactory extends Factory
 
     public function definition(): array
     {
-        //Codigo para verificar se a classificação=single para num elementos ser 1 como default
-
         $start = $this->faker->dateTime('-1 week')->format('Y-m-d H:i:s');
         $end = $this->faker->dateTimeBetween($start, 'yesterday')->format('Y-m-d H:i:s');
 
         $classification = $this->faker->randomElement(['single', 'org', 'misc']);
+
+        $hasMeal = $this->faker->boolean();
+        $hasAccommodation = $this->faker->boolean();
 
         return [
             'name' => $this->faker->name(),
@@ -28,14 +29,16 @@ VolunteerFactory extends Factory
             'classification' => $classification,
             'num_elements' => $classification === 'single' ? 1 : $this->faker->numberBetween(2, 20),
             'mission' => $this->faker->text(),
-            'team_identification' => $this->faker->text(),
-            'has_accommodation' => $this->faker->boolean(),
-            'location' => $this->faker->address(),
+            'team_identification' => $this->faker->text(100),
+            'has_accommodation' => $hasAccommodation,
+            'location' => $hasAccommodation ? $this->faker->address() : null,
+            'has_meal' => $hasMeal,
+            'meal_notes' => $hasMeal ? $this->faker->text() : null,
+            'meal_location' => $hasMeal ? $this->faker->address() : null,
             'start_datetime' => $start,
             'end_datetime' => $end,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-
             'incident_id' => Incident::inRandomOrder()->first()->id,
         ];
     }

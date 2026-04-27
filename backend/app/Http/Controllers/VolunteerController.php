@@ -42,6 +42,12 @@ class VolunteerController extends Controller
                     }
                     $query->where('has_accommodation', $value);
                 }),
+                AllowedFilter::callback('has_meal', function (Builder $query, $value) {
+                    if ($value === 'all' || $value === null) {
+                        return;
+                    }
+                    $query->where('has_meal', $value);
+                }),
             )
             ->paginate($request->input('per_page', 15))
             ->appends($request->query());
@@ -65,7 +71,9 @@ class VolunteerController extends Controller
     {
         $volunteer->update($request->validated());
 
-        return new VolunteerResource($volunteer);
+        return new VolunteerResource(
+            $volunteer->fresh()->load('incident')
+        );
     }
 
     public function destroy(Volunteer $volunteer)
