@@ -6,6 +6,7 @@ use App\Http\Requests\VolunteerRequest;
 use App\Http\Resources\VolunteerResource;
 use App\Models\Volunteer;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;

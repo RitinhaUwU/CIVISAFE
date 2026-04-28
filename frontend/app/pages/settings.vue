@@ -22,9 +22,9 @@ const links = [[{
 </script>
 
 <template>
-  <UDashboardPanel id="settings" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel id="definicoes" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar title="Settings">
+      <UDashboardNavbar title="Definições">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

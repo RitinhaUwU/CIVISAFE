@@ -7,6 +7,7 @@ use App\Http\Resources\IncidentPriorityResource;
 use App\Models\IncidentPriority;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 

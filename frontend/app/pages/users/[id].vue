@@ -105,7 +105,7 @@ const items = ref<BreadcrumbItem[]>([
   {
     label: 'Utilizadores',
     icon: 'i-lucide-users',
-    to: '/customers'
+    to: '/users'
   },
   {
     label: 'Dados do Utilizador',

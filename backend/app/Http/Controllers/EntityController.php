@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EntityRequest;
 use App\Http\Resources\EntityResource;
-use App\Http\Resources\IncidentResource;
 use App\Models\Entity;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Routing\Controller;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 

@@ -7,6 +7,7 @@ use App\Http\Resources\IncidentTypeResource;
 use App\Models\IncidentType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -14,10 +15,8 @@ class IncidentTypeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:INCIDENT_TYPES_LIST')->only(['index', 'show']);
-        $this->middleware('permission:INCIDENT_TYPES_CREATE')->only(['store']);
-        $this->middleware('permission:INCIDENT_TYPES_UPDATE')->only(['update']);
-        $this->middleware('permission:INCIDENT_TYPES_DELETE')->only(['destroy']);
+        $this->middleware('permission:INCIDENT_TYPES_LIST')->only(['index']);
+        $this->middleware('permission:INCIDENT_TYPES_UPLOAD')->only(['store']);
     }
 
     public function index(Request $request)
@@ -51,19 +50,5 @@ class IncidentTypeController extends Controller
     public function show(IncidentType $incidentType)
     {
         return new IncidentTypeResource($incidentType);
-    }
-
-    public function update(IncidentTypeRequest $request, IncidentType $incidentType)
-    {
-        $incidentType->update($request->validated());
-
-        return new IncidentTypeResource($incidentType->fresh());
-    }
-
-    public function destroy(IncidentType $incidentType)
-    {
-        $incidentType->delete();
-
-        return response()->json();
     }
 }

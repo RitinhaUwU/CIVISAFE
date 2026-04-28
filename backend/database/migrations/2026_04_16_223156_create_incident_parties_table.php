@@ -9,8 +9,6 @@ return new class extends Migration {
     {
         Schema::create('incident_parties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('incident_id')->constrained('incidents');
-            $table->foreignId('entity_id')->constrained('entities');
             $table->integer('vehicle_count');
             $table->integer('human_count');
             $table->timestamps();

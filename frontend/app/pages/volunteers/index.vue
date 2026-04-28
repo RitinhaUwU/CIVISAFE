@@ -4,6 +4,8 @@ import type { TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/table-core'
 
 const api = useApiStore()
+const toast = useToast()
+
 const volunteers = ref<Volunteer[]>([])
 const loading = ref(false)
 const total = ref(0)
@@ -177,7 +179,11 @@ const fetch = async() => {
     total.value = res.data.meta.total
     pagination.value.pageSize = res.data.meta.per_page
   } catch (e) {
-    console.error("Erro ao carregar entidades: ", e)
+    toast.add({
+      title: 'Erro',
+      description: 'Não foi possível atualizar o voluntário',
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }

@@ -28,9 +28,7 @@ enum PermissionsEnum: string
 
     # ENTITY TYPES
     case ENTITY_TYPES_LIST = 'ENTITY_TYPES_LIST';
-    case ENTITY_TYPES_CREATE = 'ENTITY_TYPES_CREATE';
-    case ENTITY_TYPES_UPDATE = 'ENTITY_TYPES_UPDATE';
-    case ENTITY_TYPES_DELETE = 'ENTITY_TYPES_DELETE';
+    case ENTITY_TYPES_UPLOAD = 'ENTITY_TYPES_UPLOAD';
 
     # INCIDENTS
     case INCIDENTS_LIST = 'INCIDENTS_LIST';
@@ -79,9 +77,7 @@ enum PermissionsEnum: string
             self::ENTITIES_DELETE => 'Eliminar Entidades',
             # ENTITY TYPES
             self::ENTITY_TYPES_LIST => 'Ver Tipos de Entidade',
-            self::ENTITY_TYPES_CREATE => 'Criar Tipos de Entidade',
-            self::ENTITY_TYPES_UPDATE => 'Editar Tipos de Entidade',
-            self::ENTITY_TYPES_DELETE => 'Eliminar Tipos de Entidade',
+            self::ENTITY_TYPES_UPLOAD => 'Carregar Tipos de Entidade',
             # INCIDENTS
             self::INCIDENTS_LIST => 'Ver Incidentes',
             self::INCIDENTS_CREATE => 'Criar Incidentes',

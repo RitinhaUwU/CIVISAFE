@@ -15,7 +15,7 @@ const links = [
     auth.hasPermission('USERS_VIEW_ANY') && {
       label: 'Utilizadores',
       icon: 'i-lucide-user',
-      to: '/customers',
+      to: '/users',
       onSelect: () => (open.value = false)
     },
     auth.hasPermission('INCIDENTS_LIST') && {

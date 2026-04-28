@@ -19,9 +19,6 @@ class IncidentPartyFactory extends Factory
             'vehicle_count' => $this->faker->randomNumber(2),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-
-            'incident_id' => Incident::inRandomOrder()->first()->id,
-            'entity_id' => Entity::inRandomOrder()->first()->id,
         ];
     }
 }

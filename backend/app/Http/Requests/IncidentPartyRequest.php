@@ -11,8 +11,6 @@ class IncidentPartyRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'incident_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incidents'],
-            'entity_id' => [$is_patch ? 'sometimes' : 'required', 'exists:entities'],
             'vehicle_count' => [$is_patch ? 'sometimes' : 'required', 'integer'],
             'human_count' => [$is_patch ? 'sometimes' : 'required', 'integer'],
         ];

@@ -9,15 +9,13 @@ class UserCreateRequest extends FormRequest
 {
     public function rules(): array
     {
-        $is_patch = $this->isMethod('PATCH');
-
         return [
-            'name' => [$is_patch ? 'sometimes' : 'required', 'string'],
-            'email' => [$is_patch ? 'sometimes' : 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
-            'password' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:8', 'confirmed'],
-            'mobile' => [$is_patch ? 'sometimes' : 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
-            'locked' => [$is_patch ? 'sometimes' : 'required', 'boolean'],
-            'role' => [$is_patch ? 'sometimes' : 'required', 'string', 'exists:roles,name'],
+            'name' => ['sometimes', 'required', 'string'],
+            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
+            'mobile' => ['sometimes', 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
+            'locked' => ['sometimes', 'required', 'boolean'],
+            'role' => ['sometimes', 'required', 'string', 'exists:roles,name'],
         ];
     }
 
