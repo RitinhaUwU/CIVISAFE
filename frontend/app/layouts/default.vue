@@ -24,35 +24,6 @@ const links = [
       to: '/incidents',
       onSelect: () => (open.value = false)
     }, {
-      label: 'Definições',
-      to: '/settings',
-      icon: 'i-lucide-settings',
-      type: 'trigger',
-      children: [{
-        label: 'General',
-        to: '/settings',
-        exact: true,
-        onSelect: () => {
-          open.value = false
-        }
-      }, {
-        label: 'Members',
-        to: '/settings/members',
-        onSelect: () => {
-          open.value = false
-        }
-      }, {
-        label: 'Notifications',
-        to: '/settings/notifications',
-        onSelect: () => {
-          open.value = false
-        }
-      }, {
-        label: 'Security',
-        to: '/settings/security',
-        onSelect: () => { open.value = false }
-      }]
-    }, {
       label: 'Administração',
       icon: 'i-lucide-wrench',
       type: 'trigger',

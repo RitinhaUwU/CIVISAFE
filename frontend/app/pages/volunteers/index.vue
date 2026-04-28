@@ -78,7 +78,7 @@ const columns: TableColumn<Volunteer>[] = [
   },
   {
     accessorKey: "classification",
-    header: "Grupo",
+    header: "Tipo de Equipas",
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-col' }, [
         h('span', { class: 'font-medium text-highlighted' }, classificationMap[row.original.classification]),
@@ -223,7 +223,7 @@ onMounted(fetch)
           <USelect
             v-model="classificationFilter"
             :items="[
-              { label: 'Classificação', value: 'all' },
+              { label: 'Tipo de Equipa', value: 'all' },
               { label: 'Individual', value: 'single' },
               { label: 'Organização', value: 'org' },
               { label: 'Outro', value: 'misc' }

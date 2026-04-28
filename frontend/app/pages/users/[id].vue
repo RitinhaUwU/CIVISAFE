@@ -19,7 +19,7 @@ const schema = z.object({
   password_confirmation: z.string().optional(),
   mobile: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
   locked: z.boolean(),
-  role: z.enum(['admin', 'manager', 'user'])
+  role: z.enum(['admin', 'manager', 'user'], 'Selecione uma opção')
 }).refine((data) => data.password === data.password_confirmation, {
   message: 'Passwords não coincidem',
   path: ['password_confirmation']

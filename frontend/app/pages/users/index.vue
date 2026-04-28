@@ -93,7 +93,7 @@ const columns: TableColumn<User>[] = [
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
-          onClick: () => navigateTo(`/customers/${row.original.id}`)
+          onClick: () => navigateTo(`/users/${row.original.id}`)
         }),
         auth.hasPermission('USERS_DELETE') && h(UButton, {
           icon: 'i-lucide-trash',

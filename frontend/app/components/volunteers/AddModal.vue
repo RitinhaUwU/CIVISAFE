@@ -103,7 +103,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Novo Voluntário" description="Criar Voluntário">
+  <UModal
+    v-model:open="open"
+    title="Novo Voluntário"
+    description="Criar Voluntário":ui="{
+      content: 'max-h-[90vh] overflow-y-auto w-full max-w-3xl'
+    }"
+  >
     <UButton icon="i-lucide-plus" label="Novo Voluntário" color="primary"/>
     <template #body>
       <UForm :state="state" :schema="schema" class="space-y-4" @submit="onSubmit">
@@ -186,10 +192,10 @@ onMounted(() => {
           <UFormField v-if="state.has_meal" label="Refeitório:" name="meal_location">
             <UInput v-model="state.meal_location" class="w-full" />
           </UFormField>
-          <UFormField v-if="state.has_meal" label="Quais refeições necessita:" name="meal_notes">
-            <UTextarea v-model="state.meal_notes" class="w-full" />
-          </UFormField>
         </div>
+        <UFormField v-if="state.has_meal" label="Quais refeições necessita:" name="meal_notes">
+          <UTextarea v-model="state.meal_notes" class="w-full" />
+        </UFormField>
         <div class="h-px border-t border-stone-200 dark:border-stone-800" />
         <h3 class="text-sm font-semibold text-muted">Período</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
