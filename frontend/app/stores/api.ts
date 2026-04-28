@@ -1,10 +1,10 @@
 import {defineStore} from 'pinia'
-import axios from 'axios'
+import axios, {type AxiosRequestConfig} from 'axios'
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
 
-  interface QueryParams {
+  interface QueryParams{
     page?: number
     per_page?: number
     search?: string
@@ -51,16 +51,8 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidentTypes/${id}`, params)
   }
 
-  const createIncidentType = (params) => {
-    return axios.post(`${config.public.apiBase}/incidentTypes`, params)
-  }
-
-  const updateIncidentType = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/incidentTypes/${id}`, params)
-  }
-
-  const deleteIncidentType = (id: number) => {
-    return axios.delete(`${config.public.apiBase}/incidentTypes/${id}`)
+  const uploadIncidentTypesFile = (form: FormData) => {
+    return axios.post(`${config.public.apiBase}/incidentTypes`, form)
   }
 
   /*************************
@@ -189,9 +181,7 @@ export const useApiStore = defineStore('api', () => {
     getAuthUser,
     getIncidentTypes,
     getIncidentType,
-    updateIncidentType,
-    deleteIncidentType,
-    createIncidentType,
+    uploadIncidentTypesFile,
     getEntities,
     getEntity,
     updateEntity,

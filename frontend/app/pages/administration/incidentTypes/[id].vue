@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import { useApiStore } from '@/stores/api'
+import {useRoute} from 'vue-router'
+import {useApiStore} from '@/stores/api'
 
 const route = useRoute()
 const router = useRouter()
 const api = useApiStore()
-
-const saving = ref(false)
 
 const state = reactive({
   code: '',
   species: '',
   type: '',
   description: '',
-  is_active: ''
 })
 
 const toast = useToast()
@@ -22,27 +19,6 @@ const fetchEntity = async () => {
   const res = await api.getIncidentType(route.params.id)
 
   Object.assign(state, res.data.data)
-}
-
-const handleSave = async () => {
-  saving.value = true
-  try {
-    await api.updateIncidentType(route.params.id, state)
-
-    toast.add({
-      title: 'Sucesso',
-      description: 'Tipo de incidente atualizada',
-      color: 'success'
-    })
-  } catch (e) {
-    toast.add({
-      title: 'Erro',
-      description: 'Erro ao atualizar',
-      color: 'error'
-    })
-  } finally {
-    saving.value = false
-  }
 }
 
 const handleCancel = () => {
@@ -64,8 +40,7 @@ onMounted(fetchEntity)
             {{ state.type }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel" />
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel"/>
           </div>
         </div>
       </div>
@@ -78,26 +53,20 @@ onMounted(fetchEntity)
               <h2 class="font-bold">Dados Gerais</h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <UFormField label="Código" class="sm:col-span-2">
-                  <UInput v-model="state.code" class="w-full" />
+                  <UInput v-model="state.code" class="w-full" disabled/>
                 </UFormField>
                 <UFormField label="Espécie" class="sm:col-span-2">
-                  <UInput v-model="state.species" class="w-full" />
+                  <UInput v-model="state.species" class="w-full" disabled/>
                 </UFormField>
                 <UFormField label="Tipo" class="sm:col-span-2">
-                  <UInput v-model="state.type" class="w-full" />
+                  <UInput v-model="state.type" class="w-full" disabled/>
                 </UFormField>
-                <USwitch
-                  v-model="state.is_active"
-                  label="Está ativo?"
-                  unchecked-icon="i-lucide-x"
-                  checked-icon="i-lucide-check"
-                />
               </div>
             </section>
-            <div class="h-px border-t border-stone-200 dark:border-stone-800" />
+            <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
             <section class="space-y-2">
               <h2 class="font-bold">Descrição</h2>
-              <UTextarea v-model="state.description" :rows="5" class="w-full" />
+              <UTextarea v-model="state.description" :rows="5" class="w-full" disabled/>
             </section>
           </div>
         </div>

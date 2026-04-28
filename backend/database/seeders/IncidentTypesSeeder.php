@@ -29,7 +29,6 @@ class IncidentTypesSeeder extends Seeder
                     'species' => $row_csv[1],
                     'type' => $row_csv[2],
                     'description' => $row_csv[3],
-                    'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

@@ -26,7 +26,8 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('/entities', EntityController::class);
         Route::apiResource('/entityTypes', EntityTypesController::class);
-        Route::apiResource('/incidentTypes', IncidentTypeController::class);
+        Route::apiResource('/incidentTypes', IncidentTypeController::class)
+            ->only(['index', 'store', 'show']);
         Route::apiResource('/incidentStates', IncidentStateController::class);
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);
         Route::apiResource('/incidents', IncidentController::class);

@@ -13,6 +13,7 @@ const total = ref(0)
 const search = ref('')
 
 const deleteModalOpen = ref(false)
+const uploadFileModalOpen = ref(false)
 const selectedTypeById = ref<IncidentTypes>(null)
 
 type IncidentTypes = {
@@ -21,7 +22,6 @@ type IncidentTypes = {
   species: string;
   type: string;
   description: string;
-  is_active: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -78,15 +78,6 @@ const columns: TableColumn<IncidentTypes | null>[] = [
           variant: 'ghost',
           onClick: () => {
             navigateTo(`/administration/incidentTypes/${row.original.id}`)
-          }
-        }),
-        h(UButton, {
-          icon: 'i-lucide-trash',
-          color: 'error',
-          variant: 'ghost',
-          onClick: () => {
-            selectedTypeById.value = row.original
-            deleteModalOpen.value = true
           }
         })
       )
@@ -149,6 +140,7 @@ onMounted(fetch)
           icon="i-lucide-upload"
           label="Carregar Estados"
           color="primary"
+          @click="uploadFileModalOpen = true"
         />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
@@ -190,6 +182,8 @@ onMounted(fetch)
           @update:page="(p) => (pagination.pageIndex = p - 1)"
         />
       </div>
+
+      <IncidentTypesUploadModal v-model:open="uploadFileModalOpen"/>
 
       <IncidentTypesDeleteModal
         v-if="selectedTypeById"

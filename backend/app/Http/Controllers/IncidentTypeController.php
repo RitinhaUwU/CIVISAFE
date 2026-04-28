@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\IncidentTypeRequest;
+use App\Http\Requests\IncidentType\IncidentTypeImportRequest;
 use App\Http\Resources\IncidentTypeResource;
+use App\Jobs\IncidentTypeImportJob;
 use App\Models\IncidentType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -35,27 +37,30 @@ class IncidentTypeController extends Controller
         return IncidentTypeResource::collection($types);
     }
 
-    public function store(IncidentTypeRequest $request)
-    {
-        return new IncidentTypeResource(IncidentType::create($request->validated())->fresh());
-    }
-
     public function show(IncidentType $incidentType)
     {
         return new IncidentTypeResource($incidentType);
     }
 
-    public function update(IncidentTypeRequest $request, IncidentType $incidentType)
+    public function store(IncidentTypeImportRequest $request)
     {
-        $incidentType->update($request->validated());
+        try {
+            $file = $request->file('file')->store("/", [
+                'disk' => 'misc_bucket',
+                'visibility' => 'private'
+            ]);
 
-        return new IncidentTypeResource($incidentType->fresh());
-    }
+            IncidentTypeImportJob::dispatch($file, $request->user())->onQueue('imports');
 
-    public function destroy(IncidentType $incidentType)
-    {
-        $incidentType->delete();
-
-        return response()->json();
+            return response()->json(['message' => 'File sent to processing', 'file' => $file], 201);
+        } catch (\Exception $e) {
+            Log::error("Could not upload file to disk.", [
+                'message' => $e->getMessage(),
+                'exceptionData' => $e,
+            ]);
+            return response()->json([
+                'message' => 'Ocorreu um erro interno ao carregar o ficheiro.'
+            ], 500);
+        }
     }
 }
