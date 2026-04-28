@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\IncidentPartyRequest;
 use App\Http\Resources\IncidentPartyResource;
 use App\Models\IncidentParty;
-use Illuminate\Routing\Controller;
 
 class IncidentPartyController extends Controller
 {

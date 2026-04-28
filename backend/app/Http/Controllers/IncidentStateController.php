@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EntityRequest;
 use App\Http\Requests\IncidentStatesRequest;
-use App\Http\Resources\EntityResource;
 use App\Http\Resources\IncidentStateResource;
-use App\Models\Entity;
-use App\Models\IncidentPriority;
 use App\Models\IncidentState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 

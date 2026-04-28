@@ -7,7 +7,6 @@ use App\Http\Resources\EntityTypesResource;
 use App\Models\EntityType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
