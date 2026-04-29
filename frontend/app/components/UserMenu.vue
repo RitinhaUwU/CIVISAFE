@@ -20,11 +20,8 @@ const user = computed(() => {
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
   label: user.value.name,
-}], [{
-  label: 'Perfil',
-  icon: 'i-lucide-user'
-}, {
-  label: 'Settings',
+}], [ {
+  label: 'Definições',
   icon: 'i-lucide-settings',
   to: '/settings'
 }], [{

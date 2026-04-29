@@ -12,7 +12,7 @@ class IncidentStatesRequest extends FormRequest
 
         return [
             'name' => [$is_patch ? 'sometimes' : 'required'],
-            'description' => ['sometimes', 'nullable'],
+            'description' => [$is_patch ? 'sometimes' : 'nullable'],
             'hex_color' => [$is_patch ? 'sometimes' : 'required', 'regex:/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/'],
             'terminates_incident' => [$is_patch ? 'sometimes' : 'required', 'boolean'], //boolean
             'is_active' => [$is_patch ? 'sometimes' : 'required', 'boolean'], //boolean

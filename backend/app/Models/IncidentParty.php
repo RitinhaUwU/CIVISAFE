@@ -11,6 +11,7 @@ class IncidentParty extends Model
 {
     use SoftDeletes, HasFactory;
 
+
     public function incident(): BelongsTo
     {
         return $this->belongsTo(Incident::class);

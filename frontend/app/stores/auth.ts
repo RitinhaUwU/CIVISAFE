@@ -22,9 +22,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => currentUser.value !== undefined)
 
-  const currentUserID = computed(() => {
-    return currentUser.value?.id
-  })
+  const currentUserID = computed(() => { return currentUser.value?.id })
+
+  const currentUserPermissions = computed(() => currentUser.value?.permissions)
+
+  const roles  = computed(() => currentUser.value?.roles)
 
   const isAuthenticated = async () => {
     if (!token.value) return false
@@ -32,7 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       apiStore.setBearerToken(token.value)
       const res = await apiStore.getAuthUser()
-      currentUser.value = res.data
+      currentUser.value = res.data.data
       return true
     } catch (err) {
       reset()
@@ -82,18 +84,37 @@ export const useAuthStore = defineStore('auth', () => {
 
   const getUser = async () => {
     const res = await apiStore.getAuthUser()
-    currentUser.value = res.data
+    currentUser.value = res.data.data
     return currentUser.value
   }
 
+  const hasPermission = (permission) => {
+    return currentUserPermissions.value.includes(permission)
+  }
+
+  const hasRole = (role: string) => {
+    return roles.value.includes(role)
+  }
+
+  const isAdmin = computed(() => hasRole('admin'))
+  const isManager = computed(() => hasRole('manager'))
+  const isUser = computed(() => hasRole('user'))
+
   return {
-    currentUserID,
     currentUser,
+    currentUserID,
+    currentUserPermissions,
+    roles,
+    reset,
     isLoggedIn,
     isAuthenticated,
     login,
     logout,
-    reset,
-    getUser
+    getUser,
+    hasPermission,
+    hasRole,
+    isAdmin,
+    isManager,
+    isUser
   }
 })

@@ -32,10 +32,6 @@ const state = reactive({
   incident_id: null
 })
 
-const handleCancel = () => {
-  router.back()
-}
-
 const fetchEntity = async () => {
   const res = await api.getIncident(route.params.id)
   const data = res.data.data
@@ -71,6 +67,18 @@ const fetchSelects = async () => {
   }))
 }
 
+const items = ref<BreadcrumbItem[]>([
+  {
+    label: 'Ocorrências',
+    icon: 'i-lucide-flame',
+    to: '/incidents'
+  },
+  {
+    label: 'Dados de Ocorrência',
+    icon: 'i-lucide-brick-wall-fire',
+  }
+])
+
 onMounted(async () => {
   await fetchSelects()
   await fetchEntity()
@@ -85,17 +93,17 @@ onMounted(async () => {
           Ocorrência
         </p>
         <div class="flex items-center justify-between w-full gap-4">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight truncate max-w-full">
             {{ state.identifier }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel" />
+            <!-- <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" /> -->
           </div>
         </div>
       </div>
     </header>
-    <div class="flex-1 flex flex-col min-h-0">
-      <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 pb-8">
+      <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
+        <UBreadcrumb :items="items" />
         <div class="grid grid-cols-1 gap-8">
           <div class="space-y-6">
             <section class="space-y-2">
@@ -157,7 +165,6 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

@@ -104,9 +104,7 @@ const fetch = async () => {
       per_page: pagination.value.pageSize,
     }
     if (search.value) {
-      params.filter = {
-        search: search.value
-      }
+      params.filter = { search: search.value }
     }
     if (statusFilter.value !== 'all') {
       params.filter = {

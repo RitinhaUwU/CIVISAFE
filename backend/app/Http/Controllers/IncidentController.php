@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:INCIDENTS_LIST')->only(['index', 'show']);
+        $this->middleware('permission:INCIDENTS_CREATE')->only(['store']);
+        $this->middleware('permission:INCIDENTS_UPDATE')->only(['update']);
+        $this->middleware('permission:INCIDENTS_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $incidents = QueryBuilder::for(Incident::class)
@@ -34,7 +42,7 @@ class IncidentController extends Controller
                     $query->where('incident_priority_id', $value);
                 })
             )
-            ->paginate($request->input('per_page', 15))
+            ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 
         return IncidentResource::collection($incidents);

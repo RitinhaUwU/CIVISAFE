@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EntityRequest;
 use App\Http\Resources\EntityResource;
-use App\Http\Resources\IncidentResource;
 use App\Models\Entity;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class EntityController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:ENTITIES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:ENTITIES_CREATE')->only(['store']);
+        $this->middleware('permission:ENTITIES_UPDATE')->only(['update']);
+        $this->middleware('permission:ENTITIES_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $request->validate([
@@ -20,9 +27,7 @@ class EntityController extends Controller
         ]);
 
         $types = QueryBuilder::for(Entity::class)
-            ->with([
-                'entityType',
-            ])
+            ->with(['entityType'])
             ->allowedFilters(
                 AllowedFilter::callback('search', function (Builder $query, $value) {
                     $query->where('name', 'ILIKE', "%{$value}%");

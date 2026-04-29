@@ -12,6 +12,12 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:INCIDENT_TYPES_LIST')->only(['index']);
+        $this->middleware('permission:INCIDENT_TYPES_UPLOAD')->only(['store']);
+    }
+
     public function index(Request $request)
     {
         $request->validate([
@@ -43,19 +49,5 @@ class IncidentTypeController extends Controller
     public function show(IncidentType $incidentType)
     {
         return new IncidentTypeResource($incidentType);
-    }
-
-    public function update(IncidentTypeRequest $request, IncidentType $incidentType)
-    {
-        $incidentType->update($request->validated());
-
-        return new IncidentTypeResource($incidentType->fresh());
-    }
-
-    public function destroy(IncidentType $incidentType)
-    {
-        $incidentType->delete();
-
-        return response()->json();
     }
 }

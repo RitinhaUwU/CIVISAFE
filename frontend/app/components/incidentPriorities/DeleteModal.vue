@@ -12,6 +12,11 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open', 'deleted'])
 
+const openModel = computed({
+  get: () => props.open,
+  set: (value: boolean) => emit('update:open', value)
+})
+
 const onSubmit = async () => {
   if (!props.id) return
 
@@ -39,28 +44,15 @@ const onSubmit = async () => {
 
 <template>
   <UModal
-    v-model:open="props.open"
+    v-model:open="openModel"
     :title="`Eliminar tipo de Estado: ${props.name} - ${props.description}`"
     :description="`Tem certeza que deseja eliminar este tipo de estado '${props.name} - ${props.description}'?`"
-    :ui="{
-      close: 'hidden'
-    }"
+    :ui="{ close: 'hidden' }"
   >
-
     <template #body>
       <div class="flex justify-end gap-2">
-        <UButton
-          label="Cancelar"
-          color="neutral"
-          variant="subtle"
-          @click="emit('update:open', false)"
-        />
-        <UButton
-          label="Eliminar"
-          color="error"
-          loading-auto
-          @click="onSubmit"
-        />
+        <UButton label="Cancelar" color="neutral" variant="subtle" @click="emit('update:open', false)" />
+        <UButton label="Eliminar" color="error" loading-auto @click="onSubmit" />
       </div>
     </template>
   </UModal>
