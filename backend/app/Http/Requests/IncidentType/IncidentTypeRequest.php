@@ -19,7 +19,7 @@ class IncidentTypeRequest extends FormRequest
             'species' => [$is_patch ? 'sometimes' : 'required'],
             'type' => [$is_patch ? 'sometimes' : 'required'],
             'description' => [$is_patch ? 'sometimes' : 'nullable'],
-            'is_active' => ['sometimes', 'boolean'],
+            'is_active' => [$is_patch ? 'sometimes' : 'boolean'],
         ];
     }
 

@@ -36,6 +36,35 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/user`)
   }
 
+  /*************************
+   *
+   *  Users
+   *
+   *************************/
+
+  const getUsers = (params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/users`, { params })
+  }
+
+  const getUser = (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/users/${id}`, params)
+  }
+
+  const createUser = (params) => {
+    return axios.post(`${config.public.apiBase}/users`, params)
+  }
+
+  const updateUser = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/users/${id}`, params)
+  }
+
+  const patchUser = (id: number, params: any) => {
+    return axios.patch(`${config.public.apiBase}/users/${id}`, params)
+  }
+
+  const deleteUser = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/users/${id}`)
+  }
 
   /*************************
    *
@@ -175,6 +204,32 @@ export const useApiStore = defineStore('api', () => {
 
   /*************************
    *
+   *  Volunteers
+   *
+   *************************/
+
+  const getVolunteers = (params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/volunteers`, { params })
+  }
+
+  const getVolunteer = (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/volunteers/${id}`, params)
+  }
+
+  const createVolunteer = (params) => {
+    return axios.post(`${config.public.apiBase}/volunteers`, params)
+  }
+
+  const updateVolunteer = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/volunteers/${id}`, params)
+  }
+
+  const deleteVolunteer = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/volunteers/${id}`)
+  }
+
+  /*************************
+   *
    *  Notifications
    *
    *************************/
@@ -197,6 +252,12 @@ export const useApiStore = defineStore('api', () => {
     postLogin,
     postLogout,
     getAuthUser,
+    getUsers,
+    getUser,
+    patchUser,
+    updateUser,
+    deleteUser,
+    createUser,
     getIncidentTypes,
     getIncidentType,
     uploadIncidentTypesFile,
@@ -224,6 +285,11 @@ export const useApiStore = defineStore('api', () => {
     createIncidentPriority,
     getNotifications,
     readNotification,
-    readAllNotifications
+    readAllNotifications,
+    getVolunteers,
+    getVolunteer,
+    updateVolunteer,
+    deleteVolunteer,
+    createVolunteer
   }
 })

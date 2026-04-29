@@ -12,12 +12,12 @@ const toast = useToast()
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  phone_contact: z.string().optional().nullable(),
+  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   email_contact: z.string().email('Email inválido').optional().nullable(),
   address: z.string().optional().nullable(),
   logo: z.string().optional().nullable(),
   poc_name: z.string().optional().nullable(),
-  poc_phone: z.string().optional().nullable(),
+  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
   description: z.string().optional().nullable()
 })
@@ -90,65 +90,66 @@ onMounted(() => {
       label="Nova Entidade"
       color="primary"
     />
-
     <template #body>
       <UForm
         :state="state"
-        class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5"
         @submit="onSubmit"
       >
-        <div class="space-y-5">
-          <UFormField label="Tipo de Entidade:" name="entity_type_id">
-            <USelect
-              v-model="state.entity_type_id"
-              :items="entityTypes"
-              placeholder="Seleciona o tipo"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Nome:" name="name">
-            <UInput v-model="state.name" class="w-full" required />
-          </UFormField>
-          <UFormField label="Email:" name="email">
-            <UInput v-model="state.email_contact" class="w-full" required />
-          </UFormField>
-          <UFormField label="Contacto:" name="phone_contact">
-            <UInput v-model="state.phone_contact" class="w-full" required />
-          </UFormField>
-          <UFormField label="Morada:" name="address">
-            <UInput v-model="state.address" class="w-full" required />
-          </UFormField>
-        </div>
-        <div class="space-y-5">
-          <UFormField label="Nome do Responsável:" name="poc_name">
-            <UInput v-model="state.poc_name" class="w-full" required />
-          </UFormField>
-          <UFormField label="Email do Responsável:" name="poc_email">
-            <UInput v-model="state.poc_email" class="w-full" required />
-          </UFormField>
-          <UFormField label="Contacto do Responsável:" name="poc_phone">
-            <UInput v-model="state.poc_phone" class="w-full" required />
-          </UFormField>
-          <UFormField label="Observações:" name="description">
-            <UTextarea v-model="state.description" class="w-full" />
-          </UFormField>
-        </div>
+        <UFormField class="mb-5">
+          <div class="relative flex items-center gap-4 group">
+            <div class="w-16 h-16 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center overflow-hidden transition group-hover:scale-105">
+              <UIcon name="i-lucide-image" class="w-6 h-6 text-muted group-hover:text-primary transition" />
+            </div>
+            <div>
+              <UButton label="Carregar imagem" variant="soft" class="transition group-hover:bg-primary group-hover:text-white"/>
+              <p class="text-xs text-muted mt-1">PNG, JPG até 2MB</p>
+            </div>
+            <UFileUpload class="absolute inset-0 opacity-0 cursor-pointer" />
+          </div>
+        </UFormField>
+        <div class="h-px border-t border-stone-200 dark:border-stone-800 mb-5" />
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">
+          <div class="space-y-5">
+            <UFormField label="Tipo de Entidade:" name="entity_type_id">
+              <USelect
+                v-model="state.entity_type_id"
+                :items="entityTypes"
+                placeholder="Seleciona o tipo"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="Nome:" name="name">
+              <UInput v-model="state.name" class="w-full" required />
+            </UFormField>
+            <UFormField label="Email:" name="email">
+              <UInput v-model="state.email_contact" class="w-full" required />
+            </UFormField>
+            <UFormField label="Contacto:" name="phone_contact">
+              <UInput v-model="state.phone_contact" class="w-full" required />
+            </UFormField>
+            <UFormField label="Morada:" name="address">
+              <UInput v-model="state.address" class="w-full" required />
+            </UFormField>
+          </div>
+          <div class="space-y-5">
+            <UFormField label="Nome do Responsável:" name="poc_name">
+              <UInput v-model="state.poc_name" class="w-full" required />
+            </UFormField>
+            <UFormField label="Email do Responsável:" name="poc_email">
+              <UInput v-model="state.poc_email" class="w-full" required />
+            </UFormField>
+            <UFormField label="Contacto do Responsável:" name="poc_phone">
+              <UInput v-model="state.poc_phone" class="w-full" required />
+            </UFormField>
+            <UFormField label="Observações:" name="description">
+              <UTextarea v-model="state.description" class="w-full" />
+            </UFormField>
+          </div>
 
-        <div class="col-span-1 lg:col-span-2 flex justify-between gap-2">
-          <UButton
-            label="Cancelar"
-            color="neutral"
-            variant="subtle"
-            class="flex-1 justify-center"
-            @click="open = false"
-          />
-
-          <UButton
-            label="Guardar"
-            color="primary"
-            type="submit"
-            class="flex-1 justify-center"
-          />
+          <div class="col-span-1 lg:col-span-2 flex justify-between gap-2">
+            <UButton label="Cancelar" color="neutral" variant="subtle" class="flex-1 justify-center" @click="open = false"/>
+            <UButton label="Guardar" color="primary" type="submit" class="flex-1 justify-center"/>
+          </div>
         </div>
       </UForm>
     </template>

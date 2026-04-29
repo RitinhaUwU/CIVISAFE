@@ -11,6 +11,7 @@ const { data: notifications } = await useFetch<Notification[]>('/api/notificatio
   <USlideover
     v-model:open="isNotificationsSlideoverOpen"
     title="Notifications"
+    side="left"
   >
     <template #body>
       <NuxtLink
@@ -30,18 +31,15 @@ const { data: notifications } = await useFetch<Notification[]>('/api/notificatio
             size="md"
           />
         </UChip>
-
         <div class="text-sm flex-1">
           <p class="flex items-center justify-between">
             <span class="text-highlighted font-medium">{{ notification.sender.name }}</span>
-
             <time
               :datetime="notification.date"
               class="text-muted text-xs"
               v-text="formatTimeAgo(new Date(notification.date))"
             />
           </p>
-
           <p class="text-dimmed">
             {{ notification.body }}
           </p>

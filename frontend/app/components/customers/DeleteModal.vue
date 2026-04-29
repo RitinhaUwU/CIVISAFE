@@ -1,41 +1,56 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
-  count?: number
-}>(), {
-  count: 0
+
+const api = useApiStore()
+const toast = useToast()
+const props = defineProps<{
+  id: number
+  name: string
+  open: boolean
+}>()
+
+const emit = defineEmits(['update:open', 'deleted'])
+
+const openModel = computed({
+  get: () => props.open,
+  set: (value: boolean) => emit('update:open', value)
 })
 
-const open = ref(false)
+const onSubmit = async () => {
+  if (!props.id) return
 
-async function onSubmit() {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  open.value = false
+  try {
+    await api.deleteUser(props.id)
+
+    toast.add({
+      title: 'Eliminado com sucesso',
+      description: `O utilizador foi eliminado.`,
+      color: 'success'
+    })
+
+    emit('deleted')
+    emit('update:open', false)
+
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: 'Não foi possível eliminar o utilizador.',
+      color: 'error'
+    })
+  }
 }
 </script>
 
 <template>
   <UModal
-    v-model:open="open"
-    :title="`Delete ${count} customer${count > 1 ? 's' : ''}`"
-    :description="`Are you sure, this action cannot be undone.`"
+    v-model:open="openModel"
+    :title="`Eliminar Utilizador: ${props.name}`"
+    :description="`Tem certeza que deseja eliminar o utilizador '${props.name}'?`"
+    :ui="{ close: 'hidden' }"
   >
-    <slot />
-
     <template #body>
       <div class="flex justify-end gap-2">
-        <UButton
-          label="Cancel"
-          color="neutral"
-          variant="subtle"
-          @click="open = false"
-        />
-        <UButton
-          label="Delete"
-          color="error"
-          variant="solid"
-          loading-auto
-          @click="onSubmit"
-        />
+        <UButton label="Cancelar" color="neutral" variant="subtle" @click="emit('update:open', false)" />
+        <UButton label="Eliminar" color="error" loading-auto @click="onSubmit" />
       </div>
     </template>
   </UModal>

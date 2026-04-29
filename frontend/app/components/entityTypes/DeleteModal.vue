@@ -11,6 +11,11 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open', 'deleted'])
 
+const openModel = computed({
+  get: () => props.open,
+  set: (value: boolean) => emit('update:open', value)
+})
+
 const onSubmit = async () => {
   if (!props.id) return
 
@@ -38,7 +43,7 @@ const onSubmit = async () => {
 
 <template>
   <UModal
-    v-model:open="props.open"
+    v-model:open="openModel"
     :title="`Eliminar Tipo de Entidade: ${props.name}`"
     :description="`Tem certeza que deseja eliminar o Tipo de Entidade '${props.name}'?`"
     :ui="{ close: 'hidden' }"

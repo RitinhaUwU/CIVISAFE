@@ -12,7 +12,7 @@ class EntityTypeRequest extends FormRequest
 
         return [
             'name' => [$is_patch ? 'sometimes' : 'required'],
-            'description' => ['sometimes', 'nullable'],
+            'description' => [$is_patch ? 'sometimes' : 'nullable'],
         ];
     }
 

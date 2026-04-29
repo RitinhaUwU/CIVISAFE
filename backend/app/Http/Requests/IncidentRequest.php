@@ -8,26 +8,28 @@ class IncidentRequest extends FormRequest
 {
     public function rules(): array
     {
+        $is_patch = $this->isMethod('PATCH');
+
         return [
-            'identifier' => ['required'],
-            'incident_type_id' => ['required', 'exists:incident_types,id'],
-            'incident_state_id' => ['required', 'exists:incident_states'],
-            'user_id' => ['required', 'exists:users'],
-            'start_datetime' => ['required', 'date'],
-            'end_datetime' => ['nullable', 'date'],
-            'coordinates' => ['nullable'],
-            'common_place' => ['nullable'],
-            'address' => ['nullable'],
-            'parish' => ['nullable'],
-            'municipality' => ['nullable'],
-            'district' => ['nullable'],
-            'command_post' => ['required'],
-            'is_major' => ['boolean'],
-            'alert_source_relationship' => ['nullable'],
-            'alert_source_name' => ['nullable'],
-            'alert_source_contact' => ['nullable'],
-            'obs' => ['nullable'],
-            'incident_id' => ['nullable', 'integer'],
+            'identifier' => [$is_patch ? 'sometimes' : 'required'],
+            'incident_type_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_types,id'],
+            'incident_state_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_states'],
+            'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users'],
+            'start_datetime' => [$is_patch ? 'sometimes' : 'required', 'date'],
+            'end_datetime' => [$is_patch ? 'sometimes' : 'nullable', 'date'],
+            'coordinates' => [$is_patch ? 'sometimes' : 'nullable'],
+            'common_place' => [$is_patch ? 'sometimes' : 'nullable'],
+            'address' => [$is_patch ? 'sometimes' : 'nullable'],
+            'parish' => [$is_patch ? 'sometimes' : 'nullable'],
+            'municipality' => [$is_patch ? 'sometimes' : 'nullable'],
+            'district' => [$is_patch ? 'sometimes' : 'nullable'],
+            'command_post' => [$is_patch ? 'sometimes' : 'required'],
+            'is_major' => [$is_patch ? 'sometimes' : 'required', 'boolean'],
+            'alert_source_relationship' => [$is_patch ? 'sometimes' : 'nullable'],
+            'alert_source_name' => [$is_patch ? 'sometimes' : 'nullable'],
+            'alert_source_contact' => [$is_patch ? 'sometimes' : 'nullable'],
+            'obs' => [$is_patch ? 'sometimes' : 'nullable'],
+            'incident_id' => [$is_patch ? 'sometimes' : 'nullable', 'integer'],
         ];
     }
 

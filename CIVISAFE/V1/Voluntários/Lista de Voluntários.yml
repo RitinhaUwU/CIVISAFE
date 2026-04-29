@@ -1,11 +1,11 @@
 info:
-  name: Dados Utilizador
+  name: Lista de Voluntários
   type: http
   seq: 1
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/v1/user"
+  url: "{{BASE_URL}}/api/v1/volunteers"
   auth: inherit
 
 settings:

@@ -185,13 +185,6 @@ onMounted(fetch)
 
       <IncidentTypesUploadModal v-model:open="uploadFileModalOpen"/>
 
-      <IncidentTypesDeleteModal
-        v-if="selectedTypeById"
-        v-model:open="deleteModalOpen"
-        :id="selectedTypeById?.id"
-        :type="selectedTypeById?.type"
-        @deleted="fetch"
-      />
     </template>
   </UDashboardPanel>
 </template>
