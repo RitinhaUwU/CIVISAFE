@@ -7,6 +7,7 @@ use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentPriorityController;
 use App\Http\Controllers\IncidentStateController;
 use App\Http\Controllers\IncidentTypeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/users', UserController::class);
         Route::get('/user', function (Request $request) {
             return $request->user();
+        });
+
+        Route::prefix('notifications')->group(function () {
+           Route::get('/', [NotificationController::class, 'index']);
+           Route::delete('/', [NotificationController::class, 'readAll']);
+           Route::delete('/{notification}', [NotificationController::class, 'read']);
         });
 
         Route::apiResource('/entities', EntityController::class);

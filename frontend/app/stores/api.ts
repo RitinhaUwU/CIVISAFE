@@ -173,6 +173,24 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/incidentPriorities/${id}`)
   }
 
+  /*************************
+   *
+   *  Notifications
+   *
+   *************************/
+
+  const getNotifications = () => {
+    return axios.get(`${config.public.apiBase}/notifications`);
+  }
+
+  const readNotification = (uuid: string) => {
+    return axios.delete(`${config.public.apiBase}/notifications/${uuid}`);
+  }
+
+  const readAllNotifications = () => {
+    return axios.delete(`${config.public.apiBase}/notifications/`);
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -203,6 +221,9 @@ export const useApiStore = defineStore('api', () => {
     getIncidentPriority,
     updateIncidentPriority,
     deleteIncidentPriority,
-    createIncidentPriority
+    createIncidentPriority,
+    getNotifications,
+    readNotification,
+    readAllNotifications
   }
 })

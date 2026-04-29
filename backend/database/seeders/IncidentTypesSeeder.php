@@ -40,7 +40,7 @@ class IncidentTypesSeeder extends Seeder
         DB::table('incident_types')->upsert(
             $data,
             ['code'],
-            ['species', 'type', 'description', 'is_active', 'created_at', 'updated_at'],
+            ['species', 'type', 'description', 'created_at', 'updated_at'],
         );
     }
 }
