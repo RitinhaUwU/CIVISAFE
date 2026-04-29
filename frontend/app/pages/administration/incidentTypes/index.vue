@@ -9,12 +9,8 @@ const api = useApiStore()
 const incidentTypes = ref<IncidentTypes[]>([])
 const loading = ref(false)
 const total = ref(0)
-
 const search = ref('')
-
-const deleteModalOpen = ref(false)
 const uploadFileModalOpen = ref(false)
-const selectedTypeById = ref<IncidentTypes>(null)
 
 type IncidentTypes = {
   id: number;
