@@ -2,6 +2,8 @@
 import type {NavigationMenuItem} from '@nuxt/ui'
 import { useAuthStore } from '../stores/auth'
 
+let { isNotificationsSlideoverOpen } = useDashboard()
+
 const auth = useAuthStore()
 const open = ref(false)
 
@@ -62,7 +64,15 @@ const links = [
         to: '/volunteers'
       }]
     }
-  ]
+  ], [{
+    label: 'Notificações',
+    icon: 'i-lucide-message-circle',
+    target: '_blank',
+    onSelect: () => {
+      isNotificationsSlideoverOpen.value = true
+      open.value = false
+    }
+  }]
 ] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
