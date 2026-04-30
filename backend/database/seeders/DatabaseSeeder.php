@@ -3,15 +3,12 @@
 namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
-use App\Models\Category;
 use App\Models\Entity;
+use App\Models\Facility;
 use App\Models\Incident;
 use App\Models\IncidentParty;
-use App\Models\IncidentPriority;
-use App\Models\IncidentState;
 use App\Models\User;
 use App\Models\Volunteer;
-use DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -64,6 +61,7 @@ class DatabaseSeeder extends Seeder
         Entity::factory(10)->create();
         Incident::factory(60)->create();
         Volunteer::factory(10)->create();
+        Facility::factory(10)->create();
 
         for ($i = 0; $i <= 20; $i++) {
             Incident::factory()->create([

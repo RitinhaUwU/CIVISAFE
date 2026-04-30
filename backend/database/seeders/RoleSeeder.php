@@ -34,6 +34,7 @@ class RoleSeeder extends Seeder
             PermissionsEnum::INCIDENT_TYPES_LIST->value,
             PermissionsEnum::INCIDENT_STATES_LIST->value,
             PermissionsEnum::INCIDENT_PRIORITIES_LIST->value,
+            PermissionsEnum::FACILITIES_LIST->value,
         ]);
     }
 }

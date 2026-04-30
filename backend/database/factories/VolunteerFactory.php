@@ -29,7 +29,7 @@ VolunteerFactory extends Factory
             'classification' => $classification,
             'num_elements' => $classification === 'single' ? 1 : $this->faker->numberBetween(2, 20),
             'mission' => $this->faker->text(),
-            'team_identification' => $this->faker->text(100),
+            'team_identification' => $this->faker->word(),
             'has_accommodation' => $hasAccommodation,
             'location' => $hasAccommodation ? $this->faker->address() : null,
             'has_meal' => $hasMeal,

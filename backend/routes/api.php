@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
+use App\Http\Controllers\FacilitiesController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentPriorityController;
 use App\Http\Controllers\IncidentStateController;
@@ -33,6 +34,6 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/incidentStates', IncidentStateController::class);
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);
         Route::apiResource('/incidents', IncidentController::class);
-
+        Route::apiResource('/facilities', FacilitiesController::class);
     });
 });
