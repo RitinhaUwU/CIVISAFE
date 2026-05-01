@@ -22,6 +22,11 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::delete('logout', [AuthController::class, 'logout']);
 
+        //Custom para seguir a regra de versionamento da API
+        Route::post('broadcasting/auth', function (Request $request) {
+            return Broadcast::auth($request);
+        });
+
         Route::apiResource('/users', UserController::class);
         Route::get('/user', function (Request $request) {
             return new UserResource($request->user()->load('roles'));

@@ -12,6 +12,7 @@ export interface Notification {
   uuid: string
   title: string
   body: string
+  style: Toast['variants']
   date: string
   read: boolean
 }

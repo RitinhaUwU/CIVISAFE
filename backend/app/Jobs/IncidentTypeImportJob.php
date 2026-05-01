@@ -2,10 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Enums\NotificationStyles;
 use App\Imports\IncidentTypeImport;
 use App\Models\IncidentType;
 use App\Models\User;
-use App\Notifications\IncidentTypeImportSuccessNotification;
+use App\Notifications\GenericNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,7 +17,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\Validators\ValidationException;
 use Throwable;
 
 #[Tries(1)]
@@ -41,12 +41,22 @@ class IncidentTypeImportJob implements ShouldQueue
                 }
             });
 
-            $this->user->notify(new IncidentTypeImportSuccessNotification());
+            $this->user->notify(new GenericNotification(
+                "Tipos de Ocorrência Atualizados!",
+                "A nova lista de tipos de ocorrência foi carregada com sucesso.",
+                NotificationStyles::SUCCESS
+            ));
         } catch (\Exception $exception) {
             if (!empty($import->getFailures())) {
                 foreach ($import->getFailures() as $failure) {
                     Log::warning("Row {$failure->row()}: " . implode(', ', $failure->errors()));
                 }
+
+                $this->user->notify(new GenericNotification(
+                    "Erro ao Atualizar Tipos de Ocorrência",
+                    implode("\n", $import->getFailures()),
+                    NotificationStyles::ERROR
+                ));
             } else {
                 Log::error("Error importing incident types", ['message' => $exception->getMessage(), 'exception' => get_class($exception)]);
             }
