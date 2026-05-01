@@ -21,7 +21,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: '',
-      websocketURL: '',
       reverbAppKey: '',
       reverbHost: '',
       reverbPort: '',
