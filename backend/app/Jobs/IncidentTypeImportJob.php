@@ -48,16 +48,26 @@ class IncidentTypeImportJob implements ShouldQueue
             ));
         } catch (\Exception $exception) {
             if (!empty($import->getFailures())) {
+                $errors = [];
                 foreach ($import->getFailures() as $failure) {
-                    Log::warning("Row {$failure->row()}: " . implode(', ', $failure->errors()));
+                    foreach ($failure->errors() as $error) {
+                        $errors[] = "Linha {$failure->row()}: $error";
+                        Log::warning("Linha {$failure->row()}: " . $error);
+                    }
                 }
 
                 $this->user->notify(new GenericNotification(
                     "Erro ao Atualizar Tipos de Ocorrência",
-                    implode("\n", $import->getFailures()),
+                    implode("\n", $errors),
                     NotificationStyles::ERROR
                 ));
             } else {
+                $this->user->notify(new GenericNotification(
+                    "Erro ao Atualizar Tipos de Ocorrência",
+                    "Ocorreu um erro interno ao tentar aplicar os dados. A ação foi revertida",
+                    NotificationStyles::ERROR
+                ));
+
                 Log::error("Error importing incident types", ['message' => $exception->getMessage(), 'exception' => get_class($exception)]);
             }
         } finally {
