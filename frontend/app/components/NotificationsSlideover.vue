@@ -91,9 +91,10 @@ onMounted(() => {
         @click.prevent="markNotificationRead(notification.id)"
       >
         <span v-if="!notification.read_at" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500" />
-        <div
-          class="w-1 self-stretch rounded-full"
-          :class="notification.data.style === 'success' ? 'bg-green-500' : 'bg-red-500'"
+        <UBadge
+          :color="notification.data.style"
+          variant="solid"
+          class="w-1 self-stretch rounded-full p-0"
         />
         <div class="text-sm flex-1 flex flex-col justify-between">
           <span class="text-highlighted font-medium">
