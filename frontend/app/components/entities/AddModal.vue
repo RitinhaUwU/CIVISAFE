@@ -10,6 +10,8 @@ const entityTypes = ref([])
 
 const toast = useToast()
 
+const imageFile = ref(null)
+
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
@@ -95,17 +97,17 @@ onMounted(() => {
         :state="state"
         @submit="onSubmit"
       >
-        <UFormField class="mb-5">
-          <div class="relative flex items-center gap-4 group">
-            <div class="w-16 h-16 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center overflow-hidden transition group-hover:scale-105">
-              <UIcon name="i-lucide-image" class="w-6 h-6 text-muted group-hover:text-primary transition" />
-            </div>
-            <div>
-              <UButton label="Carregar imagem" variant="soft" class="transition group-hover:bg-primary group-hover:text-white"/>
-              <p class="text-xs text-muted mt-1">PNG, JPG até 2MB</p>
-            </div>
-            <UFileUpload class="absolute inset-0 opacity-0 cursor-pointer" />
-          </div>
+        <UFormField name="image" class="mb-5">
+          <UFileUpload
+            icon="i-lucide-image"
+            v-model="imageFile"
+            accept="image/*"
+            color="neutral"
+            highlight
+            label="Carregue uma imagem"
+            description="SVG, PNG, JPG or GIF (max. 2MB)"
+            class="w-full min-h-48 cursor-pointer bg-stone-50/40 dark:bg-stone-900/40 hover:bg-stone-100/70 dark:hover:bg-stone-800/60 transition-all duration-200 ease-out"
+          />
         </UFormField>
         <div class="h-px border-t border-stone-200 dark:border-stone-800 mb-5" />
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">

@@ -8,48 +8,38 @@ const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
-const entityTypes = ref([])
+const facilities = ref([])
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  email_contact: z.string().email('Email inválido').optional().nullable(),
+  contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  email: z.string().email('Email inválido').optional().nullable(),
   address: z.string().optional().nullable(),
-  logo: z.string().optional().nullable(),
-  poc_name: z.string().optional().nullable(),
-  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  poc_email: z.string().email('Email inválido').optional().nullable(),
+  image: z.string().optional().nullable(),
   description: z.string().optional().nullable()
 })
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema & { entity_type_id: number }>>({
+const state = reactive<Partial<Schema>>({
   name: '',
-  email_contact: '',
-  phone_contact: '',
+  email: '',
+  contact: '',
   address: '',
-  poc_name: '',
-  poc_email: '',
-  poc_phone: '',
-  description: '',
-  entity_type_id: null,
+  image: '',
+  description: ''
 })
 
 const toast = useToast()
 
-const fetchEntity = async () => {
-  const res = await api.getEntity(route.params.id)
+const fetchFacility = async () => {
+  const res = await api.getFacility(route.params.id)
   const data = res.data.data
 
-  Object.assign(state, {
-    ...data,
-    entity_type_id: data.entityType?.id,
-  })
+  Object.assign(state, data)
 }
 
 const handleSave = async () => {
-
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -65,7 +55,7 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateEntity(route.params.id, state)
+    await api.updateFacility(route.params.id, state)
 
     toast.add({
       title: 'Sucesso',
@@ -83,29 +73,20 @@ const handleSave = async () => {
   }
 }
 
-const fetchEntityTypes = async () => {
-  const res = await api.getEntityTypes()
-  entityTypes.value = res.data.data.map((t: any) => ({
-    label: t.name,
-    value: t.id
-  }))
-}
-
 const items = ref<BreadcrumbItem[]>([
   {
-    label: 'Entidades',
+    label: 'Instalações',
     icon: 'i-lucide-building-2',
-    to: '/administration/entities'
+    to: '/facilities'
   },
   {
-    label: 'Dados da Entidade',
+    label: 'Dados da Instalação',
     icon: 'i-lucide-building',
   }
 ])
 
 onMounted(() => {
-  fetchEntity()
-  fetchEntityTypes()
+  fetchFacility()
 })
 </script>
 
@@ -114,7 +95,7 @@ onMounted(() => {
     <header class="border-b border-stone-200 dark:border-stone-800">
       <div class="px-6 sm:px-8 py-6">
         <p class="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">
-          Entidade
+          Instalação
         </p>
         <div class="flex items-center justify-between w-full gap-4">
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight truncate max-w-full">
@@ -133,39 +114,17 @@ onMounted(() => {
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Tipo" class="sm:col-span-2">
-                <USelect
-                  v-model="state.entity_type_id"
-                  :items="entityTypes"
-                  class="w-full"
-                />
-              </UFormField>
               <UFormField label="Nome" class="sm:col-span-2">
                 <UInput v-model="state.name" class="w-full" />
               </UFormField>
-              <UFormField label="Email de contacto">
-                <UInput v-model="state.email_contact" class="w-full" />
-              </UFormField>
-              <UFormField label="Telefone">
-                <UInput v-model="state.phone_contact" class="w-full" />
-              </UFormField>
-              <UFormField label="Morada" class="sm:col-span-2">
-                <UInput v-model="state.address" class="w-full" />
-              </UFormField>
-            </div>
-          </section>
-          <div class="h-px border-t border-stone-200 dark:border-stone-800" />
-          <section class="space-y-2">
-            <h2 class="font-bold">Responsável</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Nome completo" class="sm:col-span-2">
-                <UInput v-model="state.poc_name" class="w-full" />
-              </UFormField>
               <UFormField label="Email">
-                <UInput v-model="state.poc_email" class="w-full" />
+                <UInput v-model="state.email" class="w-full" />
               </UFormField>
               <UFormField label="Telefone">
-                <UInput v-model="state.poc_phone" class="w-full" />
+                <UInput v-model="state.contact" class="w-full" />
+              </UFormField>
+              <UFormField label="Sede" class="sm:col-span-2">
+                <UInput v-model="state.address" class="w-full" />
               </UFormField>
             </div>
           </section>
@@ -173,6 +132,11 @@ onMounted(() => {
           <section class="space-y-2">
             <h2 class="font-bold">Descrição</h2>
             <UTextarea v-model="state.description" :rows="5" class="w-full" />
+          </section>
+          <div class="h-px border-t border-stone-200 dark:border-stone-800" />
+          <section class="space-y-2">
+            <h2 class="font-bold">Ficheiros:</h2>
+            <UButton class="rounded-full" icon="i-lucide-plus" color="primary" />
           </section>
         </div>
         <div class="hidden lg:flex flex-col items-center justify-start gap-6 pt-1">

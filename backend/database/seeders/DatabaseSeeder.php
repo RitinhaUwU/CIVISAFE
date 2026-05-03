@@ -6,6 +6,7 @@ use App\Enums\RolesEnum;
 use App\Models\Entity;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\Facility;
 use App\Models\Incident;
 use App\Models\IncidentParty;
 use App\Models\User;
@@ -62,6 +63,7 @@ class DatabaseSeeder extends Seeder
         Entity::factory(10)->create();
         Incident::factory(60)->create();
         Volunteer::factory(10)->create();
+        Facility::factory(10)->create();
 
         Incident::factory(20)->create([
             'is_major' => false,

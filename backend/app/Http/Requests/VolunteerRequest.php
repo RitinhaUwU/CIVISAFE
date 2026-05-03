@@ -14,9 +14,9 @@ class VolunteerRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'name' => [$is_patch ? 'required' : 'nullable', 'string'],
-            'contact' => [$is_patch ? 'required' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
-            'email' => [$is_patch ? 'required' : 'nullable', 'email'],
+            'name' => [$is_patch ? 'sometimes' : 'required', 'string'],
+            'contact' => [$is_patch ? 'sometimes' : 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
+            'email' => [$is_patch ? 'sometimes' : 'required', 'email'],
             'team_identification' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
             'num_elements' => [$is_patch ? 'sometimes' : 'nullable', 'integer', 'min:1'],
             'mission' => [$is_patch ? 'sometimes' : 'nullable', 'string'],

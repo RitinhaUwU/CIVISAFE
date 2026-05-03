@@ -246,6 +246,32 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/notifications/`);
   }
 
+  /*************************
+   *
+   *  Facilities
+   *
+   *************************/
+
+  const getFacilities = (params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/facilities`, { params })
+  }
+
+  const getFacility = (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/facilities/${id}`, params)
+  }
+
+  const createFacility = (params) => {
+    return axios.post(`${config.public.apiBase}/facilities`, params)
+  }
+
+  const updateFacility = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/facilities/${id}`, params)
+  }
+
+  const deleteFacility = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/facilities/${id}`)
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -290,6 +316,11 @@ export const useApiStore = defineStore('api', () => {
     getVolunteer,
     updateVolunteer,
     deleteVolunteer,
-    createVolunteer
+    createVolunteer,
+    getFacilities,
+    getFacility,
+    updateFacility,
+    deleteFacility,
+    createFacility
   }
 })
