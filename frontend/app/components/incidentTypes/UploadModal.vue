@@ -42,7 +42,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Carregar Ficheiro..." description="Carregue o ficheiro Excel preenchido com os novos Tipos de Ocorrência">
+  <UModal
+    v-model:open="open"
+    title="Carregar Ficheiro..."
+    description="Carregue o ficheiro Excel preenchido com os novos Tipos de Ocorrência"
+  >
+    <UButton
+      icon="i-lucide-upload"
+      label="Carregar Estados"
+      color="primary"
+    />
     <template #body>
       <UForm :state="state" :schema="schema" class="space-y-5" @submit="onSubmit">
 

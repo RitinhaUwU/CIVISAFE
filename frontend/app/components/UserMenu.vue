@@ -57,11 +57,6 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
   target: '_blank'
 }, {
-  label: 'GitHub repository',
-  icon: 'i-simple-icons-github',
-  to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
-}, {
   label: 'Sair',
   icon: 'i-lucide-log-out',
   async onSelect() {

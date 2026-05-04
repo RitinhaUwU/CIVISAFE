@@ -12,11 +12,12 @@ class NotificationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'uuid' => $request->uuid,
-            'title' => $request->title,
-            'body' => $request->body,
-            'date' => $request->created_at,
-            'read' => $request->read_at ? true : false
+            'uuid' => $this->id,
+            'title' => $this->data['title'],
+            'body' => $this->data['body'],
+            'style' => $this->data['style'],
+            'date' => $this->created_at,
+            'read' => $this->read_at ? true : false
         ];
     }
 }

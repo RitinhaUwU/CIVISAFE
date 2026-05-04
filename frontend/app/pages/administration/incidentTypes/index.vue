@@ -132,12 +132,7 @@ onMounted(fetch)
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <UButton
-          icon="i-lucide-upload"
-          label="Carregar Estados"
-          color="primary"
-          @click="uploadFileModalOpen = true"
-        />
+        <IncidentTypesUploadModal v-model:open="uploadFileModalOpen" />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -178,8 +173,6 @@ onMounted(fetch)
           @update:page="(p) => (pagination.pageIndex = p - 1)"
         />
       </div>
-
-      <IncidentTypesUploadModal v-model:open="uploadFileModalOpen"/>
 
     </template>
   </UDashboardPanel>

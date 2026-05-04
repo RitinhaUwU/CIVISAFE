@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 
@@ -9,18 +10,21 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json($request->user()->notifications()
+        $notifications = $request->user()->notifications()
             ->orderBy('created_at', 'desc')
             ->limit(30)
-            ->get()
-        );
+            ->get();
+        return NotificationResource::collection($notifications);
     }
 
     public function read(Request $request, DatabaseNotification $notification)
     {
-        //TODO: Validar que a notificação é do utilizador
+        if($notification->notifiable_id !== auth()->id()) {
+            abort(403);
+        }
+
         $notification->markAsRead();
-        return response()->json($notification->fresh());
+        return new NotificationResource($notification->fresh());
     }
 
     public function readAll(Request $request)
