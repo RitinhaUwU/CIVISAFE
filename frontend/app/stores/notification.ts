@@ -4,7 +4,7 @@ import {useApiStore} from "~/stores/api";
 import {useAuthStore} from "~/stores/auth";
 
 export const useNotificationStore = defineStore('notification', () => {
-  const { $echo } = useNuxtApp();
+  const {$echo} = useNuxtApp();
   const apiStore = useApiStore();
   const authStore = useAuthStore();
   const toast = useToast();
@@ -15,6 +15,19 @@ export const useNotificationStore = defineStore('notification', () => {
     console.debug("Called websocket connect function.")
 
     $echo.options.auth.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
+
+    apiStore.getNotifications()
+      .then(r => {
+        notifications.value = r.data.data;
+      })
+      .catch(e => {
+        console.debug(e);
+        toast.add({
+          title: "Erro",
+          description: "Ocorreu um erro ao carregar notificações",
+          color: "error"
+        });
+      })
 
     $echo.private(`App.Models.User.${authStore.currentUserID}`)
       // Isto tem de ser ".NotificationEvent" porque se não tiver o ponto ele pensa que é "App.Events.NotificationEvent"
@@ -33,11 +46,39 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   const read = (uuid: string) => {
+    if(notifications.value.find(notif => notif.uuid === uuid)?.read === true)
+      return;
 
+    apiStore.readNotification(uuid)
+      .then(r => {
+        notifications.value = notifications.value.map(notification => notification.uuid === uuid ? { ...notification, read: true } : notification)
+      })
+      .catch(e => {
+        console.debug(e);
+        toast.add({
+          title: "Erro",
+          description: "Ocorreu um erro ao marcar a notificação como lida",
+          color: "error"
+        });
+      })
   }
 
   const readAll = () => {
+    if(!notifications.value.some(notification => notification.read === true))
+      return;
 
+    apiStore.readAllNotifications()
+      .then(r => {
+        notifications.value = notifications.value.map(n => ({ ...n, read: true }))
+      })
+      .catch(e => {
+        console.debug(e);
+        toast.add({
+          title: "Erro",
+          description: "Ocorreu um erro ao marcar as notificações como lidas",
+          color: "error"
+        });
+      });
   }
 
   return {

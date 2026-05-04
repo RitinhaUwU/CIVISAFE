@@ -31,14 +31,14 @@ class GenericNotification extends Notification implements ShouldBroadcast
 
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return (new BroadcastMessage([
+        return new BroadcastMessage([
             'uuid' => $this->id,
             'title' => $this->title,
             'body' => $this->body,
             'style' => $this->style->value,
             'date' => Carbon::now()->toDateTimeString(),
             'read' => false,
-        ]))->onQueue('notifications');
+        ])->onQueue('notifications');
     }
 
     public function broadcastAs(): string
