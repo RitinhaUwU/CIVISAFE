@@ -19,8 +19,20 @@ class EquipmentFactory extends Factory
 
         $custom_fields = [];
 
-        foreach (json_decode($equipmentType->custom_fields) as $item) {
-            $custom_fields[$item] = $this->faker->word();
+        foreach (json_decode($equipmentType->custom_fields) as $field) {
+            if($field->mandatory || $this->faker->boolean(50)) {
+                switch ($field->type) {
+                    case 'text':
+                        $custom_fields[$field->name] = $this->faker->text();
+                        break;
+                    case 'number':
+                        $custom_fields[$field->name] = $this->faker->randomNumber();
+                        break;
+                    case 'boolean':
+                        $custom_fields[$field->name] = $this->faker->boolean();
+                        break;
+                }
+            }
         }
 
         return [
