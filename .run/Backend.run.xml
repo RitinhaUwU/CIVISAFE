@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend" type="PhpLocalRunConfigurationType" factoryName="PHP Console" path="$PROJECT_DIR$/backend/artisan" scriptParameters="serve">
+    <CommandLine workingDirectory="$PROJECT_DIR$/backend" />
+    <method v="2" />
+  </configuration>
+</component>

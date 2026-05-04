@@ -9,11 +9,10 @@ return new class extends Migration {
     {
         Schema::create('incident_types', function (Blueprint $table) {
             $table->id();
-            $table->integer('code')->unique();
+            $table->integer('code');
             $table->string('species');
             $table->string('type');
             $table->text('description');
-            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
         });
