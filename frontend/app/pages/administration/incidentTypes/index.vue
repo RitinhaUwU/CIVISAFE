@@ -132,7 +132,7 @@ onMounted(fetch)
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesUploadModal v-model:open="uploadFileModalOpen" />
+        <IncidentTypesUploadModal />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
