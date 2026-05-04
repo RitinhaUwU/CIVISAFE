@@ -27,51 +27,56 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     formData.append('file', event.data.file)
     await apiStore.uploadIncidentTypesFile(formData)
 
-    open.value = false
     toast.add({
       title: 'Ficheiro Carregado!',
       description: 'O Ficheiro será processado e receberá uma notificação quando a operação tiver terminado.',
       color: 'success'
     })
-
+    closeModal()
+    emit('created')
   } catch (e: any) {
     console.error(e)
     //const errors = e.response?.data?.errors
   }
 }
+
+function closeModal(){
+  open.value = false
+  state.file = undefined
+}
 </script>
 
 <template>
+  <UButton
+    icon="i-lucide-upload"
+    label="Carregar Estados"
+    color="primary"
+    @click="open = true"
+  />
   <UModal
     v-model:open="open"
     title="Carregar Ficheiro..."
     description="Carregue o ficheiro Excel preenchido com os novos Tipos de Ocorrência"
   >
-    <UButton
-      icon="i-lucide-upload"
-      label="Carregar Estados"
-      color="primary"
-    />
     <template #body>
       <UForm :state="state" :schema="schema" class="space-y-5" @submit="onSubmit">
-
         <h1>Esta lista irá substituir todos os Tipos de Ocorrência atuais</h1>
-
         <UFormField name="file" label="Ficheiro" description="Ficheiro XLSX com nova listagem de Tipos de Ocorrência">
           <UFileUpload
+            :key="open"
             v-model="state.file"
             accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             class="min-h-48"
           />
         </UFormField>
-
         <div class="flex justify-between gap-3 pt-2">
           <UButton
             label="Cancelar"
             color="neutral"
             variant="subtle"
             class="flex-1 justify-center"
-            @click="open = false"
+            type="button"
+            @click="closeModal"
           />
           <UButton
             label="Carregar"

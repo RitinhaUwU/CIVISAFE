@@ -14,12 +14,11 @@ class IncidentTypeRequest extends FormRequest
         return [
             'code' => [$is_patch ? 'sometimes' : 'required', 'integer',
                 Rule::unique('incident_types', 'code')
-                    ->where(fn ($query) => $query->where('is_active', true))
+                    ->withoutTrashed()
             ],
             'species' => [$is_patch ? 'sometimes' : 'required'],
             'type' => [$is_patch ? 'sometimes' : 'required'],
             'description' => [$is_patch ? 'sometimes' : 'nullable'],
-            'is_active' => [$is_patch ? 'sometimes' : 'boolean'],
         ];
     }
 
