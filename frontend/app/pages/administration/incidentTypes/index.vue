@@ -9,11 +9,8 @@ const api = useApiStore()
 const incidentTypes = ref<IncidentTypes[]>([])
 const loading = ref(false)
 const total = ref(0)
-
 const search = ref('')
-
-const deleteModalOpen = ref(false)
-const selectedTypeById = ref<IncidentTypes>(null)
+const uploadFileModalOpen = ref(false)
 
 type IncidentTypes = {
   id: number;
@@ -21,7 +18,6 @@ type IncidentTypes = {
   species: string;
   type: string;
   description: string;
-  is_active: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -78,15 +74,6 @@ const columns: TableColumn<IncidentTypes | null>[] = [
           variant: 'ghost',
           onClick: () => {
             navigateTo(`/administration/incidentTypes/${row.original.id}`)
-          }
-        }),
-        h(UButton, {
-          icon: 'i-lucide-trash',
-          color: 'error',
-          variant: 'ghost',
-          onClick: () => {
-            selectedTypeById.value = row.original
-            deleteModalOpen.value = true
           }
         })
       )
@@ -145,11 +132,7 @@ onMounted(fetch)
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <UButton
-          icon="i-lucide-upload"
-          label="Carregar Estados"
-          color="primary"
-        />
+        <IncidentTypesUploadModal />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -191,13 +174,6 @@ onMounted(fetch)
         />
       </div>
 
-      <IncidentTypesDeleteModal
-        v-if="selectedTypeById"
-        v-model:open="deleteModalOpen"
-        :id="selectedTypeById?.id"
-        :type="selectedTypeById?.type"
-        @deleted="fetch"
-      />
     </template>
   </UDashboardPanel>
 </template>

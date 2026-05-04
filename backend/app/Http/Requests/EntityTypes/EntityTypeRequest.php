@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\EntityTypes;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class EntityTypesRequest extends FormRequest
+class EntityTypeRequest extends FormRequest
 {
     public function rules(): array
     {

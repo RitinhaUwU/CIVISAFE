@@ -20,8 +20,12 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: ''
-    }
+      apiBase: '',
+      reverbAppKey: '',
+      reverbHost: '',
+      reverbPort: '',
+      reverbScheme: '',
+    },
   },
 
   compatibilityDate: '2024-07-11',

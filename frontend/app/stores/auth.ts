@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useApiStore } from './api'
 import { useToast } from '../../.nuxt/imports'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const apiStore = useApiStore()
@@ -18,6 +17,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser.value = undefined
     localStorage.removeItem('token')
     apiStore.removeBearerToken?.()
+    useNotificationStore().disconnect();
   }
 
   const isLoggedIn = computed(() => currentUser.value !== undefined)
@@ -35,6 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
       apiStore.setBearerToken(token.value)
       const res = await apiStore.getAuthUser()
       currentUser.value = res.data.data
+      useNotificationStore().connect()
       return true
     } catch (err) {
       reset()
@@ -52,6 +53,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       await getUser()
 
+      useNotificationStore().connect()
+
       toast.add({
         title: 'Login efetuado com sucesso',
         color: 'success'
@@ -65,8 +68,6 @@ export const useAuthStore = defineStore('auth', () => {
         title: 'Credenciais inválidas',
         color: 'error'
       })
-
-      // throw err
     }
   }
 

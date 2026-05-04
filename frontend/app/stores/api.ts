@@ -1,10 +1,10 @@
 import {defineStore} from 'pinia'
-import axios from 'axios'
+import axios, {type AxiosRequestConfig} from 'axios'
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
 
-  interface QueryParams {
+  interface QueryParams{
     page?: number
     per_page?: number
     search?: string
@@ -80,16 +80,8 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidentTypes/${id}`, params)
   }
 
-  const createIncidentType = (params) => {
-    return axios.post(`${config.public.apiBase}/incidentTypes`, params)
-  }
-
-  const updateIncidentType = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/incidentTypes/${id}`, params)
-  }
-
-  const deleteIncidentType = (id: number) => {
-    return axios.delete(`${config.public.apiBase}/incidentTypes/${id}`)
+  const uploadIncidentTypesFile = (form: FormData) => {
+    return axios.post(`${config.public.apiBase}/incidentTypes`, form)
   }
 
   /*************************
@@ -236,6 +228,24 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/volunteers/${id}`)
   }
 
+  /*************************
+   *
+   *  Notifications
+   *
+   *************************/
+
+  const getNotifications = () => {
+    return axios.get(`${config.public.apiBase}/notifications`);
+  }
+
+  const readNotification = (uuid: string) => {
+    return axios.delete(`${config.public.apiBase}/notifications/${uuid}`);
+  }
+
+  const readAllNotifications = () => {
+    return axios.delete(`${config.public.apiBase}/notifications/`);
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -250,9 +260,7 @@ export const useApiStore = defineStore('api', () => {
     createUser,
     getIncidentTypes,
     getIncidentType,
-    updateIncidentType,
-    deleteIncidentType,
-    createIncidentType,
+    uploadIncidentTypesFile,
     getEntities,
     getEntity,
     updateEntity,
@@ -275,6 +283,9 @@ export const useApiStore = defineStore('api', () => {
     updateIncidentPriority,
     deleteIncidentPriority,
     createIncidentPriority,
+    getNotifications,
+    readNotification,
+    readAllNotifications,
     getVolunteers,
     getVolunteer,
     updateVolunteer,
