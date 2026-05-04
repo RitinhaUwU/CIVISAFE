@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Reverb" type="PhpLocalRunConfigurationType" factoryName="PHP Console" path="$PROJECT_DIR$/backend/artisan" scriptParameters="reverb:start">
+    <CommandLine workingDirectory="$PROJECT_DIR$/backend" />
+    <method v="2" />
+  </configuration>
+</component>
