@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\EntityController;
-use App\Http\Controllers\EntityTypesController;
+use App\Http\Controllers\Entity\EntityController;
+use App\Http\Controllers\Entity\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
-use App\Http\Controllers\IncidentController;
-use App\Http\Controllers\IncidentPriorityController;
-use App\Http\Controllers\IncidentStateController;
-use App\Http\Controllers\IncidentTypeController;
+use App\Http\Controllers\Incident\IncidentController;
+use App\Http\Controllers\Incident\IncidentPriorityController;
+use App\Http\Controllers\Incident\IncidentStateController;
+use App\Http\Controllers\Incident\IncidentTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
