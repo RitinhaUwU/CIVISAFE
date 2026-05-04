@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
 
 const api = useApiStore()
+
 const incidents = ref<Incident[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
@@ -121,11 +123,6 @@ const columns: TableColumn<Incident>[] = [
   }
 ]
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
-})
-
 const fetchFilters = async () => {
   const [statesRes, prioritiesRes] = await Promise.all([
     api.getIncidentStates(),
@@ -137,11 +134,14 @@ const fetchFilters = async () => {
 }
 
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize,
+      page: page.value,
+      per_page: 10,
       filter: {}
     }
     if (search.value) {
@@ -155,9 +155,9 @@ const fetch = async() => {
     }
     const res = await api.getIncidents(params)
 
-    incidents.value = res.data.data
+    incidents.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     console.error("Erro ao carregar entidades: ", e)
   } finally {
@@ -165,16 +165,30 @@ const fetch = async() => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
 watch([search, statusFilter, prioritiesFilter], () => {
-  pagination.value.pageIndex = 0
+  page.value = 1
+  lastPage.value = Infinity
+  incidents.value = []
   fetch()
 })
+
+const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   fetch()
   fetchFilters()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
 })
 </script>
 
@@ -220,35 +234,20 @@ onMounted(() => {
           />
         </div>
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="incidents"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
-            base: 'table-fixed border-separate border-spacing-0',
+            base: 'table-auto border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
             tbody: '[&>tr]:last:[&>td]:border-b-0',
             th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[640px]"
-        />
-      </div>
-
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
+          class="w-full"
         />
       </div>
 

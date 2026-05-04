@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
 
@@ -9,6 +8,8 @@ const auth = useAuthStore()
 const toast = useToast()
 
 const users = ref<User[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
@@ -109,26 +110,24 @@ const columns: TableColumn<User>[] = [
   }
 ]
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
-})
-
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize
+      page: page.value,
+      per_page: 10
     }
     if (search.value) {
       params.filter = { search: search.value }
     }
     const res = await api.getUsers(params)
 
-    users.value = res.data.data
+    users.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     console.error("Erro ao carregar entidades: ", e)
   } finally {
@@ -146,13 +145,16 @@ const patchUser = async (user: User) => {
       locked: updated
     })
 
+    const index = users.value.findIndex(u => u.id === user.id)
+    if (index !== -1) {
+      users.value[index].locked = updated
+    }
+
     toast.add({
       title: updated ? 'Conta ativada' : 'Conta bloqueada',
       description: `${user.name} foi ${updated ? 'ativado(a)' : 'bloqueado(a)'} com sucesso`,
       color: updated ? 'success' : 'warning'
     })
-
-    await fetch()
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -162,14 +164,30 @@ const patchUser = async (user: User) => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
 watch(search, () => {
-  pagination.value.pageIndex = 0
+  page.value = 1
+  lastPage.value = Infinity
+  users.value = []
   fetch()
 })
 
-onMounted(fetch)
+const scrollContainer = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+  fetch()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+})
 </script>
 
 <template>
@@ -193,38 +211,22 @@ onMounted(fetch)
           placeholder="Filtrar utilizadores..."
         />
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="users"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
-            base: 'table-fixed border-separate border-spacing-0',
+            base: 'table-auto border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
             tbody: '[&>tr]:last:[&>td]:border-b-0',
             th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[640px]"
+          class="w-full"
         />
       </div>
-
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
-        />
-      </div>
-
       <CustomersDeleteModal
         v-if="auth.hasPermission('USERS_DELETE') && selectedUserById"
         v-model:open="deleteModalOpen"

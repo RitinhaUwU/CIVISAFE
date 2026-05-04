@@ -33,6 +33,7 @@ class EntityController extends Controller
                     $query->where('name', 'ILIKE', "%{$value}%");
                 }),
             )
+            ->orderBy('id', 'asc')
             ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 
