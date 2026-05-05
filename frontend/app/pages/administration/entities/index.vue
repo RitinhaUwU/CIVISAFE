@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
 
 const toast = useToast()
 const api = useApiStore()
@@ -13,6 +12,8 @@ const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
+const typesFilter = ref('all')
+const types = ref([])
 
 const deleteModalOpen = ref(false)
 const selectedEntityById = ref<Entity | null>(null)
@@ -80,6 +81,14 @@ const columns: TableColumn<Entity>[] = [
   }
 ]
 
+const fetchFilters = async () => {
+  const [typesRes] = await Promise.all([
+    api.getEntityTypes(),
+  ])
+
+  types.value = typesRes.data.data
+}
+
 const fetch = async() => {
   if (loading.value) return
   if (page.value > lastPage.value) return
@@ -88,12 +97,14 @@ const fetch = async() => {
   try {
     const params: any = {
       page: page.value,
-      per_page: 10
+      per_page: 10,
+      filter: {}
     }
     if (search.value) {
-      params.filter = {
-        search: search.value
-      }
+      params.filter.search = search.value
+    }
+    if (typesFilter.value !== 'all') {
+      params.filter.type = typesFilter.value
     }
     const res = await api.getEntities(params)
 
@@ -111,7 +122,7 @@ const fetch = async() => {
   }
 }
 
-watch(search, () => {
+watch([search, typesFilter], () => {
   page.value = 1
   lastPage.value = Infinity
   entities.value = []
@@ -122,6 +133,7 @@ const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   fetch()
+  fetchFilters()
 
   useInfiniteScroll(
     scrollContainer,
@@ -154,6 +166,19 @@ onMounted(() => {
           icon="i-lucide-search"
           placeholder="Filtrar entidades..."
         />
+        <div class="flex flex-wrap items-center gap-1.5">
+          <USelect
+            v-model="typesFilter"
+            class="w-48"
+            :items="[
+              { label: 'Todos', value: 'all' },
+              ...types.map(t => ({
+              label: t.name,
+              value: t.id
+              }))
+            ]"
+          />
+        </div>
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
