@@ -13,7 +13,12 @@ const total = ref(0)
 
 const search = ref('')
 const typesFilter = ref('all')
-const types = ref([])
+const typesMenu = useTemplateRef('stateMenu')
+const typesItems = ref<any[]>([])
+const typesPage = ref(1)
+const typesLastPage = ref(Infinity)
+const typesLoading = ref(false)
+const typesSearch = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedEntityById = ref<Entity | null>(null)
@@ -81,12 +86,24 @@ const columns: TableColumn<Entity>[] = [
   }
 ]
 
-const fetchFilters = async () => {
-  const [typesRes] = await Promise.all([
-    api.getEntityTypes(),
-  ])
+const fetchTypes = async (search?: string, loadMore = false) => {
+  typesLoading.value = true
 
-  types.value = typesRes.data.data
+  try {
+    const res = await api.getEntityTypes({
+      page: typesPage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    typesLastPage.value = res.data.meta.last_page
+    typesItems.value = loadMore ? [...typesItems.value, ...data] : [{ id: 'all', name: 'Tipos' }, ...data]
+  } finally {
+    typesLoading.value = false
+  }
 }
 
 const fetch = async() => {
@@ -129,12 +146,22 @@ watch([search, typesFilter], () => {
   fetch()
 })
 
+watchDebounced(typesSearch, async (value) => {
+  typesPage.value = 1
+  typesItems.value = []
+  typesLastPage.value = Infinity
+  await fetchTypes(value)
+}, { debounce: 300 })
+
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   fetch()
-  fetchFilters()
+  fetchTypes()
 
+  // ----------
+  // Filters
+  // ----------
   useInfiniteScroll(
     scrollContainer,
     () => {
@@ -144,6 +171,23 @@ onMounted(() => {
     {
       distance: 200,
       canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+
+  // ----------
+  // Filters
+  // ----------
+  // Types
+  useInfiniteScroll(
+    () => typesMenu.value?.viewportRef,
+    () => {
+      if (typesPage.value < typesLastPage.value) {
+        typesPage.value++
+        fetchTypes(typesSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () => !typesLoading.value && typesPage.value < typesLastPage.value
     }
   )
 })
@@ -167,16 +211,17 @@ onMounted(() => {
           placeholder="Filtrar entidades..."
         />
         <div class="flex flex-wrap items-center gap-1.5">
-          <USelect
+          <USelectMenu
+            ref="typesMenu"
             v-model="typesFilter"
+            v-model:search-term="typesSearch"
+            :items="typesItems"
+            :loading="typesLoading"
+            value-key="id"
+            label-key="name"
+            ignore-filter
             class="w-48"
-            :items="[
-              { label: 'Todos', value: 'all' },
-              ...types.map(t => ({
-              label: t.name,
-              value: t.id
-              }))
-            ]"
+            placeholder="Tipos"
           />
         </div>
       </div>

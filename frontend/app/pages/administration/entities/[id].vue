@@ -8,7 +8,13 @@ const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
-const entityTypes = ref([])
+
+const entityTypeMenu = useTemplateRef('entityTypeMenu')
+const entityTypeItems = ref<any[]>([])
+const entityTypePage = ref(1)
+const entityTypeLastPage = ref(Infinity)
+const entityTypeLoading = ref(false)
+const entityTypeSearch = ref('')
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -46,6 +52,10 @@ const fetchEntity = async () => {
     ...data,
     entity_type_id: data.entityType?.id,
   })
+
+  if (data.entityType) {
+    entityTypeItems.value = [{ id: data.entityType.id, name: data.entityType.name }]
+  }
 }
 
 const handleSave = async () => {
@@ -83,12 +93,27 @@ const handleSave = async () => {
   }
 }
 
-const fetchEntityTypes = async () => {
-  const res = await api.getEntityTypes()
-  entityTypes.value = res.data.data.map((t: any) => ({
-    label: t.name,
-    value: t.id
-  }))
+const fetchEntityTypes = async (search?: string, loadMore = false) => {
+  if (entityTypeLoading.value) return
+
+  entityTypeLoading.value = true
+  try {
+    const res = await api.getEntityTypes({
+      page: entityTypePage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    entityTypeLastPage.value = res.data.meta.last_page
+    const mapped = data.map((t: any) => ({ id: t.id, name: t.name }))
+    const existingIds = new Set(entityTypeItems.value.map(i => i.id))
+    entityTypeItems.value = [...entityTypeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+  } finally {
+    entityTypeLoading.value = false
+  }
 }
 
 const items = ref<BreadcrumbItem[]>([
@@ -103,9 +128,31 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
+watchDebounced(entityTypeSearch, async (val) => {
+  entityTypePage.value = 1
+  entityTypeItems.value = []
+  entityTypeLastPage.value = Infinity
+  await fetchEntityTypes(val)
+}, { debounce: 300 })
+
 onMounted(() => {
   fetchEntity()
   fetchEntityTypes()
+
+  useInfiniteScroll(
+    () => entityTypeMenu.value?.viewportRef,
+    () => {
+      if (entityTypePage.value < entityTypeLastPage.value) {
+        entityTypePage.value++
+        fetchEntityTypes(entityTypeSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () =>
+        !entityTypeLoading.value &&
+        entityTypePage.value < entityTypeLastPage.value
+    }
+  )
 })
 </script>
 
@@ -134,10 +181,17 @@ onMounted(() => {
             <h2 class="font-bold">Dados Gerais</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <UFormField label="Tipo" class="sm:col-span-2">
-                <USelect
+                <USelectMenu
+                  ref="entityTypeMenu"
                   v-model="state.entity_type_id"
-                  :items="entityTypes"
+                  v-model:search-term="entityTypeSearch"
+                  :items="entityTypeItems"
+                  :loading="entityTypeLoading"
+                  value-key="id"
+                  label-key="name"
+                  ignore-filter
                   class="w-full"
+                  placeholder="Selecionar tipo"
                 />
               </UFormField>
               <UFormField label="Nome" class="sm:col-span-2">

@@ -7,9 +7,27 @@ const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
-const incidentTypes = ref([])
-const incidentStates = ref([])
-const incidentPriorities = ref([])
+
+const typeMenu = useTemplateRef('typeMenu')
+const typeItems = ref<any[]>([])
+const typePage = ref(1)
+const typeLastPage = ref(Infinity)
+const typeLoading = ref(false)
+const typeSearch = ref('')
+
+const stateMenu = useTemplateRef('stateMenu')
+const stateItems = ref<any[]>([])
+const statePage = ref(1)
+const stateLastPage = ref(Infinity)
+const stateLoading = ref(false)
+const stateSearch = ref('')
+
+const priorityMenu = useTemplateRef('priorityMenu')
+const priorityItems = ref<any[]>([])
+const priorityPage = ref(1)
+const priorityLastPage = ref(Infinity)
+const priorityLoading = ref(false)
+const prioritySearch = ref('')
 
 const state = reactive({
   identifier: '',
@@ -42,29 +60,96 @@ const fetchEntity = async () => {
     incident_state_id: data.incidentState?.id,
     incident_priority_id: data.incidentPriority?.id,
   })
+
+  if (data.incidentType) {
+    typeItems.value = [{
+      id: data.incidentType.id,
+      name: `${data.incidentType.code} - ${data.incidentType.species}`
+    }]
+  }
+  if (data.incidentState) {
+    stateItems.value = [{ id: data.incidentState.id, name: data.incidentState.name }]
+  }
+  if (data.incidentPriority) {
+    priorityItems.value = [{
+      id: data.incidentPriority.id,
+      name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`
+    }]
+  }
 }
 
-const fetchSelects = async () => {
-  const [typesRes, statesRes, prioritiesRes] = await Promise.all([
-    api.getIncidentTypes(),
-    api.getIncidentStates(),
-    api.getIncidentPriorities()
-  ])
+const fetchTypes = async (search?: string, loadMore = false) => {
+  if (typeLoading.value) return
 
-  incidentTypes.value = typesRes.data.data.map(t => ({
-    label: `${t.code} - ${t.species}`,
-    value: t.id
-  }))
+  typeLoading.value = true
+  try {
+    const res = await api.getIncidentTypes({
+      page: typePage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
 
-  incidentStates.value = statesRes.data.data.map(s => ({
-    label: s.name,
-    value: s.id
-  }))
+    const data = res.data.data
+    typeLastPage.value = res.data.meta.last_page
+    const mapped = data.map(t => ({id: t.id, name: `${t.code} - ${t.species}`}))
+    if (loadMore) {
+      const existingIds = new Set(typeItems.value.map(i => i.id))
+      typeItems.value = [...typeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+    } else {
+      const existingIds = new Set(typeItems.value.map(i => i.id))
+      typeItems.value = [...typeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+    }
+  } finally {
+    typeLoading.value = false
+  }
+}
 
-  incidentPriorities.value = prioritiesRes.data.data.map(p => ({
-    label: `${p.name} - ${p.description}`,
-    value: p.id
-  }))
+const fetchStates = async (search?: string, loadMore = false) => {
+  if (stateLoading.value) return
+
+  stateLoading.value = true
+  try {
+    const res = await api.getIncidentStates({
+      page: statePage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    stateLastPage.value = res.data.meta.last_page
+    const mapped = data.map(s => ({ id: s.id, name: s.name }))
+    const existingIds = new Set(stateItems.value.map(i => i.id))
+    stateItems.value = [...stateItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+  } finally {
+    stateLoading.value = false
+  }
+}
+
+const fetchPriorities = async (search?: string, loadMore = false) => {
+  if (priorityLoading.value) return
+
+  priorityLoading.value = true
+  try {
+    const res = await api.getIncidentPriorities({
+      page: priorityPage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    priorityLastPage.value = res.data.meta.last_page
+    const mapped = data.map(p => ({ id: p.id, name: `${p.name} - ${p.description}` }))
+    const existingIds = new Set(priorityItems.value.map(i => i.id))
+    priorityItems.value = [...priorityItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+  } finally {
+    priorityLoading.value = false
+  }
 }
 
 const items = ref<BreadcrumbItem[]>([
@@ -79,9 +164,65 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
+watchDebounced(typeSearch, async (val) => {
+  typePage.value = 1
+  typeItems.value = []
+  typeLastPage.value = Infinity
+  await fetchTypes(val)
+}, { debounce: 300 })
+
+watchDebounced(stateSearch, async (val) => {
+  statePage.value = 1
+  stateItems.value = []
+  stateLastPage.value = Infinity
+  await fetchStates(val)
+}, { debounce: 300 })
+
+watchDebounced(prioritySearch, async (val) => {
+  priorityPage.value = 1
+  priorityItems.value = []
+  priorityLastPage.value = Infinity
+  await fetchPriorities(val)
+}, { debounce: 300 })
+
 onMounted(async () => {
-  await fetchSelects()
   await fetchEntity()
+  await fetchTypes()
+  await fetchStates()
+  await fetchPriorities()
+
+  useInfiniteScroll(
+    () => typeMenu.value?.viewportRef,
+    () => {
+      if (typePage.value < typeLastPage.value) {
+        typePage.value++
+        fetchTypes(typeSearch.value, true)
+      }
+    },
+    { canLoadMore: () => !typeLoading.value && typePage.value < typeLastPage.value }
+  )
+
+  useInfiniteScroll(
+    () => stateMenu.value?.viewportRef,
+    () => {
+      if (statePage.value < stateLastPage.value) {
+        statePage.value++
+        fetchStates(stateSearch.value, true)
+      }
+    },
+    { canLoadMore: () => !stateLoading.value && statePage.value < stateLastPage.value }
+  )
+
+  useInfiniteScroll(
+    () => priorityMenu.value?.viewportRef,
+    () => {
+      if (priorityPage.value < priorityLastPage.value) {
+        priorityPage.value++
+        fetchPriorities(prioritySearch.value, true)
+      }
+    },
+    { canLoadMore: () => !priorityLoading.value && priorityPage.value < priorityLastPage.value }
+  )
 })
 </script>
 
@@ -113,23 +254,41 @@ onMounted(async () => {
                   <UInput v-model="state.identifier" class="w-full"/>
                 </UFormField>
                 <UFormField label="Tipo de Ocorrência" class="sm:col-span-2">
-                  <USelect
+                  <USelectMenu
+                    ref="typeMenu"
                     v-model="state.incident_type_id"
-                    :items="incidentTypes"
+                    v-model:search-term="typeSearch"
+                    :items="typeItems"
+                    :loading="typeLoading"
+                    value-key="id"
+                    label-key="name"
+                    ignore-filter
                     class="w-full"
                   />
                 </UFormField>
                 <UFormField label="Estado" class="sm:col-span-2">
-                  <USelect
+                  <USelectMenu
+                    ref="stateMenu"
                     v-model="state.incident_state_id"
-                    :items="incidentStates"
+                    v-model:search-term="stateSearch"
+                    :items="stateItems"
+                    :loading="stateLoading"
+                    value-key="id"
+                    label-key="name"
+                    ignore-filter
                     class="w-full"
                   />
                 </UFormField>
                 <UFormField label="Prioridade" class="sm:col-span-2">
-                  <USelect
+                  <USelectMenu
+                    ref="priorityMenu"
                     v-model="state.incident_priority_id"
-                    :items="incidentPriorities"
+                    v-model:search-term="prioritySearch"
+                    :items="priorityItems"
+                    :loading="priorityLoading"
+                    value-key="id"
+                    label-key="name"
+                    ignore-filter
                     class="w-full"
                   />
                 </UFormField>

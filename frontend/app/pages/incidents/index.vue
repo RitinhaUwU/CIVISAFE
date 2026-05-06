@@ -11,10 +11,22 @@ const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
+
 const statusFilter = ref('all')
+const stateMenu = useTemplateRef('stateMenu')
+const stateItems = ref<any[]>([])
+const statePage = ref(1)
+const stateLastPage = ref(Infinity)
+const stateLoading = ref(false)
+const stateSearch = ref('')
+
 const prioritiesFilter = ref('all')
-const states = ref([])
-const priorities = ref([])
+const priorityMenu = useTemplateRef('priorityMenu')
+const priorityItems = ref<any[]>([])
+const priorityPage = ref(1)
+const priorityLastPage = ref(Infinity)
+const priorityLoading = ref(false)
+const prioritySearch = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedIncidentById = ref<Incident | null>(null)
@@ -123,14 +135,44 @@ const columns: TableColumn<Incident>[] = [
   }
 ]
 
-const fetchFilters = async () => {
-  const [statesRes, prioritiesRes] = await Promise.all([
-    api.getIncidentStates(),
-    api.getIncidentPriorities(),
-  ])
+const fetchStates = async (search?: string, loadMore = false) => {
+  stateLoading.value = true
 
-  states.value = statesRes.data.data
-  priorities.value = prioritiesRes.data.data
+  try {
+    const res = await api.getIncidentStates({
+      page: statePage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    stateLastPage.value = res.data.meta.last_page
+    stateItems.value = loadMore ? [...stateItems.value, ...data] : [{ id: 'all', name: 'Estados' }, ...data]
+  } finally {
+    stateLoading.value = false
+  }
+}
+
+const fetchPriorities = async (search?: string, loadMore = false) => {
+  priorityLoading.value = true
+
+  try {
+    const res = await api.getIncidentPriorities({
+      page: priorityPage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    priorityLastPage.value = res.data.meta.last_page
+    priorityItems.value = loadMore ? [...priorityItems.value, ...data] : [{ id: 'all', name: 'Prioridades' }, ...data]
+  } finally {
+    priorityLoading.value = false
+  }
 }
 
 const fetch = async() => {
@@ -172,12 +214,30 @@ watch([search, statusFilter, prioritiesFilter], () => {
   fetch()
 })
 
+watchDebounced(stateSearch, async (value) => {
+  statePage.value = 1
+  stateItems.value = []
+  stateLastPage.value = Infinity
+  await fetchStates(value)
+}, { debounce: 300 })
+
+watchDebounced(prioritySearch, async (value) => {
+  priorityPage.value = 1
+  priorityItems.value = []
+  priorityLastPage.value = Infinity
+  await fetchPriorities(value)
+}, { debounce: 300 })
+
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   fetch()
-  fetchFilters()
+  fetchStates()
+  fetchPriorities()
 
+  // ----------
+  // Tables
+  // ----------
   useInfiniteScroll(
     scrollContainer,
     () => {
@@ -187,6 +247,37 @@ onMounted(() => {
     {
       distance: 200,
       canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+
+  // ----------
+  // Filters
+  // ----------
+  // States
+  useInfiniteScroll(
+    () => stateMenu.value?.viewportRef,
+    () => {
+      if (statePage.value < stateLastPage.value) {
+        statePage.value++
+        fetchStates(stateSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () => !stateLoading.value && statePage.value < stateLastPage.value
+    }
+  )
+
+  // Priorities
+  useInfiniteScroll(
+    () => priorityMenu.value?.viewportRef,
+    () => {
+      if (priorityPage.value < priorityLastPage.value) {
+        priorityPage.value++
+        fetchPriorities(prioritySearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () => !priorityLoading.value && priorityPage.value < priorityLastPage.value
     }
   )
 })
@@ -210,27 +301,29 @@ onMounted(() => {
           placeholder="Filtrar ocorrências..."
         />
         <div class="flex flex-wrap items-center gap-1.5">
-          <USelect
+          <USelectMenu
+            ref="stateMenu"
             v-model="statusFilter"
+            v-model:search-term="stateSearch"
+            :items="stateItems"
+            :loading="stateLoading"
+            value-key="id"
+            label-key="name"
+            ignore-filter
             class="w-48"
-            :items="[
-              { label: 'Todos', value: 'all' },
-              ...states.map(s => ({
-              label: s.name,
-              value: s.id
-              }))
-            ]"
+            placeholder="Estado"
           />
-          <USelect
+          <USelectMenu
+            ref="priorityMenu"
             v-model="prioritiesFilter"
+            v-model:search-term="prioritySearch"
+            :items="priorityItems"
+            :loading="priorityLoading"
+            value-key="id"
+            label-key="name"
+            ignore-filter
             class="w-48"
-            :items="[
-              { label: 'Todas', value: 'all' },
-              ...priorities.map(p => ({
-              label: `${p.name} - ${p.description}`,
-              value: p.id
-              }))
-            ]"
+            placeholder="Prioridade"
           />
         </div>
       </div>
