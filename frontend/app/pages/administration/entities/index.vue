@@ -65,6 +65,7 @@ const columns: TableColumn<Entity>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-entity',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -73,6 +74,7 @@ const columns: TableColumn<Entity>[] = [
           }
         }),
         h(UButton, {
+          'data-testid': 'delete-entity',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',

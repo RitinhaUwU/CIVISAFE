@@ -25,7 +25,8 @@ const schema = z.object({
   poc_name: z.string().optional().nullable(),
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
-  description: z.string().optional().nullable()
+  description: z.string().optional().nullable(),
+  entity_type_id: z.number().nullable()
 })
 
 type Schema = z.output<typeof schema>
@@ -54,7 +55,10 @@ const fetchEntity = async () => {
   })
 
   if (data.entityType) {
-    entityTypeItems.value = [{ id: data.entityType.id, name: data.entityType.name }]
+    entityTypeItems.value = [{
+      id: data.entityType.id,
+      name: data.entityType.name
+    }]
   }
 }
 
@@ -93,7 +97,7 @@ const handleSave = async () => {
   }
 }
 
-const fetchEntityTypes = async (search?: string, loadMore = false) => {
+const fetchEntityTypes = async (search?: string) => {
   if (entityTypeLoading.value) return
 
   entityTypeLoading.value = true
@@ -148,9 +152,7 @@ onMounted(() => {
       }
     },
     {
-      canLoadMore: () =>
-        !entityTypeLoading.value &&
-        entityTypePage.value < entityTypeLastPage.value
+      canLoadMore: () => !entityTypeLoading.value && entityTypePage.value < entityTypeLastPage.value
     }
   )
 })
@@ -194,7 +196,7 @@ onMounted(() => {
                   placeholder="Selecionar tipo"
                 />
               </UFormField>
-              <UFormField label="Nome" class="sm:col-span-2">
+              <UFormField label="Nome da Entidade" class="sm:col-span-2">
                 <UInput v-model="state.name" class="w-full" />
               </UFormField>
               <UFormField label="Email de contacto">
@@ -212,8 +214,8 @@ onMounted(() => {
           <section class="space-y-2">
             <h2 class="font-bold">Responsável</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Nome completo" class="sm:col-span-2">
-                <UInput v-model="state.poc_name" class="w-full" />
+              <UFormField label="Nome do Responsável" class="sm:col-span-2">
+                <UInput v-model="state.poc_name" data-testid="entity-name-input" class="w-full" />
               </UFormField>
               <UFormField label="Email">
                 <UInput v-model="state.poc_email" class="w-full" />

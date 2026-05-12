@@ -116,7 +116,7 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getEntityTypes = (params?: any) => {
+  const getEntityTypes = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/entityTypes`, { params })
   }
 

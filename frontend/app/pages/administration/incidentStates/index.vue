@@ -101,6 +101,7 @@ const columns: TableColumn<States>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-state',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -109,6 +110,7 @@ const columns: TableColumn<States>[] = [
           }
         }),
         h(UButton, {
+          'data-testid': 'delete-state',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',

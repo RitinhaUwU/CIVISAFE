@@ -73,6 +73,7 @@ const columns: TableColumn<IncidentTypes | null>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-volunteer',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',

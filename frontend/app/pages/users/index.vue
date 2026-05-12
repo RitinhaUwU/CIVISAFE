@@ -91,12 +91,14 @@ const columns: TableColumn<User>[] = [
           }
         ),
         auth.hasPermission('USERS_VIEW_ANY') && (auth.hasPermission('USERS_UPDATE_ANY') || auth.hasPermission('USERS_UPDATE_OWN')) && h(UButton, {
+          'data-testid': 'edit-user',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
           onClick: () => navigateTo(`/users/${row.original.id}`)
         }),
         auth.hasPermission('USERS_DELETE') && h(UButton, {
+          'data-testid': 'delete-user',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',

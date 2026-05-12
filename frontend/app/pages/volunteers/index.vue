@@ -129,6 +129,7 @@ const columns: TableColumn<Volunteer>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-volunteer',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -137,6 +138,7 @@ const columns: TableColumn<Volunteer>[] = [
           }
         }),
         h(UButton, {
+          'data-testid': 'delete-volunteer',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',

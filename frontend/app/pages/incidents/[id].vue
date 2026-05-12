@@ -50,7 +50,7 @@ const state = reactive({
   incident_id: null
 })
 
-const fetchEntity = async () => {
+const fetchIncident = async () => {
   const res = await api.getIncident(route.params.id)
   const data = res.data.data
 
@@ -68,7 +68,9 @@ const fetchEntity = async () => {
     }]
   }
   if (data.incidentState) {
-    stateItems.value = [{ id: data.incidentState.id, name: data.incidentState.name }]
+    stateItems.value = [{
+      id: data.incidentState.id,
+      name: data.incidentState.name }]
   }
   if (data.incidentPriority) {
     priorityItems.value = [{
@@ -186,7 +188,7 @@ watchDebounced(prioritySearch, async (val) => {
 }, { debounce: 300 })
 
 onMounted(async () => {
-  await fetchEntity()
+  await fetchIncident()
   await fetchTypes()
   await fetchStates()
   await fetchPriorities()

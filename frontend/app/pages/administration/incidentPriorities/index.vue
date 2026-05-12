@@ -71,6 +71,7 @@ const columns: TableColumn<Priority>[] = [
         { class: 'text-right' },
         [
           h(UButton, {
+            'data-testid': 'edit-priority',
             icon: 'i-lucide-info',
             color: 'info',
             variant: 'ghost',
@@ -79,6 +80,7 @@ const columns: TableColumn<Priority>[] = [
             }
           }),
           h(UButton, {
+            'data-testid': 'delete-priority',
             icon: 'i-lucide-trash',
             color: 'error',
             variant: 'ghost',

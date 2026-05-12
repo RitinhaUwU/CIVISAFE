@@ -30,7 +30,7 @@ async function handleLogin() {
       <form @submit.prevent="handleLogin">
         <div class="mb-3 flex flex-col">
           <label class="mb-1">Email</label>
-          <UInput v-model="credentials.email" type="email" placeholder="exemplo@exemplo.pt" required />
+          <UInput v-model="credentials.email" type="email" placeholder="examplo@examplo.pt" required />
         </div>
         <div class="mb-3 flex flex-col">
           <label class="mb-1">Palavra-Passe</label>
