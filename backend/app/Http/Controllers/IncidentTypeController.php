@@ -16,7 +16,7 @@ class IncidentTypeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:INCIDENT_TYPES_LIST')->only(['index']);
+        $this->middleware('permission:INCIDENT_TYPES_LIST')->only(['index', 'show']);
         $this->middleware('permission:INCIDENT_TYPES_UPLOAD')->only(['store']);
     }
 

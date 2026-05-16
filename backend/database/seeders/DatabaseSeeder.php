@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Utilizador Manager',
             'email' => 'manager@example.com',
             'password' => bcrypt('password'),
-            'locked' => false,
+            'locked' => true,
         ])->assignRole(enum_value(RolesEnum::MANAGER));
 
         User::factory()->create([
