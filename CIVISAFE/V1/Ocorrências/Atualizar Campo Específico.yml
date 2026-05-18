@@ -1,11 +1,17 @@
 info:
-  name: Ocorrência Especifica
+  name: Atualizar Campo Específico
   type: http
-  seq: 2
+  seq: 5
 
 http:
-  method: GET
+  method: PATCH
   url: "{{BASE_URL}}/api/v1/incidents/82"
+  body:
+    type: json
+    data: |-
+      {
+        "alert_source_name": "Igor Borges Canceiro"
+      }
   auth: inherit
 
 settings:

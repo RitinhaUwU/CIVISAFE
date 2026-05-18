@@ -13,8 +13,9 @@ class IncidentRequest extends FormRequest
         return [
             'identifier' => [$is_patch ? 'sometimes' : 'required'],
             'incident_type_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_types,id'],
-            'incident_state_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_states'],
-            'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users'],
+            'incident_state_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_states,id'],
+            'incident_priority_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_priorities,id'],
+            'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users,id'],
             'start_datetime' => [$is_patch ? 'sometimes' : 'required', 'date'],
             'end_datetime' => [$is_patch ? 'sometimes' : 'nullable', 'date'],
             'coordinates' => [$is_patch ? 'sometimes' : 'nullable'],
@@ -23,7 +24,7 @@ class IncidentRequest extends FormRequest
             'parish' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
             'municipality' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
             'district' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
-            'command_post' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
+            'command_post' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'], //???????
             'is_major' => [$is_patch ? 'sometimes' : 'required', 'boolean'],
             'alert_source_relationship' => [$is_patch ? 'sometimes' : 'nullable'],
             'alert_source_name' => [$is_patch ? 'sometimes' : 'nullable'],
