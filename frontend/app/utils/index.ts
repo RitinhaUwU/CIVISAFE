@@ -5,3 +5,16 @@ export function randomInt(min: number, max: number): number {
 export function randomFrom<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]!
 }
+
+export const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}
+
+export const createBlobURL = (file) => {
+  return URL.createObjectURL(file)
+}

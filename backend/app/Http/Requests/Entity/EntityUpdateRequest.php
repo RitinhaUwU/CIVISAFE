@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Entity;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class EntityRequest extends FormRequest
+class EntityUpdateRequest extends FormRequest
 {
     public function rules(): array
     {
@@ -16,7 +16,6 @@ class EntityRequest extends FormRequest
             'phone_contact' => [$is_patch ? 'sometimes' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'email_contact' => [$is_patch ? 'sometimes' : 'nullable', 'email', 'max:254'],
             'address' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
-            'logo' => [$is_patch ? 'sometimes' : 'nullable'],
             'poc_name' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
             'poc_phone' => [$is_patch ? 'sometimes' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'poc_email' => [$is_patch ? 'sometimes' : 'nullable', 'email', 'max:254'],

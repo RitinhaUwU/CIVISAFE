@@ -110,6 +110,14 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/entities/${id}`)
   }
 
+  const requestEntitySignedUrl = (filename: string) => {
+    return axios.post(`${config.public.apiBase}/entities/uploadUrl`, {filename: filename});
+  }
+
+  const updateEntityLogo = (entityId: number, key: string) => {
+    return axios.post(`${config.public.apiBase}/entities/${entityId}/upload`, {key: key})
+  }
+
   /*************************
    *
    *  Entities
@@ -266,6 +274,8 @@ export const useApiStore = defineStore('api', () => {
     updateEntity,
     deleteEntity,
     createEntity,
+    requestEntitySignedUrl,
+    updateEntityLogo,
     getEntityTypes,
     getEntityType,
     updateEntityType,

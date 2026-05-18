@@ -39,7 +39,14 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::apiResource('/volunteers', VolunteerController::class);
-        Route::apiResource('/entities', EntityController::class);
+
+        Route::prefix('/entities')->group(function () {
+            Route::apiResource('/', EntityController::class)
+            ->parameter('', 'entity');
+            Route::post('/uploadUrl', [EntityController::class, 'signedUrl']);
+            Route::post('/{entity}/upload', [EntityController::class, 'confirmUpload']);
+        });
+
         Route::apiResource('/entityTypes', EntityTypesController::class);
         Route::apiResource('/incidentTypes', IncidentTypeController::class)
             ->only(['index', 'store', 'show']);
