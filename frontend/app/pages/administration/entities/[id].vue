@@ -216,43 +216,8 @@ onMounted(() => {
     </header>
     <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
       <UBreadcrumb :items="items" />
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8 items-start">
         <div class="space-y-6">
-          <section>
-            <h2 class="font-bold">Logotipo</h2>
-            <div class="grid grid-cols-2">
-              <div>
-                <UFileUpload
-                  v-model="fileState.image"
-                  v-slot="{ open, removeFile }"
-                  accept="image/png, image/jpeg, image/jpg"
-                >
-                  <div class="flex flex-wrap items-center gap-3">
-                    <UAvatar
-                      :src="entityLogoURL"
-                      icon="i-lucide-image"
-                      class="h-50 w-50"
-                    />
-
-                    <UButton
-                      :label="state.logo ? 'Alterar Logotipo' : 'Carregar Logotipo'"
-                      color="neutral"
-                      variant="outline"
-                      @click="open()"
-                    />
-
-                    <UButton
-                      label="Restaurar"
-                      v-if="fileState.image"
-                      @click="removeFile()"
-                    />
-
-                  </div>
-                </UFileUpload>
-              </div>
-            </div>
-          </section>
-
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -296,6 +261,45 @@ onMounted(() => {
           <section class="space-y-2">
             <h2 class="font-bold">Descrição</h2>
             <UTextarea v-model="state.description" :rows="5" class="w-full" />
+          </section>
+        </div>
+        <div class="space-y-6">
+          <section class="space-y-4">
+            <h2 class="font-bold">Logotipo</h2>
+            <UFileUpload
+              v-model="fileState.image"
+              v-slot="{ open, removeFile }"
+              accept="image/png, image/jpeg, image/jpg"
+            >
+              <div class="flex flex-col items-center gap-4">
+                <UAvatar
+                  :src="entityLogoURL"
+                  icon="i-lucide-image"
+                  class="w-40 h-40 ring-2 ring-default"
+                />
+
+                <div class="flex flex-col w-full gap-2">
+                  <UButton
+                    :label="state.logo ? 'Alterar Logotipo' : 'Carregar Logotipo'"
+                    icon="i-lucide-upload"
+                    color="neutral"
+                    variant="outline"
+                    block
+                    @click="open()"
+                  />
+
+                  <UButton
+                    v-if="fileState.image"
+                    label="Restaurar"
+                    icon="i-lucide-rotate-ccw"
+                    color="warning"
+                    variant="soft"
+                    block
+                    @click="removeFile()"
+                  />
+                </div>
+              </div>
+            </UFileUpload>
           </section>
         </div>
       </div>

@@ -170,29 +170,31 @@ onMounted(() => {
           <UFileUpload v-slot="{ open, removeFile }" v-model="fileState.image" accept="image/PNG,image/JPG,image/JPEG">
             <div class="flex flex-wrap items-center gap-3">
               <UAvatar
-                size="lg"
                 :src="fileState.image ? createBlobURL(fileState.image) : undefined"
                 icon="i-lucide-image"
+                class="w-24 h-24 ring-2 ring-default"
               />
-
-              <UButton
-                :label="fileState.image ? 'Alterar imagem' : 'Carregar imagem'"
-                color="neutral"
-                variant="outline"
-                @click="open()"
-              />
+              <div class="flex flex-col items-start">
+                <UButton
+                  :label="fileState.image ? 'Alterar imagem' : 'Carregar imagem'"
+                  color="neutral"
+                  variant="outline"
+                  @click="open()"
+                />
+                <div v-if="fileState.image" class="flex items-center mt-1 ml-2 text-xs text-muted">
+                  <span>{{ formatBytes(fileState.image.size) }}</span>
+                </div>
+              </div>
             </div>
-
-            <p v-if="fileState.image" class="text-xs text-muted mt-1.5">
+            <p v-if="fileState.image" class="flex items-center text-xs text-muted mt-1.5 ml-1.5">
               {{ fileState.image.name }}
-
               <UButton
-                label="Remover"
+                icon="i-lucide-x"
                 color="error"
-                variant="link"
+                variant="ghost"
                 size="xs"
-                class="p-0"
                 @click="removeFile()"
+                class="ml-1"
               />
             </p>
           </UFileUpload>
