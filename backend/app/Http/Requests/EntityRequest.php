@@ -11,16 +11,16 @@ class EntityRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'name' => [$is_patch ? 'sometimes' : 'required'],
-            'description' => ['sometimes', 'nullable'],
-            'phone_contact' => ['sometimes', 'nullable'],
-            'email_contact' => ['sometimes', 'nullable', 'email', 'max:254'],
-            'address' => ['sometimes', 'nullable'],
-            'logo' => ['sometimes', 'nullable'],
-            'poc_name' => ['sometimes', 'nullable'],
-            'poc_phone' => ['sometimes', 'nullable'],
-            'poc_email' => ['sometimes', 'nullable', 'email', 'max:254'],
-            'entity_type_id' => ['nullable', 'exists:entity_types,id'],
+            'name' => [$is_patch ? 'sometimes' : 'required', 'string'],
+            'description' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
+            'phone_contact' => [$is_patch ? 'sometimes' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
+            'email_contact' => [$is_patch ? 'sometimes' : 'nullable', 'email', 'max:254'],
+            'address' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
+            'logo' => [$is_patch ? 'sometimes' : 'nullable'],
+            'poc_name' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
+            'poc_phone' => [$is_patch ? 'sometimes' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
+            'poc_email' => [$is_patch ? 'sometimes' : 'nullable', 'email', 'max:254'],
+            'entity_type_id' => [$is_patch ? 'sometimes' : 'nullable', 'exists:entity_types,id'],
         ];
     }
 

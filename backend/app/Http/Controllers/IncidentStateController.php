@@ -2,12 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EntityRequest;
 use App\Http\Requests\IncidentStatesRequest;
-use App\Http\Resources\EntityResource;
 use App\Http\Resources\IncidentStateResource;
-use App\Models\Entity;
-use App\Models\IncidentPriority;
 use App\Models\IncidentState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -16,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class IncidentStateController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:INCIDENT_STATES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:INCIDENT_STATES_CREATE')->only(['store']);
+        $this->middleware('permission:INCIDENT_STATES_UPDATE')->only(['update']);
+        $this->middleware('permission:INCIDENT_STATES_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request)
     {
         $types = QueryBuilder::for(IncidentState::class)

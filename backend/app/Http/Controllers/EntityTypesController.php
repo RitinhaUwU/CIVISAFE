@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EntityTypesRequest;
+use App\Http\Requests\EntityTypes\EntityTypeRequest;
 use App\Http\Resources\EntityTypesResource;
 use App\Models\EntityType;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class EntityTypesController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:ENTITY_TYPES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:ENTITY_TYPES_CREATE')->only(['store']);
+        $this->middleware('permission:ENTITY_TYPES_UPDATE')->only(['update']);
+        $this->middleware('permission:ENTITY_TYPES_DELETE')->only(['destroy']);
+    }
+
     public function index(Request $request){
         $request->validate([
             'per_page' => 'sometimes|integer',
@@ -29,7 +37,7 @@ class EntityTypesController extends Controller
         return EntityTypesResource::collection($types);
     }
 
-    public function store(EntityTypesRequest $request)
+    public function store(EntityTypeRequest $request)
     {
         return new EntityTypesResource(EntityType::create($request->validated()));
     }
@@ -39,7 +47,7 @@ class EntityTypesController extends Controller
         return new EntityTypesResource($entityType);
     }
 
-    public function update(EntityTypesRequest $request, EntityType $entityType)
+    public function update(EntityTypeRequest $request, EntityType $entityType)
     {
         $entityType->update($request->validated());
 

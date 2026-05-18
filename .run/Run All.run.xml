@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run All" type="CompoundRunConfigurationType">
+    <toRun name="dev" type="js.build_tools.npm" />
+    <toRun name="Backend" type="PhpLocalRunConfigurationType" />
+    <toRun name="Queue - Default" type="PhpLocalRunConfigurationType" />
+    <toRun name="Queue - Imports" type="PhpLocalRunConfigurationType" />
+    <toRun name="Queue - Notifications" type="PhpLocalRunConfigurationType" />
+    <toRun name="Reverb" type="PhpLocalRunConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

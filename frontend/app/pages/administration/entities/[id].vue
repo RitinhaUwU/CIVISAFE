@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useApiStore } from '@/stores/api'
+import * as z from "zod";
 
 const route = useRoute()
 const router = useRouter()
@@ -9,7 +10,21 @@ const api = useApiStore()
 const saving = ref(false)
 const entityTypes = ref([])
 
-const state = reactive({
+const schema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
+  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  email_contact: z.string().email('Email inválido').optional().nullable(),
+  address: z.string().optional().nullable(),
+  logo: z.string().optional().nullable(),
+  poc_name: z.string().optional().nullable(),
+  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  poc_email: z.string().email('Email inválido').optional().nullable(),
+  description: z.string().optional().nullable()
+})
+
+type Schema = z.output<typeof schema>
+
+const state = reactive<Partial<Schema & { entity_type_id: number }>>({
   name: '',
   email_contact: '',
   phone_contact: '',
@@ -18,7 +33,7 @@ const state = reactive({
   poc_email: '',
   poc_phone: '',
   description: '',
-  entity_type_id: null as number,
+  entity_type_id: null,
 })
 
 const toast = useToast()
@@ -34,6 +49,20 @@ const fetchEntity = async () => {
 }
 
 const handleSave = async () => {
+
+  const result = schema.safeParse(state)
+
+  if (!result.success) {
+    result.error.issues.forEach((err) => {
+      toast.add({
+        title: 'Erro de validação',
+        description: err.message,
+        color: 'error'
+      })
+    })
+    return
+  }
+
   saving.value = true
   try {
     await api.updateEntity(route.params.id, state)
@@ -54,10 +83,6 @@ const handleSave = async () => {
   }
 }
 
-const handleCancel = () => {
-  router.back()
-}
-
 const fetchEntityTypes = async () => {
   const res = await api.getEntityTypes()
   entityTypes.value = res.data.data.map((t: any) => ({
@@ -65,6 +90,18 @@ const fetchEntityTypes = async () => {
     value: t.id
   }))
 }
+
+const items = ref<BreadcrumbItem[]>([
+  {
+    label: 'Entidades',
+    icon: 'i-lucide-building-2',
+    to: '/administration/entities'
+  },
+  {
+    label: 'Dados das Entidades',
+    icon: 'i-lucide-building',
+  }
+])
 
 onMounted(() => {
   fetchEntity()
@@ -80,72 +117,68 @@ onMounted(() => {
           Entidade
         </p>
         <div class="flex items-center justify-between w-full gap-4">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight truncate max-w-full">
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel" />
             <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
           </div>
         </div>
       </div>
     </header>
-    <div class="flex-1 flex flex-col min-h-0">
-      <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 pb-8">
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
-          <div class="space-y-6">
-            <section class="space-y-2">
-              <h2 class="font-bold">Dados Gerais</h2>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <UFormField label="Tipo" class="sm:col-span-2">
-                  <USelect
-                    v-model="state.entity_type_id"
-                    :items="entityTypes"
-                    class="w-full"
-                  />
-                </UFormField>
-                <UFormField label="Nome" class="sm:col-span-2">
-                  <UInput v-model="state.name" class="w-full" />
-                </UFormField>
-                <UFormField label="Email de contacto">
-                  <UInput v-model="state.email_contact" class="w-full" />
-                </UFormField>
-                <UFormField label="Telefone">
-                  <UInput v-model="state.phone_contact" class="w-full" />
-                </UFormField>
-                <UFormField label="Morada" class="sm:col-span-2">
-                  <UInput v-model="state.address" class="w-full" />
-                </UFormField>
-              </div>
-            </section>
-            <div class="h-px border-t border-stone-200 dark:border-stone-800" />
-            <section class="space-y-2">
-              <h2 class="font-bold">Responsável</h2>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <UFormField label="Nome completo" class="sm:col-span-2">
-                  <UInput v-model="state.poc_name" class="w-full" />
-                </UFormField>
-
-                <UFormField label="Email">
-                  <UInput v-model="state.poc_email" class="w-full" />
-                </UFormField>
-
-                <UFormField label="Telefone">
-                  <UInput v-model="state.poc_phone" class="w-full" />
-                </UFormField>
-              </div>
-            </section>
-            <div class="h-px border-t border-stone-200 dark:border-stone-800" />
-            <section class="space-y-2">
-              <h2 class="font-bold">Descrição</h2>
-              <UTextarea v-model="state.description" :rows="5" class="w-full" />
-            </section>
-          </div>
-          <div class="hidden lg:flex flex-col items-center justify-start gap-6 pt-1">
-            <div class="sticky top-8 flex flex-col items-center gap-5 w-full text-center">
-              <div class="relative flex items-center justify-center w-32 h-32">
-                <img src="" class="h-10 w-auto object-contain" alt="Logo" />
-              </div>
+    <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
+      <UBreadcrumb :items="items" />
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
+        <div class="space-y-6">
+          <section class="space-y-2">
+            <h2 class="font-bold">Dados Gerais</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <UFormField label="Tipo" class="sm:col-span-2">
+                <USelect
+                  v-model="state.entity_type_id"
+                  :items="entityTypes"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField label="Nome" class="sm:col-span-2">
+                <UInput v-model="state.name" class="w-full" />
+              </UFormField>
+              <UFormField label="Email de contacto">
+                <UInput v-model="state.email_contact" class="w-full" />
+              </UFormField>
+              <UFormField label="Telefone">
+                <UInput v-model="state.phone_contact" class="w-full" />
+              </UFormField>
+              <UFormField label="Morada" class="sm:col-span-2">
+                <UInput v-model="state.address" class="w-full" />
+              </UFormField>
+            </div>
+          </section>
+          <div class="h-px border-t border-stone-200 dark:border-stone-800" />
+          <section class="space-y-2">
+            <h2 class="font-bold">Responsável</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <UFormField label="Nome completo" class="sm:col-span-2">
+                <UInput v-model="state.poc_name" class="w-full" />
+              </UFormField>
+              <UFormField label="Email">
+                <UInput v-model="state.poc_email" class="w-full" />
+              </UFormField>
+              <UFormField label="Telefone">
+                <UInput v-model="state.poc_phone" class="w-full" />
+              </UFormField>
+            </div>
+          </section>
+          <div class="h-px border-t border-stone-200 dark:border-stone-800" />
+          <section class="space-y-2">
+            <h2 class="font-bold">Descrição</h2>
+            <UTextarea v-model="state.description" :rows="5" class="w-full" />
+          </section>
+        </div>
+        <div class="hidden lg:flex flex-col items-center justify-start gap-6 pt-1">
+          <div class="sticky top-8 flex flex-col items-center gap-5 w-full text-center">
+            <div class="relative flex items-center justify-center w-32 h-32">
+              <img src="" class="h-10 w-auto object-contain" alt="Logo" />
             </div>
           </div>
         </div>

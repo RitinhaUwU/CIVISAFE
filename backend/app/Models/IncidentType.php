@@ -8,20 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class IncidentType extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
     protected $fillable = [
         'code',
         'species',
         'type',
         'description',
-        'is_active'
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-        ];
-    }
 }

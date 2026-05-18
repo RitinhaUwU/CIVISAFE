@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useApiStore } from './api'
 import { useRouter } from 'vue-router'
-import {useToast} from "@nuxt/ui/composables";
 
 export const useAuthStore = defineStore('auth', () => {
   const apiStore = useApiStore()
@@ -17,13 +16,16 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser.value = undefined
     localStorage.removeItem('token')
     apiStore.removeBearerToken?.()
+    useNotificationStore().disconnect();
   }
 
   const isLoggedIn = computed(() => currentUser.value !== undefined)
 
-  const currentUserID = computed(() => {
-    return currentUser.value?.id
-  })
+  const currentUserID = computed(() => { return currentUser.value?.id })
+
+  const currentUserPermissions = computed(() => currentUser.value?.permissions)
+
+  const roles  = computed(() => currentUser.value?.roles)
 
   const isAuthenticated = async () => {
     if (!token.value) return false
@@ -31,7 +33,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       apiStore.setBearerToken(token.value)
       const res = await apiStore.getAuthUser()
-      currentUser.value = res.data
+      currentUser.value = res.data.data
+      useNotificationStore().connect()
       return true
     } catch (err) {
       reset()
@@ -49,6 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       await getUser()
 
+      useNotificationStore().connect()
+
       toast.add({
         title: 'Login efetuado com sucesso',
         color: 'success'
@@ -62,8 +67,6 @@ export const useAuthStore = defineStore('auth', () => {
         title: 'Credenciais inválidas',
         color: 'error'
       })
-
-      // throw err
     }
   }
 
@@ -81,18 +84,37 @@ export const useAuthStore = defineStore('auth', () => {
 
   const getUser = async () => {
     const res = await apiStore.getAuthUser()
-    currentUser.value = res.data
+    currentUser.value = res.data.data
     return currentUser.value
   }
 
+  const hasPermission = (permission) => {
+    return currentUserPermissions.value.includes(permission)
+  }
+
+  const hasRole = (role: string) => {
+    return roles.value.includes(role)
+  }
+
+  const isAdmin = computed(() => hasRole('admin'))
+  const isManager = computed(() => hasRole('manager'))
+  const isUser = computed(() => hasRole('user'))
+
   return {
-    currentUserID,
     currentUser,
+    currentUserID,
+    currentUserPermissions,
+    roles,
+    reset,
     isLoggedIn,
     isAuthenticated,
     login,
     logout,
-    reset,
-    getUser
+    getUser,
+    hasPermission,
+    hasRole,
+    isAdmin,
+    isManager,
+    isUser
   }
 })

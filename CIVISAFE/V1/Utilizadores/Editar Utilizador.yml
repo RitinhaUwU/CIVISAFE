@@ -1,0 +1,27 @@
+info:
+  name: Editar Utilizador
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/users/12"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Rute Marques Cardoso",
+        "email": "rute@example.com",
+        "password": "password",
+        "password_confirmation": "password",
+        "mobile": "925786321",
+        "locked": true,
+        "role": "user"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
