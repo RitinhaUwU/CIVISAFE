@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import {useToast} from "@nuxt/ui/composables";
+import {computed, onMounted, onUnmounted, ref, watch} from "vue";
+import {useHead} from "nuxt/app";
+import {useColorMode} from "@vueuse/core";
+import isOnline from "is-online";
 
-const isOnline = ref(true)
-const installPrompt = ref(null)
 const toast = useToast()
 const colorMode = useColorMode()
 const color = computed(() => colorMode.value === 'dark' ? '#1b1718' : 'white')
-const title = 'CIVISAFE'
+let last_connectivity_state = true;
 
 useHead({
   meta: [
@@ -20,49 +21,76 @@ useHead({
   ],
   htmlAttrs: {
     lang: 'pt-pt'
-  }
+  },
+  title: 'CIVISAFE',
 })
 
-useSeoMeta({
-  title,
-  ogTitle: title,
-  // ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/dashboard-light.png',
-  // twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/dashboard-light.png',
-  // twitterCard: 'summary_large_image'
-})
 
-const updateOnline = () => {
-  isOnline.value = navigator.onLine  // read actual state
-  if (isOnline.value) {
-    toast.add({
-      title: 'Está online!',
-      description: 'A sua ligação foi reestabelecida.',
-      color: 'success'
-    })
-  } else {
-    toast.add({
-      title: 'Está offline!',
-      description: 'Enquanto estiver offline, algumas funcionalidades estão indisponíveis.',
-      color: 'warning'
-    })
+const INTERVAL_MS = 3000
+let intervalId: number | null = null
+
+async function checkInternetAccess() {
+  const online = await isOnline()
+
+  if(online !== last_connectivity_state)
+  {
+    last_connectivity_state = online;
+
+    if (online) {
+      toast.add({
+        'title': 'Ligação à internet restaurada!',
+        'description': 'A sua ligação à internet foi restaurada!',
+        'color': 'success',
+      })
+    }
+    else
+    {
+      toast.add({
+        'title': 'Ligação perdida!',
+        'description': 'A sua à internet foi perdida!',
+        'color': 'error',
+      })
+    }
   }
 }
 
-onMounted(() => {
-  isOnline.value = navigator.onLine
-  window.addEventListener('online', updateOnline)
-  window.addEventListener('offline', updateOnline)  // both point to same handler
-  // window.addEventListener('visibilitychange', updateOnline)
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault()
-    installPrompt.value = e
+function startConnectivityLoop() {
+  if (intervalId) return
+  intervalId = setInterval(checkInternetAccess, INTERVAL_MS)
+}
+
+function stopConnectivityLoop() {
+  if (!intervalId) return
+  clearInterval(intervalId)
+  intervalId = null
+}
+
+function handleOffline() {
+  stopConnectivityLoop()
+  last_connectivity_state = false
+  toast.add({
+    title: 'Sem acesso à rede!',
+    description: 'A sua ligação à internet foi perdida.',
+    color: 'error',
   })
+}
+
+function handleOnline() {
+  //Não mostrar o toast aqui porque o navigator.online não garante acesso à internet
+  last_connectivity_state = false
+  startConnectivityLoop()
+}
+
+onMounted(() => {
+  startConnectivityLoop()
+  window.addEventListener('offline', handleOffline)
+  window.addEventListener('online', handleOnline)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('online', updateOnline)
-  window.removeEventListener('offline', updateOnline)
-  window.removeEventListener('visibilitychange', updateOnline)
+  stopConnectivityLoop()
+  window.removeEventListener('offline', handleOffline)
+  window.removeEventListener('online', handleOnline)
 })
 </script>
 

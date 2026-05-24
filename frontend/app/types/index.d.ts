@@ -1,11 +1,14 @@
-import type { AvatarProps } from '@nuxt/ui'
-
 export interface User {
   id: number
   name: string
   email: string
-  avatar?: AvatarProps
-  location: string
+  mobile: string
+  locked: boolean
+  created_at: Date
+  updated_at: Date
+  deleted_at: Date
+  roles: string[]
+  permissions: string[]
 }
 
 export interface Notification {

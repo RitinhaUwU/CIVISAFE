@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import axios, {type AxiosRequestConfig} from 'axios'
+import axios from 'axios'
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
