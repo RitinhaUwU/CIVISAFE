@@ -3,7 +3,8 @@ import {useToast} from "@nuxt/ui/composables";
 import {computed, onMounted, onUnmounted, ref, watch} from "vue";
 import {useHead} from "nuxt/app";
 import {useColorMode} from "@vueuse/core";
-import isOnline from "is-online";
+import {checkServerAccess} from "@/utils";
+import {useAuthStore} from "@/stores/auth";
 
 const toast = useToast()
 const colorMode = useColorMode()
@@ -26,11 +27,11 @@ useHead({
 })
 
 
-const INTERVAL_MS = 3000
+const INTERVAL_MS = 5000
 let intervalId: number | null = null
 
 async function checkInternetAccess() {
-  const online = await isOnline()
+  const online = await checkServerAccess()
 
   if(online !== last_connectivity_state)
   {
@@ -41,7 +42,9 @@ async function checkInternetAccess() {
         'title': 'Ligação à internet restaurada!',
         'description': 'A sua ligação à internet foi restaurada!',
         'color': 'success',
-      })
+      });
+
+      await useAuthStore().getUser();
     }
     else
     {

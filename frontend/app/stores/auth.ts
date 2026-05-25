@@ -4,7 +4,7 @@ import { useApiStore } from './api'
 import { useRouter } from 'vue-router'
 import type {User} from "~/types";
 import {createDB, retrieveData, storeData} from "~/composables/useIndexedDB";
-import isOnline from "is-online";
+import {checkServerAccess} from "~/utils";
 
 export const useAuthStore = defineStore('auth', () => {
   const apiStore = useApiStore()
@@ -18,6 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     currentUser.value = undefined
     localStorage.removeItem('token')
+    localStorage.removeItem('tokenUserID')
     apiStore.removeBearerToken?.()
     useNotificationStore().disconnect();
   }
@@ -31,41 +32,34 @@ export const useAuthStore = defineStore('auth', () => {
   const roles  = computed(() => currentUser.value?.roles)
 
   const isAuthenticated = async () => {
-    console.log("createdb")
     await createDB();
 
-    console.log("token check")
-    if (!token.value) return false
+    const tokenUserID = localStorage.getItem('tokenUserID');
+
+    if (!token.value || !tokenUserID) return false
 
     try {
-      console.log("set token", token.value)
       apiStore.setBearerToken(token.value)
 
-      if(!await isOnline())
+      if(!await checkServerAccess())
       {
-        // @ts-ignore
-        const userData = await retrieveData('users',  parseInt(token.value.split('|')[0]));
+        console.log("Performing OFFLINE ACCESS")
 
-        console.log(userData)
+        const userData = await retrieveData('users',  parseInt(tokenUserID));
+
+        console.log("User Data: ", userData)
 
         currentUser.value = userData;
       }
       else
       {
-        console.log("Auth user")
-        const res = await apiStore.getAuthUser()
-        console.log("get user")
-        currentUser.value = res.data.data
-        console.log(res.data.data)
+        console.log("Performing ONLINE User Authentication")
+        await getUser();
 
-        const a = await retrieveData('users', res.data.data.id)
-        console.log(a)
-
-        await storeData('users', res.data.data);
+        //Tentamos ligar na mesma porque ele vai fazendo tentativas
+        await useNotificationStore().connect()
       }
 
-      //Tentamos ligar na mesma porque ele vai fazendo tentativas
-      await useNotificationStore().connect()
       return true
     } catch (err) {
       reset()
@@ -74,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const login = async (credentials: { email: string, password: string }) => {
-    if(!await isOnline())
+    if(!await checkServerAccess())
     {
       toast.add({
         title: 'Sem Ligação à internet',
@@ -90,8 +84,8 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await apiStore.postLogin(credentials)
 
       token.value = res.data.token // res.data
-      localStorage.setItem('token', token.value)
-      apiStore.setBearerToken(token.value)
+      localStorage.setItem('token', <string>token.value)
+      apiStore.setBearerToken(<string>token.value)
 
       await getUser()
       await useNotificationStore().connect()
@@ -127,7 +121,9 @@ export const useAuthStore = defineStore('auth', () => {
   const getUser = async () => {
     const res = await apiStore.getAuthUser()
     currentUser.value = res.data.data
-    localStorage.setItem('userData', JSON.stringify(res.data.data))
+
+    localStorage.setItem('tokenUserID', JSON.stringify(res.data.data.id))
+
     await storeData('users', res.data.data)
     return currentUser.value
   }

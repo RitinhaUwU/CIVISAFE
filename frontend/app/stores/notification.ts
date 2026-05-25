@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import type {Notification} from "~/types";
 import {useApiStore} from "~/stores/api";
 import {useAuthStore} from "~/stores/auth";
-import isOnline from "is-online";
+import {checkServerAccess} from "~/utils";
 
 export const useNotificationStore = defineStore('notification', () => {
   const {$echo} = useNuxtApp();
@@ -18,7 +18,7 @@ export const useNotificationStore = defineStore('notification', () => {
     // @ts-ignore
     $echo.options.auth.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 
-    if (await isOnline()) {
+    if (await checkServerAccess()) {
       apiStore.getNotifications()
         .then(r => {
           notifications.value = r.data.data;

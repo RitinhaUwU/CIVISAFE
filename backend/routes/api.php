@@ -19,6 +19,10 @@ Route::prefix('v1')->group(function () {
 
     Route::post('login', [AuthController::class, 'login']);
 
+    Route::get('up', function () {
+       return response()->json(['status' => 'up']);
+    });
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::delete('logout', [AuthController::class, 'logout']);
 
