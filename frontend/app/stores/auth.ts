@@ -1,163 +1,157 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useApiStore } from './api'
-import { useRouter } from 'vue-router'
+import {defineStore} from 'pinia'
+import {computed, ref} from 'vue'
+import {useApiStore} from './api'
+import {useRouter} from 'vue-router'
 import type {User} from "~/types";
 import {createDB, retrieveData, storeData} from "~/composables/useIndexedDB";
 import {checkServerAccess} from "~/utils";
 
 export const useAuthStore = defineStore('auth', () => {
-  const apiStore = useApiStore()
-  const toast = useToast()
-  const router = useRouter()
+    const apiStore = useApiStore()
+    const toast = useToast()
+    const router = useRouter()
 
-  const currentUser = ref<User|undefined>(undefined)
-  const token = ref<string|null>(localStorage.getItem('token'))
+    const currentUser = ref<User | undefined>(undefined)
+    const token = ref<string | null>(localStorage.getItem('token'))
 
-  function reset() {
-    token.value = null
-    currentUser.value = undefined
-    localStorage.removeItem('token')
-    localStorage.removeItem('tokenUserID')
-    apiStore.removeBearerToken?.()
-    useNotificationStore().disconnect();
-  }
-
-  const isLoggedIn = computed(() => currentUser.value !== undefined)
-
-  const currentUserID = computed(() => { return currentUser.value?.id })
-
-  const currentUserPermissions = computed(() => currentUser.value?.permissions)
-
-  const roles  = computed(() => currentUser.value?.roles)
-
-  const isAuthenticated = async () => {
-    await createDB();
-
-    const tokenUserID = localStorage.getItem('tokenUserID');
-
-    if (!token.value || !tokenUserID) return false
-
-    try {
-      apiStore.setBearerToken(token.value)
-
-      if(!await checkServerAccess())
-      {
-        console.log("Performing OFFLINE ACCESS")
-
-        const userData = await retrieveData('users',  parseInt(tokenUserID));
-
-        console.log("User Data: ", userData)
-
-        currentUser.value = userData;
-      }
-      else
-      {
-        console.log("Performing ONLINE User Authentication")
-        await getUser();
-
-        //Tentamos ligar na mesma porque ele vai fazendo tentativas
-        await useNotificationStore().connect()
-      }
-
-      return true
-    } catch (err) {
-      reset()
-      return false
-    }
-  }
-
-  const login = async (credentials: { email: string, password: string }) => {
-    if(!await checkServerAccess())
-    {
-      toast.add({
-        title: 'Sem Ligação à internet',
-        description: 'Lige-se à internet para iniciar sessão',
-        color: 'error'
-      });
-
-      reset();
-      return;
+    function reset() {
+        token.value = null
+        currentUser.value = undefined
+        localStorage.removeItem('token')
+        localStorage.removeItem('tokenUserID')
+        apiStore.removeBearerToken?.()
+        useNotificationStore().disconnect();
     }
 
-    try {
-      const res = await apiStore.postLogin(credentials)
+    const isLoggedIn = computed(() => currentUser.value !== undefined)
 
-      token.value = res.data.token // res.data
-      localStorage.setItem('token', <string>token.value)
-      apiStore.setBearerToken(<string>token.value)
-
-      await getUser()
-      await useNotificationStore().connect()
-
-      toast.add({
-        title: 'Login efetuado com sucesso',
-        color: 'success'
-      })
-
-      return currentUser.value
-    } catch (err) {
-      reset()
-
-      toast.add({
-        title: 'Credenciais inválidas',
-        color: 'error'
-      })
-    }
-  }
-
-  const logout = async () => {
-    reset()
-    toast.add({
-      title: 'Sessão Encerrada',
-      color: 'success'
+    const currentUserID = computed(() => {
+        return currentUser.value?.id
     })
 
-    if (router) {
-      await router.push('/')
+    const currentUserPermissions = computed(() => currentUser.value?.permissions)
+
+    const roles = computed(() => currentUser.value?.roles)
+
+    const isAuthenticated = async () => {
+        await createDB();
+
+        const tokenUserID = localStorage.getItem('tokenUserID');
+
+        if (!token.value || !tokenUserID) return false
+
+        try {
+            apiStore.setBearerToken(token.value)
+
+            if (!await checkServerAccess()) {
+                console.log("Performing OFFLINE ACCESS")
+
+                currentUser.value = await retrieveData('users', parseInt(tokenUserID));
+            } else {
+                console.log("Performing ONLINE User Authentication")
+                await getUser();
+
+                //Tentamos ligar na mesma porque ele vai fazendo tentativas
+                await useNotificationStore().connect()
+            }
+
+            return true
+        } catch (err) {
+            reset()
+            return false
+        }
     }
-  }
 
-  const getUser = async () => {
-    const res = await apiStore.getAuthUser()
-    currentUser.value = res.data.data
+    const login = async (credentials: { email: string, password: string }) => {
+        if (!await checkServerAccess()) {
+            toast.add({
+                title: 'Sem Ligação à internet',
+                description: 'Lige-se à internet para iniciar sessão',
+                color: 'error'
+            });
 
-    localStorage.setItem('tokenUserID', JSON.stringify(res.data.data.id))
+            reset();
+            return;
+        }
 
-    await storeData('users', res.data.data)
-    return currentUser.value
-  }
+        try {
+            const res = await apiStore.postLogin(credentials)
 
-  const hasPermission = (permission: string) => {
-    if(!currentUserPermissions.value) return false;
+            token.value = res.data.token // res.data
+            localStorage.setItem('token', <string>token.value)
+            apiStore.setBearerToken(<string>token.value)
 
-    return currentUserPermissions.value.includes(permission)
-  }
+            await getUser()
+            await useNotificationStore().connect()
 
-  const hasRole = (role: string) => {
-    if(!roles.value) return false;
+            toast.add({
+                title: 'Login efetuado com sucesso',
+                color: 'success'
+            })
 
-    return roles.value.includes(role)
-  }
+            return currentUser.value
+        } catch (err) {
+            reset()
 
-  const isAdmin = computed(() => hasRole('admin'))
-  const isManager = computed(() => hasRole('manager'))
-  const isUser = computed(() => hasRole('user'))
+            toast.add({
+                title: 'Credenciais inválidas',
+                color: 'error'
+            })
+        }
+    }
 
-  return {
-    currentUser,
-    currentUserID,
-    currentUserPermissions,
-    roles,
-    isLoggedIn,
-    isAuthenticated,
-    login,
-    logout,
-    getUser,
-    hasPermission,
-    hasRole,
-    isAdmin,
-    isManager,
-    isUser
-  }
+    const logout = async () => {
+        reset()
+        toast.add({
+            title: 'Sessão Encerrada',
+            color: 'success'
+        })
+
+        if (router) {
+            await router.push('/')
+        }
+    }
+
+    const getUser = async () => {
+        const res = await apiStore.getAuthUser()
+        currentUser.value = res.data.data
+
+        localStorage.setItem('tokenUserID', JSON.stringify(res.data.data.id))
+
+        await storeData('users', res.data.data)
+        return currentUser.value
+    }
+
+    const hasPermission = (permission: string) => {
+        if (!currentUserPermissions.value) return false;
+
+        return currentUserPermissions.value.includes(permission)
+    }
+
+    const hasRole = (role: string) => {
+        if (!roles.value) return false;
+
+        return roles.value.includes(role)
+    }
+
+    const isAdmin = computed(() => hasRole('admin'))
+    const isManager = computed(() => hasRole('manager'))
+    const isUser = computed(() => hasRole('user'))
+
+    return {
+        currentUser,
+        currentUserID,
+        currentUserPermissions,
+        roles,
+        isLoggedIn,
+        isAuthenticated,
+        login,
+        logout,
+        getUser,
+        hasPermission,
+        hasRole,
+        isAdmin,
+        isManager,
+        isUser
+    }
 })
