@@ -9,7 +9,13 @@ const api = useApiStore()
 const toast = useToast()
 
 const saving = ref(false)
-const incidents = ref<{ label: string; value: number }[]>([])
+
+const incidentMenu = useTemplateRef('incidentMenu')
+const incidentItems = ref<any[]>([])
+const incidentPage = ref(1)
+const incidentLastPage = ref(Infinity)
+const incidentLoading = ref(false)
+const incidentSearch = ref('')
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -69,7 +75,7 @@ const handleSave = async () => {
 
     toast.add({
       title: 'Sucesso',
-      description: 'Voluntário atualizada',
+      description: 'Voluntário atualizado',
       color: 'success'
     })
   } catch (e) {
@@ -95,34 +101,43 @@ const fetchVolunteer = async () => {
   const res = await api.getVolunteer(route.params.id)
   const data = res.data.data
 
-  const mapVolunteer = (data: any) => ({
-    name: data.name,
-    contact: data.contact,
-    email: data.email,
-    classification: data.classification,
+  Object.assign(state, {
+    ...data,
     num_elements: Number(data.num_elements),
-    mission: data.mission,
-    team_identification: data.team_identification,
-    has_accommodation: data.has_accommodation,
-    location: data.location,
-    has_meal: data.has_meal,
-    meal_notes: data.meal_notes,
-    meal_location: data.meal_location,
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    incident_id: data.incident_id ?? data.incident?.id ?? null,
+    incident_id: data.incident_id ?? data.incident?.id ?? null
   })
 
-  Object.assign(state, mapVolunteer(data))
+  if (data.incident) {
+    incidentItems.value = [{
+      id: data.incident.id,
+      name: data.incident.identifier
+    }]
+  }
 }
 
-const fetchIncidents = async () => {
-  const res = await api.getIncidents()
+const fetchIncidents = async (search?: string, loadMore = false) => {
+  if (incidentLoading.value) return
 
-  incidents.value = res.data.data.map((i: any) => ({
-    label: i.identifier,
-    value: i.id
-  }))
+  incidentLoading.value = true
+  try {
+    const res = await api.getIncidents({
+      page: incidentPage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    incidentLastPage.value = res.data.meta.last_page
+    const mapped = data.map((t: any) => ({ id: t.id, name: t.identifier }))
+    const existingIds = new Set(incidentItems.value.map(i => i.id))
+    incidentItems.value = [...incidentItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+  } finally {
+    incidentLoading.value = false
+  }
 }
 
 const items = ref<BreadcrumbItem[]>([
@@ -137,9 +152,29 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
+watchDebounced(incidentSearch, async (val) => {
+  incidentPage.value = 1
+  incidentItems.value = []
+  incidentLastPage.value = Infinity
+  await fetchIncidents(val)
+}, { debounce: 300 })
+
 onMounted(async () => {
-  await fetchIncidents()
   await fetchVolunteer()
+  await fetchIncidents()
+
+  useInfiniteScroll(
+    () => incidentMenu.value?.viewportRef,
+    () => {
+      if (incidentPage.value < incidentLastPage.value) {
+        incidentPage.value++
+        fetchIncidents(incidentSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () => !incidentLoading.value && incidentPage.value < incidentLastPage.value
+    }
+  )
 })
 </script>
 
@@ -198,10 +233,17 @@ onMounted(async () => {
             <UInput type="number" v-model="state.num_elements" class="w-full" />
           </UFormField>
           <UFormField label="Ocorrência">
-            <USelect
+            <USelectMenu
+              ref="incidentMenu"
               v-model="state.incident_id"
+              v-model:search-term="incidentSearch"
+              :items="incidentItems"
+              :loading="incidentLoading"
+              value-key="id"
+              label-key="name"
+              ignore-filter
               class="w-full"
-              :items="incidents"
+              placeholder="Selecionar incidente"
             />
           </UFormField>
         </div>

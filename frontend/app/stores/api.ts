@@ -116,7 +116,7 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getEntityTypes = (params?: any) => {
+  const getEntityTypes = (params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/entityTypes`, { params })
   }
 
@@ -148,6 +148,18 @@ export const useApiStore = defineStore('api', () => {
 
   const getIncident = async (id: number, params?: QueryParams) => {
     return axios.get(`${config.public.apiBase}/incidents/${id}`, params)
+  }
+
+  const createIncident = async (params) => {
+    return axios.post(`${config.public.apiBase}/incidents`, params)
+  }
+
+  const updateIncident = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/incidents/${id}`, params)
+  }
+
+  const deleteIncident = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/incidents/${id}`)
   }
 
   /*************************
@@ -246,6 +258,32 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/notifications/`);
   }
 
+  /*************************
+   *
+   *  Facilities
+   *
+   *************************/
+
+  const getFacilities = (params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/facilities`, { params })
+  }
+
+  const getFacility = (id: number, params?: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/facilities/${id}`, params)
+  }
+
+  const createFacility = (params) => {
+    return axios.post(`${config.public.apiBase}/facilities`, params)
+  }
+
+  const updateFacility = (id: number, params) => {
+    return axios.put(`${config.public.apiBase}/facilities/${id}`, params)
+  }
+
+  const deleteFacility = (id: number) => {
+    return axios.delete(`${config.public.apiBase}/facilities/${id}`)
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -273,6 +311,9 @@ export const useApiStore = defineStore('api', () => {
     createEntityType,
     getIncidents,
     getIncident,
+    updateIncident,
+    createIncident,
+    deleteIncident,
     getIncidentStates,
     getIncidentState,
     updateIncidentState,
@@ -290,6 +331,11 @@ export const useApiStore = defineStore('api', () => {
     getVolunteer,
     updateVolunteer,
     deleteVolunteer,
-    createVolunteer
+    createVolunteer,
+    getFacilities,
+    getFacility,
+    updateFacility,
+    deleteFacility,
+    createFacility
   }
 })

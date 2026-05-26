@@ -28,7 +28,10 @@ enum PermissionsEnum: string
 
     # ENTITY TYPES
     case ENTITY_TYPES_LIST = 'ENTITY_TYPES_LIST';
-    case ENTITY_TYPES_UPLOAD = 'ENTITY_TYPES_UPLOAD';
+    case ENTITY_TYPES_CREATE = 'ENTITY_TYPES_CREATE';
+    case ENTITY_TYPES_UPDATE = 'ENTITY_TYPES_UPDATE';
+    case ENTITY_TYPES_DELETE = 'ENTITY_TYPES_DELETE';
+
 
     # INCIDENTS
     case INCIDENTS_LIST = 'INCIDENTS_LIST';
@@ -52,6 +55,11 @@ enum PermissionsEnum: string
     case INCIDENT_PRIORITIES_UPDATE = 'INCIDENT_PRIORITIES_UPDATE';
     case INCIDENT_PRIORITIES_DELETE = 'INCIDENT_PRIORITIES_DELETE';
 
+    # INCIDENT FACILITIES
+    case FACILITIES_LIST = 'FACILITIES_LIST';
+    case FACILITIES_CREATE = 'FACILITIES_CREATE';
+    case FACILITIES_UPDATE = 'FACILITIES_UPDATE';
+    case FACILITIES_DELETE = 'FACILITIES_DELETE';
 
     public function label(): string
     {
@@ -96,6 +104,11 @@ enum PermissionsEnum: string
             self::INCIDENT_PRIORITIES_CREATE => 'Criar Prioridades de Incidente',
             self::INCIDENT_PRIORITIES_UPDATE => 'Editar Prioridades de Incidente',
             self::INCIDENT_PRIORITIES_DELETE => 'Eliminar Prioridades de Incidente',
+            # FACILITIES
+            self::FACILITIES_LIST => 'Ver Instalações',
+            self::FACILITIES_CREATE => 'Criar Instalações',
+            self::FACILITIES_UPDATE => 'Editar Instalações',
+            self::FACILITIES_DELETE => 'Eliminar Instalações',
         };
     }
 }

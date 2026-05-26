@@ -60,8 +60,11 @@ const links = [
           }
         ]
       }, {
-        label: 'Voluntário',
+        label: 'Voluntários',
         to: '/volunteers'
+      },{
+        label: 'Instalações',
+        to: '/facilities'
       }]
     }
   ], [{

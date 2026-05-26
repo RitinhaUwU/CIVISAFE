@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '@/stores/api'
+import { useApiStore } from '../../stores/api'
 
 const apiStore = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
 
-const incidents = ref<{ label: string; value: number }[]>([])
+const incidentMenu = useTemplateRef('incidentMenu')
+const incidentItems = ref<any[]>([])
+const incidentPage = ref(1)
+const incidentLastPage = ref(Infinity)
+const incidentLoading = ref(false)
+const incidentSearch = ref('')
 
 const toast = useToast()
 
@@ -88,17 +93,53 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-const fetchIncidents = async () => {
-  const res = await apiStore.getIncidents()
+const fetchIncidents = async (search?: string) => {
+  if (incidentLoading.value) return
 
-  incidents.value = res.data.data.map((i: any) => ({
-    label: i.identifier,
-    value: i.id
-  }))
+  incidentLoading.value = true
+  try {
+    const res = await apiStore.getIncidents({
+      page: incidentPage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    incidentLastPage.value = res.data.meta.last_page
+    const mapped = data.map((t: any) => ({ id: t.id, name: t.identifier }))
+    const existingIds = new Set(incidentItems.value.map(i => i.id))
+    incidentItems.value = [...incidentItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+  } finally {
+    incidentLoading.value = false
+  }
 }
+
+watchDebounced(incidentSearch, async (val) => {
+  incidentPage.value = 1
+  incidentItems.value = []
+  incidentLastPage.value = Infinity
+  await fetchIncidents(val)
+}, { debounce: 300 })
 
 onMounted(() => {
   fetchIncidents()
+
+  useInfiniteScroll(
+    () => incidentMenu.value?.viewportRef,
+    () => {
+      if (incidentPage.value < incidentLastPage.value) {
+        incidentPage.value++
+        fetchIncidents(incidentSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () =>
+        !incidentLoading.value &&
+        incidentPage.value < incidentLastPage.value
+    }
+  )
 })
 </script>
 
@@ -106,7 +147,8 @@ onMounted(() => {
   <UModal
     v-model:open="open"
     title="Novo Voluntário"
-    description="Criar Voluntário":ui="{
+    description="Criar Voluntário"
+    :ui="{
       content: 'max-h-[90vh] overflow-y-auto w-full max-w-3xl'
     }"
   >
@@ -152,10 +194,16 @@ onMounted(() => {
           <UTextarea v-model="state.mission" class="w-full" />
         </UFormField>
         <UFormField label="Ocorrência" name="incident_id">
-          <USelect
+          <USelectMenu
+            ref="incidentMenu"
             v-model="state.incident_id"
+            v-model:search-term="incidentSearch"
+            :items="incidentItems"
+            :loading="incidentLoading"
+            value-key="id"
+            label-key="name"
+            ignore-filter
             class="w-full"
-            :items="incidents"
             placeholder="Selecionar ocorrência"
           />
         </UFormField>

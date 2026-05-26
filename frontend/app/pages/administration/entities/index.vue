@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
 
 const toast = useToast()
 const api = useApiStore()
 
 const entities = ref<Entity[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
+const typesFilter = ref('all')
+const typesMenu = useTemplateRef('stateMenu')
+const typesItems = ref<any[]>([])
+const typesPage = ref(1)
+const typesLastPage = ref(Infinity)
+const typesLoading = ref(false)
+const typesSearch = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedEntityById = ref<Entity | null>(null)
@@ -57,6 +65,7 @@ const columns: TableColumn<Entity>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-entity',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -65,6 +74,7 @@ const columns: TableColumn<Entity>[] = [
           }
         }),
         h(UButton, {
+          'data-testid': 'delete-entity',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
@@ -78,28 +88,48 @@ const columns: TableColumn<Entity>[] = [
   }
 ]
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10,
-})
+const fetchTypes = async (search?: string, loadMore = false) => {
+  typesLoading.value = true
+
+  try {
+    const res = await api.getEntityTypes({
+      page: typesPage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    typesLastPage.value = res.data.meta.last_page
+    typesItems.value = loadMore ? [...typesItems.value, ...data] : [{ id: 'all', name: 'Tipos' }, ...data]
+  } finally {
+    typesLoading.value = false
+  }
+}
 
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize,
+      page: page.value,
+      per_page: 10,
+      filter: {}
     }
     if (search.value) {
-      params.filter = {
-        search: search.value
-      }
+      params.filter.search = search.value
+    }
+    if (typesFilter.value !== 'all') {
+      params.filter.type = typesFilter.value
     }
     const res = await api.getEntities(params)
 
-    entities.value = res.data.data
+    entities.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -111,14 +141,58 @@ const fetch = async() => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
-watch(search, () => {
-  pagination.value.pageIndex = 0
+watch([search, typesFilter], () => {
+  page.value = 1
+  lastPage.value = Infinity
+  entities.value = []
   fetch()
 })
 
-onMounted(fetch)
+watchDebounced(typesSearch, async (value) => {
+  typesPage.value = 1
+  typesItems.value = []
+  typesLastPage.value = Infinity
+  await fetchTypes(value)
+}, { debounce: 300 })
+
+const scrollContainer = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+  fetch()
+  fetchTypes()
+
+  // ----------
+  // Filters
+  // ----------
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+
+  // ----------
+  // Filters
+  // ----------
+  // Types
+  useInfiniteScroll(
+    () => typesMenu.value?.viewportRef,
+    () => {
+      if (typesPage.value < typesLastPage.value) {
+        typesPage.value++
+        fetchTypes(typesSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () => !typesLoading.value && typesPage.value < typesLastPage.value
+    }
+  )
+})
 </script>
 
 <template>
@@ -138,18 +212,26 @@ onMounted(fetch)
           icon="i-lucide-search"
           placeholder="Filtrar entidades..."
         />
+        <div class="flex flex-wrap items-center gap-1.5">
+          <USelectMenu
+            ref="typesMenu"
+            v-model="typesFilter"
+            v-model:search-term="typesSearch"
+            :items="typesItems"
+            :loading="typesLoading"
+            value-key="id"
+            label-key="name"
+            ignore-filter
+            class="w-48"
+            placeholder="Tipos"
+          />
+        </div>
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="entities"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -158,19 +240,9 @@ onMounted(fetch)
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[640px]"
+          class="w-full"
         />
       </div>
-
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
-        />
-      </div>
-
       <EntitiesDeleteModal
         v-if="selectedEntityById"
         v-model:open="deleteModalOpen"

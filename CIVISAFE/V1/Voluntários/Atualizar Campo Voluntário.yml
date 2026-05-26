@@ -1,5 +1,5 @@
 info:
-  name: Atualizar Campo Voluntário copy
+  name: Atualizar Campo Voluntário
   type: http
   seq: 5
 
@@ -11,10 +11,6 @@ http:
     data: |-
       {
         "name": "João Silva",
-        "contact": "912345678",
-        "email": "joao@example.com",
-        "classification": "org",
-        "num_elements": 2
       }
   auth: inherit
 

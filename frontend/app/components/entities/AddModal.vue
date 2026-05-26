@@ -6,9 +6,17 @@ import { useApiStore } from '../../stores/api'
 const apiStore = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
-const entityTypes = ref([])
 
 const toast = useToast()
+
+const entityTypeMenu = useTemplateRef('entityTypeMenu')
+const entityTypeItems = ref<any[]>([])
+const entityTypePage = ref(1)
+const entityTypeLastPage = ref(Infinity)
+const entityTypeLoading = ref(false)
+const entityTypeSearch = ref('')
+
+const imageFile = ref(null)
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -19,7 +27,8 @@ const schema = z.object({
   poc_name: z.string().optional().nullable(),
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
-  description: z.string().optional().nullable()
+  description: z.string().optional().nullable(),
+  entity_type_id: z.number().nullable()
 })
 
 type Schema = z.output<typeof schema>
@@ -70,16 +79,53 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-const fetchEntityTypes = async () => {
-  const res = await apiStore.getEntityTypes()
-  entityTypes.value = res.data.data.map((t: any) => ({
-    label: t.name,
-    value: t.id
-  }))
+const fetchEntityTypes = async (search?: string) => {
+  if (entityTypeLoading.value) return
+
+  entityTypeLoading.value = true
+  try {
+    const res = await apiStore.getEntityTypes({
+      page: entityTypePage.value,
+      per_page: 10,
+      filter: {
+        ...(search ? { search } : {})
+      }
+    })
+
+    const data = res.data.data
+    entityTypeLastPage.value = res.data.meta.last_page
+    const mapped = data.map((e: any) => ({ id: e.id, name: e.name }))
+    const existingIds = new Set(entityTypeItems.value.map(i => i.id))
+    entityTypeItems.value = [...entityTypeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
+  } finally {
+    entityTypeLoading.value = false
+  }
 }
+
+watchDebounced(entityTypeSearch, async (val) => {
+  entityTypePage.value = 1
+  entityTypeItems.value = []
+  entityTypeLastPage.value = Infinity
+  await fetchEntityTypes(val)
+}, { debounce: 300 })
 
 onMounted(() => {
   fetchEntityTypes()
+
+  useInfiniteScroll(
+    () => entityTypeMenu.value?.viewportRef,
+    () => {
+      if (entityTypePage.value < entityTypeLastPage.value) {
+        entityTypePage.value++
+        fetchEntityTypes(entityTypeSearch.value, true)
+      }
+    },
+    {
+      canLoadMore: () =>
+        !entityTypeLoading.value &&
+        entityTypePage.value < entityTypeLastPage.value
+    }
+  )
 })
 </script>
 
@@ -93,59 +139,66 @@ onMounted(() => {
     <template #body>
       <UForm
         :state="state"
+        :schema="schema"
         @submit="onSubmit"
       >
-        <UFormField class="mb-5">
-          <div class="relative flex items-center gap-4 group">
-            <div class="w-16 h-16 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center overflow-hidden transition group-hover:scale-105">
-              <UIcon name="i-lucide-image" class="w-6 h-6 text-muted group-hover:text-primary transition" />
-            </div>
-            <div>
-              <UButton label="Carregar imagem" variant="soft" class="transition group-hover:bg-primary group-hover:text-white"/>
-              <p class="text-xs text-muted mt-1">PNG, JPG até 2MB</p>
-            </div>
-            <UFileUpload class="absolute inset-0 opacity-0 cursor-pointer" />
-          </div>
+        <UFormField name="image" class="mb-5">
+          <UFileUpload
+            icon="i-lucide-image"
+            v-model="imageFile"
+            accept="image/*"
+            color="neutral"
+            highlight
+            label="Carregue uma imagem"
+            description="SVG, PNG, JPG or GIF (max. 2MB)"
+            class="w-full min-h-48 cursor-pointer bg-stone-50/40 dark:bg-stone-900/40 hover:bg-stone-100/70 dark:hover:bg-stone-800/60 transition-all duration-200 ease-out"
+          />
         </UFormField>
         <div class="h-px border-t border-stone-200 dark:border-stone-800 mb-5" />
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">
           <div class="space-y-5">
             <UFormField label="Tipo de Entidade:" name="entity_type_id">
-              <USelect
+              <USelectMenu
+                data-testid="entity-type-select"
+                ref="entityTypeMenu"
                 v-model="state.entity_type_id"
-                :items="entityTypes"
+                v-model:search-term="entityTypeSearch"
+                :items="entityTypeItems"
+                :loading="entityTypeLoading"
+                value-key="id"
+                label-key="name"
+                ignore-filter
                 placeholder="Seleciona o tipo"
                 class="w-full"
               />
             </UFormField>
             <UFormField label="Nome:" name="name">
-              <UInput v-model="state.name" class="w-full" required />
+              <UInput v-model="state.name" class="w-full" />
             </UFormField>
-            <UFormField label="Email:" name="email">
-              <UInput v-model="state.email_contact" class="w-full" required />
+            <UFormField label="Email:" name="email_contact">
+              <UInput v-model="state.email_contact" class="w-full" />
             </UFormField>
             <UFormField label="Contacto:" name="phone_contact">
-              <UInput v-model="state.phone_contact" class="w-full" required />
+              <UInput v-model="state.phone_contact" class="w-full" />
             </UFormField>
             <UFormField label="Morada:" name="address">
-              <UInput v-model="state.address" class="w-full" required />
+              <UInput v-model="state.address" class="w-full" />
             </UFormField>
           </div>
           <div class="space-y-5">
             <UFormField label="Nome do Responsável:" name="poc_name">
-              <UInput v-model="state.poc_name" class="w-full" required />
+              <UInput v-model="state.poc_name" class="w-full" />
             </UFormField>
             <UFormField label="Email do Responsável:" name="poc_email">
-              <UInput v-model="state.poc_email" class="w-full" required />
+              <UInput v-model="state.poc_email" class="w-full" />
             </UFormField>
             <UFormField label="Contacto do Responsável:" name="poc_phone">
-              <UInput v-model="state.poc_phone" class="w-full" required />
+              <UInput v-model="state.poc_phone" class="w-full" />
             </UFormField>
             <UFormField label="Observações:" name="description">
               <UTextarea v-model="state.description" class="w-full" />
             </UFormField>
           </div>
-
           <div class="col-span-1 lg:col-span-2 flex justify-between gap-2">
             <UButton label="Cancelar" color="neutral" variant="subtle" class="flex-1 justify-center" @click="open = false"/>
             <UButton label="Guardar" color="primary" type="submit" class="flex-1 justify-center"/>

@@ -38,6 +38,7 @@ class UserController extends Controller
                     });
                 }),
             )
+            ->orderBy('id', 'asc')
             ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 

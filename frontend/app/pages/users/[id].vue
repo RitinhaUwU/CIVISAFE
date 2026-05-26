@@ -72,7 +72,7 @@ const handleSave = async () => {
 
     toast.add({
       title: 'Sucesso',
-      description: 'Utilizador atualizada',
+      description: 'Utilizador atualizado',
       color: 'success'
     })
   } catch (e) {
