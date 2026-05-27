@@ -1,14 +1,11 @@
 import {defineStore} from 'pinia'
 import axios from 'axios'
+import {checkServerAccess} from "@/utils";
+import {retrieveData, retrieveDataPaginated, storeData} from "@/composables/useIndexedDB";
+import type {QueryParams} from "@/types";
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
-
-  interface QueryParams{
-    page?: number
-    per_page?: number
-    search?: string
-  }
 
   const setBearerToken = (token: string) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -19,7 +16,7 @@ export const useApiStore = defineStore('api', () => {
   }
 
   // Login
-  const postLogin = async (credentials: {email: string, password: string }) => {
+  const postLogin = async (credentials: { email: string, password: string }) => {
     const response = await axios.post(`${config.public.apiBase}/login`, credentials)
     localStorage.setItem('token', response.data.token) // response.data
     return response
@@ -42,19 +39,37 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getUsers = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/users`, { params })
+  const getUsers = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const response = await axios.get(`${config.public.apiBase}/users`, {params})
+
+      await storeData('users', response.data.data)
+
+      return response;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('users', params);
+    }
   }
 
-  const getUser = (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/users/${id}`, params)
+  const getUser = async (id: number, params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const response = await axios.get(`${config.public.apiBase}/users/${id}`, {params})
+
+      await storeData('users', response.data.data)
+
+      return response;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('users', id);
+    }
   }
 
-  const createUser = (params) => {
+  const createUser = (params: any) => {
     return axios.post(`${config.public.apiBase}/users`, params)
   }
 
-  const updateUser = (id: number, params) => {
+  const updateUser = (id: number, params: any) => {
     return axios.put(`${config.public.apiBase}/users/${id}`, params)
   }
 
@@ -68,16 +83,32 @@ export const useApiStore = defineStore('api', () => {
 
   /*************************
    *
-   *  Categories
+   *  Incident Types
    *
    *************************/
 
-  const getIncidentTypes = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidentTypes`, { params })
+  const getIncidentTypes = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const response = await axios.get(`${config.public.apiBase}/incidentTypes`, {params})
+
+      await storeData('incidentTypes', response.data.data)
+
+      return response;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('incidentTypes', params);
+    }
   }
 
-  const getIncidentType = (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidentTypes/${id}`, params)
+  const getIncidentType = async (id: number, params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidentTypes/${id}`, {params})
+      await storeData('incidentTypes', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('incidentTypes', id);
+    }
   }
 
   const uploadIncidentTypesFile = (form: FormData) => {
@@ -90,20 +121,34 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getEntities = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/entities`, { params })
+  const getEntities = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/entities`, {params})
+      await storeData('entities', res.data.data);
+      return res
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('entities', params);
+    }
   }
 
   const getEntity = async (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/entities/${id}`, params)
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/entities/${id}`, {params})
+      await storeData('entities', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('entities', id);
+    }
   }
 
-  const createEntity = async (params) => {
-    return axios.post(`${config.public.apiBase}/entities`, params)
+  const createEntity = async (params: any) => {
+    return axios.post(`${config.public.apiBase}/entities`, {params})
   }
 
-  const updateEntity = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/entities/${id}`, params)
+  const updateEntity = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/entities/${id}`, {params})
   }
 
   const deleteEntity = (id: number) => {
@@ -112,24 +157,38 @@ export const useApiStore = defineStore('api', () => {
 
   /*************************
    *
-   *  Entities
+   *  EntityTypes
    *
    *************************/
 
-  const getEntityTypes = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/entityTypes`, { params })
+  const getEntityTypes = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/entityTypes`, {params})
+      await storeData('entityTypes', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('entityTypes', params);
+    }
   }
 
   const getEntityType = async (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/entityTypes/${id}`, params)
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/entityTypes/${id}`, {params})
+      await storeData('entityTypes', res.data.data);
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('entityTypes', id);
+    }
   }
 
-  const createEntityType = async (params) => {
-    return axios.post(`${config.public.apiBase}/entityTypes`, params)
+  const createEntityType = async (params: any) => {
+    return axios.post(`${config.public.apiBase}/entityTypes`, {params})
   }
 
-  const updateEntityType = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, params)
+  const updateEntityType = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, {params})
   }
 
   const deleteEntityType = (id: number) => {
@@ -142,20 +201,34 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidents = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents`, { params })
+  const getIncidents = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents`, {params})
+      await storeData('incidents', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('incidents', params);
+    }
   }
 
   const getIncident = async (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents/${id}`, params)
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents/${id}`, {params})
+      await storeData('incidents', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('incidents', id);
+    }
   }
 
-  const createIncident = async (params) => {
-    return axios.post(`${config.public.apiBase}/incidents`, params)
+  const createIncident = async (params: any) => {
+    return axios.post(`${config.public.apiBase}/incidents`, {params})
   }
 
-  const updateIncident = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/incidents/${id}`, params)
+  const updateIncident = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/incidents/${id}`, {params})
   }
 
   const deleteIncident = (id: number) => {
@@ -168,20 +241,34 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentStates = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidentStates`, { params })
+  const getIncidentStates = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidentStates`, {params})
+      await storeData('incidentStates', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('incidentStates', params);
+    }
   }
 
   const getIncidentState = async (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidentStates/${id}`, params)
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidentStates/${id}`, {params})
+      await storeData('incidentStates', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('incidentStates', id);
+    }
   }
 
-  const createIncidentState = async (params) => {
-    return axios.post(`${config.public.apiBase}/incidentStates`, params)
+  const createIncidentState = async (params: any) => {
+    return axios.post(`${config.public.apiBase}/incidentStates`, {params})
   }
 
-  const updateIncidentState = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/incidentStates/${id}`, params)
+  const updateIncidentState = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/incidentStates/${id}`, {params})
   }
 
   const deleteIncidentState = (id: number) => {
@@ -194,20 +281,34 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentPriorities = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidentPriorities`, { params })
+  const getIncidentPriorities = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidentPriorities`, {params})
+      await storeData('incidentPriorities', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('incidentPriorities', params);
+    }
   }
 
   const getIncidentPriority = async (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidentPriorities/${id}`, params)
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidentPriorities/${id}`, {params})
+      await storeData('incidentPriorities', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('incidentPriorities', id);
+    }
   }
 
-  const createIncidentPriority = async (params) => {
-    return axios.post(`${config.public.apiBase}/incidentPriorities`, params)
+  const createIncidentPriority = async (params: any) => {
+    return axios.post(`${config.public.apiBase}/incidentPriorities`, {params})
   }
 
-  const updateIncidentPriority = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, params)
+  const updateIncidentPriority = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, {params})
   }
 
   const deleteIncidentPriority = (id: number) => {
@@ -220,20 +321,34 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getVolunteers = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/volunteers`, { params })
+  const getVolunteers = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/volunteers`, {params})
+      await storeData('volunteers', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('volunteers', params);
+    }
   }
 
-  const getVolunteer = (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/volunteers/${id}`, params)
+  const getVolunteer = async (id: number, params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/volunteers/${id}`, {params})
+      await storeData('volunteers', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('volunteers', id);
+    }
   }
 
-  const createVolunteer = (params) => {
-    return axios.post(`${config.public.apiBase}/volunteers`, params)
+  const createVolunteer = (params: any) => {
+    return axios.post(`${config.public.apiBase}/volunteers`, {params})
   }
 
-  const updateVolunteer = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/volunteers/${id}`, params)
+  const updateVolunteer = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/volunteers/${id}`, {params})
   }
 
   const deleteVolunteer = (id: number) => {
@@ -264,20 +379,34 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getFacilities = (params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/facilities`, { params })
+  const getFacilities = async (params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/facilities`, {params})
+      await storeData('facilities', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveDataPaginated('facilities', params);
+    }
   }
 
-  const getFacility = (id: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/facilities/${id}`, params)
+  const getFacility = async (id: number, params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/facilities/${id}`, {params})
+      await storeData('facilities', res.data.data)
+      return res;
+    } else {
+      console.log("OFFLINE DATA")
+      return await retrieveData('facilities', id);
+    }
   }
 
-  const createFacility = (params) => {
-    return axios.post(`${config.public.apiBase}/facilities`, params)
+  const createFacility = (params: any) => {
+    return axios.post(`${config.public.apiBase}/facilities`, {params})
   }
 
-  const updateFacility = (id: number, params) => {
-    return axios.put(`${config.public.apiBase}/facilities/${id}`, params)
+  const updateFacility = (id: number, params: any) => {
+    return axios.put(`${config.public.apiBase}/facilities/${id}`, {params})
   }
 
   const deleteFacility = (id: number) => {

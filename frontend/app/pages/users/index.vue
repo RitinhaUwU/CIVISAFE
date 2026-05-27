@@ -2,6 +2,8 @@
 import type { TableColumn } from '@nuxt/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
+import type {User} from "~/types";
+import {UBadge, UButton, UTooltip} from "#components";
 
 const api = useApiStore()
 const auth = useAuthStore()
@@ -22,18 +24,6 @@ const roleLabels = {
   admin: 'Administrador',
   manager: 'Gestor',
   user: 'Utilizador',
-}
-
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  mobile: number;
-  locked: boolean;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date;
-  roles: string[];
 }
 
 const columns: TableColumn<User>[] = [

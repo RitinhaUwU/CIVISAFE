@@ -11,6 +11,56 @@ export interface User {
   permissions: string[]
 }
 
+export interface Entity {
+  id: number;
+  name: string;
+  description: string;
+  phone_contact: string;
+  email_contact: string;
+  address: string;
+  logo: string;
+  poc_name: string;
+  poc_phone: string;
+  poc_email: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface EntityType {
+  id: number;
+  name: string;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface IncidentPriority {
+  id: number;
+  name: string;
+  description: string;
+  hex_color: string;
+  is_active: boolean;
+}
+
+export interface IncidentState {
+  id: number;
+  name: string;
+  description: string;
+  hex_color: string;
+  terminates_incident: boolean;
+  is_active: boolean;
+}
+
+export interface IncidentType {
+  id: number;
+  code: number;
+  species: string;
+  type: string;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface Notification {
   uuid: string
   title: string
@@ -20,4 +70,9 @@ export interface Notification {
   read: boolean
 }
 
+interface QueryParams{
+  page?: number
+  per_page?: number
+  search?: string
+}
 

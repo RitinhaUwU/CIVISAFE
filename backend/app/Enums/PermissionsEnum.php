@@ -83,7 +83,9 @@ enum PermissionsEnum: string
             self::ENTITIES_DELETE => 'Eliminar Entidades',
             # ENTITY TYPES
             self::ENTITY_TYPES_LIST => 'Ver Tipos de Entidade',
-            self::ENTITY_TYPES_UPLOAD => 'Carregar Tipos de Entidade',
+            self::ENTITY_TYPES_CREATE => 'Criar Tipos de Entidade',
+            self::ENTITY_TYPES_UPDATE => 'Editar Tipos de Entidade',
+            self::ENTITY_TYPES_DELETE => 'Eliminar Tipos de Entidade',
             # INCIDENTS
             self::INCIDENTS_LIST => 'Ver Incidentes',
             self::INCIDENTS_CREATE => 'Criar Incidentes',
@@ -91,9 +93,7 @@ enum PermissionsEnum: string
             self::INCIDENTS_DELETE => 'Eliminar Incidentes',
             # INCIDENT TYPES
             self::INCIDENT_TYPES_LIST => 'Ver Tipos de Incidente',
-            self::INCIDENT_TYPES_CREATE => 'Criar Tipos de Incidente',
-            self::INCIDENT_TYPES_UPDATE => 'Editar Tipos de Incidente',
-            self::INCIDENT_TYPES_DELETE => 'Eliminar Tipos de Incidente',
+            self::INCIDENT_TYPES_UPLOAD => 'Carregar Tipos de Incidente',
             # INCIDENT STATES
             self::INCIDENT_STATES_LIST => 'Ver Estados de Incidente',
             self::INCIDENT_STATES_CREATE => 'Criar Estados de Incidente',

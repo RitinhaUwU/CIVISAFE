@@ -1,34 +1,26 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import type {IncidentState} from "@/types";
+import {UBadge, UButton} from "#components";
 
 const toast = useToast()
 const api = useApiStore()
 
-const states = ref<States[]>([])
+const states = ref<IncidentState[]>([])
 const page = ref(1)
 const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
-const statusFilter = ref('all')
-const terminatesFilter = ref('all')
+const statusFilter = ref<boolean|string>('all')
+const terminatesFilter = ref<boolean|string>('all')
 
 const deleteModalOpen = ref(false)
-const selectedStateById = ref<States | null>(null)
+const selectedStateById = ref<IncidentState | null>(null)
 
-type States = {
-  id: number;
-  name: string;
-  description: string;
-  hex_color: string;
-  terminates_incident: boolean;
-  is_active: boolean;
-}
-
-const columns: TableColumn<States>[] = [
+const columns: TableColumn<IncidentState>[] = [
   {
     accessorKey: "name",
     header: "Nome",
@@ -64,6 +56,7 @@ const columns: TableColumn<States>[] = [
   {
     accessorKey: "terminates_incident",
     header: () => h('div', { class: 'text-center w-full' }, 'Ocorrência Termina'),
+    //@ts-ignore
     meta: { class: 'text-center' },
     cell: ({ row }) => {
       const value = row.original.terminates_incident
@@ -109,6 +102,7 @@ const columns: TableColumn<States>[] = [
             navigateTo(`/administration/incidentStates/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           'data-testid': 'delete-state',
           icon: 'i-lucide-trash',

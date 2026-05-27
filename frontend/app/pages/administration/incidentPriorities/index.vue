@@ -1,32 +1,25 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import type { IncidentPriority } from "~/types";
+import {UBadge, UButton} from "#components";
 
 const toast = useToast()
 const api = useApiStore()
 
-const priorities = ref<Priority[]>([])
+const priorities = ref<IncidentPriority[]>([])
 const page = ref(1)
 const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
-const statusFilter = ref('all')
+const statusFilter = ref<boolean|string>('all')
 
 const deleteModalOpen = ref(false)
-const selectedPriorityById = ref<Priority | null>(null)
+const selectedPriorityById = ref<IncidentPriority | null>(null)
 
-type Priority = {
-  id: number;
-  name: string;
-  description: string;
-  hex_color: string;
-  is_active: boolean;
-};
-
-const columns: TableColumn<Priority>[] = [
+const columns: TableColumn<IncidentPriority>[] = [
   {
     accessorKey: "name",
     header: "Nome",

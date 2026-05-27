@@ -2,9 +2,9 @@
 import { useRoute } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
@@ -23,19 +23,41 @@ const state = reactive<Partial<Schema>>({
   name: '',
   description: '',
   hex_color: '',
-  terminates_incident: '',
-  is_active: ''
+  terminates_incident: false,
+  is_active: true
 })
 
 const toast = useToast()
 
 const fetchEntity = async () => {
-  const res = await api.getIncidentState(route.params.id)
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Estado de Ocorrência inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um Estado de Ocorrência inválido',
+      color: 'error'
+    });
+    useRouter().push('/incidentStates');
+    return;
+  }
+
+  const res = await api.getIncidentState(parseInt(routeID));
 
   Object.assign(state, res.data.data)
 }
 
 const handleSave = async () => {
+  if (!useAuthStore().hasPermission('INCIDENT_STATE_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -51,7 +73,7 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateIncidentState(route.params.id, state)
+    await api.updateIncidentState(parseInt(<string>route.params.id), state)
 
     toast.add({
       title: 'Sucesso',
@@ -96,7 +118,13 @@ onMounted(fetchEntity)
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!useAuthStore().hasPermission('INCIDENT_STATE_UPDATE')"
+            />
           </div>
         </div>
       </div>

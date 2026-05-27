@@ -38,12 +38,22 @@ export default defineNuxtConfig({
         'axios',
         'laravel-echo',
         'pusher-js',
-        'is-online',
         'idb',
         'leaflet'
       ]
     }
   },
+
+  // https://www.npmjs.com/package/@nuxt/icon#client-bundle
+  // TODO: tentar fazer com que os icons sejam bundled ao invés de os obter pela rede
+  // Pode ser necessário trocar do iconify para o nuxt/icon ou algo do tipo
+  // icon: {
+  //   provider: "none",
+  //   clientBundle: {
+  //     scan: true,
+  //     // icons: ['lucide'],
+  //   },
+  // },
 
   // pwa: {
   //   registerType: 'autoUpdate',

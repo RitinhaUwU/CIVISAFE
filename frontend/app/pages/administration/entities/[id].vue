@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import { useApiStore } from '@/stores/api'
+import { useAuthStore } from '@/stores/auth'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
@@ -31,7 +32,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema & { entity_type_id: number }>>({
+const state = reactive<Partial<Schema & { entity_type_id: number|null }>>({
   name: '',
   email_contact: '',
   phone_contact: '',
@@ -46,8 +47,18 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 const toast = useToast()
 
 const fetchEntity = async () => {
-  const res = await api.getEntity(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Entidade inválida',
+      description: 'O Caminho que o trouxe aqui aponta para uma entidade inválida',
+      color: 'error'
+    });
+    useRouter().push('/entities');
+    return;
+  }
+
+  const data = (await api.getEntity(parseInt(routeID))).data.data
 
   Object.assign(state, {
     ...data,
@@ -64,6 +75,17 @@ const fetchEntity = async () => {
 
 const handleSave = async () => {
 
+  if (!useAuthStore().hasPermission('ENTITIES_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -79,7 +101,7 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateEntity(route.params.id, state)
+    await api.updateEntity(parseInt(<string>route.params.id), state)
 
     toast.add({
       title: 'Sucesso',
@@ -148,7 +170,7 @@ onMounted(() => {
     () => {
       if (entityTypePage.value < entityTypeLastPage.value) {
         entityTypePage.value++
-        fetchEntityTypes(entityTypeSearch.value, true)
+        fetchEntityTypes(entityTypeSearch.value)
       }
     },
     {
@@ -170,7 +192,13 @@ onMounted(() => {
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!useAuthStore().hasPermission('ENTITY_UPDATE')"
+            />
           </div>
         </div>
       </div>

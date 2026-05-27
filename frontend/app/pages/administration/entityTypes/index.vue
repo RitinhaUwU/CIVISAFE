@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import type { EntityType} from "@/types";
+import {UButton} from "#components";
 
 const toast = useToast()
 const api = useApiStore()
 
-const entityTypes = ref<Types[]>([])
+const entityTypes = ref<EntityType[]>([])
 const page = ref(1)
 const lastPage = ref<number>(Infinity)
 const loading = ref(false)
@@ -15,17 +16,9 @@ const total = ref(0)
 const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedEntityTypeById = ref<Types | null>(null)
+const selectedEntityTypeById = ref<EntityType | null>(null)
 
-type Types = {
-  id: number;
-  name: string;
-  description: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-const columns: TableColumn<Types>[] = [
+const columns: TableColumn<EntityType>[] = [
   {
     accessorKey: "name",
     header: "Nome",
@@ -56,6 +49,7 @@ const columns: TableColumn<Types>[] = [
             navigateTo(`/administration/entityTypes/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           'data-testid': 'delete-entity-type',
           icon: 'i-lucide-trash',

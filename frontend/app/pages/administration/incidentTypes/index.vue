@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import {UButton} from "#components";
+import type {IncidentType} from "@/types";
 
 const toast = useToast()
 const api = useApiStore()
 
-const incidentTypes = ref<IncidentTypes[]>([])
+const incidentTypes = ref<IncidentType[]>([])
 const page = ref(1)
 const lastPage = ref<number>(Infinity)
 const loading = ref(false)
@@ -14,19 +15,7 @@ const total = ref(0)
 
 const search = ref('')
 
-const uploadFileModalOpen = ref(false)
-
-type IncidentTypes = {
-  id: number;
-  code: number;
-  species: string;
-  type: string;
-  description: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-const columns: TableColumn<IncidentTypes | null>[] = [
+const columns: TableColumn<IncidentType | null>[] = [
   {
     accessorKey: "code",
     header: "Código",
@@ -151,7 +140,7 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesUploadModal />
+        <IncidentTypesUploadModal v-if="!useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput

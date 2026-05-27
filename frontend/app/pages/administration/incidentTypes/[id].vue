@@ -17,7 +17,17 @@ const state = reactive({
 const toast = useToast()
 
 const fetchEntity = async () => {
-  const res = await api.getIncidentType(route.params.id)
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Tipo de Ocorrência inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um Tipo de Ocorrência inválido',
+      color: 'error'
+    });
+    useRouter().push('/incidentTypes');
+    return;
+  }
+  const res = await api.getIncidentType(parseInt(routeID));
 
   Object.assign(state, res.data.data)
 }

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
+import type { Entity } from '@/types'
+import {UButton} from "#components";
 
 const toast = useToast()
 const api = useApiStore()
@@ -22,21 +24,6 @@ const typesSearch = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedEntityById = ref<Entity | null>(null)
-
-type Entity = {
-  id: number;
-  name: string;
-  description: string;
-  phone_contact: string;
-  email_contact: string;
-  address: string;
-  logo: string;
-  poc_name: string;
-  poc_phone: string;
-  poc_email: string;
-  created_at: Date;
-  updated_at: Date;
-}
 
 const columns: TableColumn<Entity>[] = [
   {
@@ -73,11 +60,13 @@ const columns: TableColumn<Entity>[] = [
             navigateTo(`/administration/entities/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           'data-testid': 'delete-entity',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('ENTITIES_DELETE'),
           onClick: () => {
             selectedEntityById.value = row.original
             deleteModalOpen.value = true

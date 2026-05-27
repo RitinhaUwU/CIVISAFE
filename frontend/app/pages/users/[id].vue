@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-import { useApiStore } from '../../stores/api'
-import {useAuthStore} from '../../stores/auth'
+import {useRoute, useRouter} from 'vue-router'
+import {useApiStore} from '@/stores/api'
+import {useAuthStore} from '@/stores/auth'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const auth = useAuthStore()
 const api = useApiStore()
 const toast = useToast()
@@ -40,6 +40,15 @@ const state = reactive<Partial<Schema>>({
 const handleSave = async () => {
   if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
 
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -68,7 +77,7 @@ const handleSave = async () => {
       payload.password_confirmation = state.password_confirmation
     }
 
-    await api.updateUser(route.params.id, payload)
+    await api.updateUser(parseInt(<string>route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
@@ -87,8 +96,18 @@ const handleSave = async () => {
 }
 
 const fetchUser = async () => {
-  const res = await api.getUser(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Utilizador inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um utilizador inválido',
+      color: 'error'
+    });
+    useRouter().push('/users');
+    return;
+  }
+
+  const data = (await api.getUser(parseInt(routeID))).data.data
 
   Object.assign(state, {
     name: data.name,
@@ -130,18 +149,18 @@ onMounted(async () => {
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave"/>
           </div>
         </div>
       </div>
     </header>
     <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
-      <UBreadcrumb :items="items" />
+      <UBreadcrumb :items="items"/>
       <UFormField label="Ativo?" name="locked">
         <div class="flex items-center gap-3">
           <USwitch
             :model-value="!state.locked"
-            @update:model-value="(val) => state.locked = !val"
+            @update:model-value="(val: boolean) => state.locked = !val"
             checked-icon="i-lucide-check"
             unchecked-icon="i-lucide-x"
           />
@@ -152,13 +171,13 @@ onMounted(async () => {
         <h2 class="font-bold">Dados do Utilizador</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField label="Nome" name="name">
-            <UInput v-model="state.name" class="w-full" />
+            <UInput v-model="state.name" class="w-full"/>
           </UFormField>
           <UFormField label="Email" name="email">
-            <UInput v-model="state.email" class="w-full" />
+            <UInput v-model="state.email" class="w-full"/>
           </UFormField>
           <UFormField label="Telemóvel" name="mobile">
-            <UInput v-model="state.mobile" class="w-full" />
+            <UInput v-model="state.mobile" class="w-full"/>
           </UFormField>
           <UFormField label="Função" name="role">
             <USelect
@@ -177,10 +196,10 @@ onMounted(async () => {
         <h2 class="font-bold">Alterar Palavra-Passe</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField label="Nova Palavra-Passe">
-            <UInput v-model="state.password" type="password" class="w-full" />
+            <UInput v-model="state.password" type="password" class="w-full"/>
           </UFormField>
           <UFormField label="Confirmar Palavra-Passe">
-            <UInput v-model="state.password_confirmation" type="password" class="w-full" />
+            <UInput v-model="state.password_confirmation" type="password" class="w-full"/>
           </UFormField>
         </div>
       </section>
