@@ -38,7 +38,9 @@ const state = reactive<Partial<Schema>>({
 })
 
 const handleSave = async () => {
-  if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
+  if (auth.currentUserID === parseInt(<string>route.params.id) && !auth.hasPermission('USERS_UPDATE_OWN')) return
+
+  if (auth.currentUserID !== parseInt(<string>route.params.id) && !auth.hasPermission('USERS_UPDATE_ANY')) return
 
   if (!await checkServerAccess()) {
     toast.add({
@@ -103,7 +105,7 @@ const fetchUser = async () => {
       description: 'O Caminho que o trouxe aqui aponta para um utilizador inválido',
       color: 'error'
     });
-    useRouter().push('/users');
+    await useRouter().push('/users');
     return;
   }
 
@@ -149,7 +151,13 @@ onMounted(async () => {
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave"/>
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!auth.hasPermission('USERS_UPDATE_OWN')"
+            />
           </div>
         </div>
       </div>

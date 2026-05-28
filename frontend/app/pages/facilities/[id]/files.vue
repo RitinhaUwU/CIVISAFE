@@ -1,23 +1,16 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
+import type {Facilities} from "~/types";
+import {UButton} from "#components";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {useRoute} from "nuxt/app";
 
 const toast = useToast()
 const api = useApiStore()
 
-const facilities = ref<Facilities[]>([])
+const facility = ref<Facilities>()
 const loading = ref(false)
-
-type Facilities = {
-  id: number;
-  name: number;
-  email: string;
-  address: string;
-  contact: string;
-  description: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
 
 const columns: TableColumn<Facilities | null>[] = [
   {
@@ -34,8 +27,9 @@ const columns: TableColumn<Facilities | null>[] = [
           icon: 'i-lucide-x',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('FACILITIES_FILES_DELETE'),
           onClick: () => {
-
+            //TODO: Implementar funcionalidade de eliminar o ficheiro
           }
         })
       )
@@ -45,9 +39,18 @@ const columns: TableColumn<Facilities | null>[] = [
 
 const fetch = async() => {
   try{
-    const res = await api.getFacilities()
+    const routeID = useRoute().params.id;
+    if (typeof routeID !== 'string') {
+      toast.add({
+        title: 'Utilizador inválido',
+        description: 'O Caminho que o trouxe aqui aponta para um utilizador inválido',
+        color: 'error'
+      });
+      await useRouter().push('/users');
+      return;
+    }
 
-    facilities.value = res.data.data
+    facility.value = (await api.getFacility(parseInt(routeID))).data.data
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -75,12 +78,18 @@ onMounted(fetch)
 <template>
   <UDashboardPanel id="ficheiros">
     <template #header>
-      <UDashboardNavbar :title="`Ficheiros - ${facilities?.name || ''}`">
+      <UDashboardNavbar :title="`Ficheiros - ${facility?.name}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UButton label="Adicionar Ficheiro" icon="i-lucide-plus" color="primary" />
+          <!-- TODO: Implementar upload de ficheiros -->
+          <UButton
+            label="Adicionar Ficheiro"
+            icon="i-lucide-plus"
+            color="primary"
+            v-if="!useAuthStore().hasPermission('FACILITIES_FILES_UPLOAD')"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -88,7 +97,7 @@ onMounted(fetch)
       <UBreadcrumb :items="items" />
       <div class="overflow-x-auto">
         <UTable
-          :data="facilities"
+          :data="facility"
           :columns="columns"
           :loading="loading"
           :ui="{

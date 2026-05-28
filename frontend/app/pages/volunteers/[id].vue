@@ -2,6 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -56,6 +57,17 @@ const state = reactive<Partial<Schema>>({
 })
 
 const handleSave = async () => {
+  if (!useAuthStore().hasPermission('VOLUNTEERS_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -71,7 +83,7 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateVolunteer(route.params.id, state)
+    await api.updateVolunteer(parseInt(<string>route.params.id), state)
 
     toast.add({
       title: 'Sucesso',
@@ -98,8 +110,18 @@ const toDatetimeLocal = (value?: string | null) => {
 }
 
 const fetchVolunteer = async () => {
-  const res = await api.getVolunteer(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Voluntário inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um Voluntário inválido',
+      color: 'error'
+    });
+    await useRouter().push('/volunteers');
+    return;
+  }
+
+  const data = (await api.getVolunteer(parseInt(routeID))).data.data
 
   Object.assign(state, {
     ...data,
@@ -125,6 +147,7 @@ const fetchIncidents = async (search?: string, loadMore = false) => {
     const res = await api.getIncidents({
       page: incidentPage.value,
       per_page: 10,
+      //TODO: Adicionar suporte para este filtro no modo offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -160,6 +183,13 @@ watchDebounced(incidentSearch, async (val) => {
 }, { debounce: 300 })
 
 onMounted(async () => {
+
+  if(!useAuthStore().hasPermission('VOLUNTEERS_LIST'))
+  {
+    await useRouter().push('/volunteers');
+    return;
+  }
+
   await fetchVolunteer()
   await fetchIncidents()
 
@@ -190,7 +220,13 @@ onMounted(async () => {
             {{ state.team_identification }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!useAuthStore().hasPermission('VOLUNTEERS_UPDATE')"
+            />
           </div>
         </div>
       </div>

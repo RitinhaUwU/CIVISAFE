@@ -108,6 +108,7 @@ const columns: TableColumn<IncidentState>[] = [
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('INCIDENT_STATE_DELETE'),
           onClick: () => {
             selectedStateById.value = row.original
             deleteModalOpen.value = true
@@ -171,6 +172,12 @@ watch([search, statusFilter, terminatesFilter], () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('INCIDENT_STATES_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(
@@ -195,7 +202,10 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Estados de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Estado de Ocorrências.</p>
         </div>
-        <IncidentStatesAddModal @created="fetch" />
+        <IncidentStatesAddModal
+          @created="fetch"
+          v-if="useAuthStore().hasPermission('INCIDENT_STATES_CREATE')"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput

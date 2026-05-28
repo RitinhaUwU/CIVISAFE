@@ -2,13 +2,12 @@
 import { useRoute } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
-const facilities = ref([])
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -33,13 +32,34 @@ const state = reactive<Partial<Schema>>({
 const toast = useToast()
 
 const fetchFacility = async () => {
-  const res = await api.getFacility(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Instalação inválida',
+      description: 'O Caminho que o trouxe aqui aponta para uma instalação inválida',
+      color: 'error'
+    });
+    await useRouter().push('/facilities');
+    return;
+  }
+
+  const data = (await api.getFacility(parseInt(routeID))).data.data
 
   Object.assign(state, data)
 }
 
 const handleSave = async () => {
+  if (!useAuthStore().hasPermission('FACILITIES_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {

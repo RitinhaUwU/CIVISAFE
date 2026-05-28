@@ -24,7 +24,7 @@ const fetchEntity = async () => {
       description: 'O Caminho que o trouxe aqui aponta para um Tipo de Ocorrência inválido',
       color: 'error'
     });
-    useRouter().push('/incidentTypes');
+    await useRouter().push('/incidentTypes');
     return;
   }
   const res = await api.getIncidentType(parseInt(routeID));

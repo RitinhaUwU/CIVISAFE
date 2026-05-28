@@ -116,6 +116,13 @@ watch(search, () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('INCIDENT_TYPES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(
@@ -140,7 +147,7 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesUploadModal v-if="!useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
+        <IncidentTypesUploadModal v-if="useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput

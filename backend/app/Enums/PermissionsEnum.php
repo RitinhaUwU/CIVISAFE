@@ -60,7 +60,8 @@ enum PermissionsEnum: string
     case FACILITIES_CREATE = 'FACILITIES_CREATE';
     case FACILITIES_UPDATE = 'FACILITIES_UPDATE';
     case FACILITIES_DELETE = 'FACILITIES_DELETE';
-
+    case FACILITIES_FILES_UPLOAD = 'FACILITIES_FILES_UPLOAD';
+    case FACILITIES_FILES_DELETE = 'FACILITIES_FILES_DELETE';
     public function label(): string
     {
         return match ($this) {
@@ -109,6 +110,8 @@ enum PermissionsEnum: string
             self::FACILITIES_CREATE => 'Criar Instalações',
             self::FACILITIES_UPDATE => 'Editar Instalações',
             self::FACILITIES_DELETE => 'Eliminar Instalações',
+            self::FACILITIES_FILES_UPLOAD => 'Carregar Ficheiros de Instalações',
+            self::FACILITIES_FILES_DELETE => 'Eliminar Ficheiros de Instalações',
         };
     }
 }

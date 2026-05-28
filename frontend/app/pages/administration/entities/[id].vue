@@ -54,7 +54,7 @@ const fetchEntity = async () => {
       description: 'O Caminho que o trouxe aqui aponta para uma entidade inválida',
       color: 'error'
     });
-    useRouter().push('/entities');
+    await useRouter().push('/entities');
     return;
   }
 

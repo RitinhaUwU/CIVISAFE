@@ -2,6 +2,8 @@
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/table-core'
+import {UButton} from "#components";
+import type {Facilities} from "~/types";
 
 const toast = useToast()
 const api = useApiStore()
@@ -15,18 +17,7 @@ const total = ref(0)
 const search = ref('')
 
 const deleteModalOpen = ref(false)
-const selectedFacilitiesById = ref<Facilities>(null)
-
-type Facilities = {
-  id: number;
-  name: number;
-  email: string;
-  address: string;
-  contact: string;
-  description: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
+const selectedFacilitiesById = ref<Facilities | null>(null)
 
 const columns: TableColumn<Facilities | null>[] = [
   {
@@ -61,6 +52,7 @@ const columns: TableColumn<Facilities | null>[] = [
             navigateTo(`/facilities/${row.original.id}/files`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           icon: 'i-lucide-info',
           color: 'info',
@@ -73,6 +65,7 @@ const columns: TableColumn<Facilities | null>[] = [
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('FACILITIES_DELETE'),
           onClick: () => {
             selectedFacilitiesById.value = row.original
             deleteModalOpen.value = true
@@ -124,6 +117,12 @@ watch(search, () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('FACILITIES_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(
@@ -143,12 +142,12 @@ onMounted(() => {
 <template>
   <UDashboardPanel id="instalações">
     <template #header>
-      <UDashboardNavbar title="Intalações">
+      <UDashboardNavbar title="Instalações">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <FacilitiesAddModal @created="fetch" />
+          <FacilitiesAddModal @created="fetch" v-if="useAuthStore().hasPermission('FACILITIES_CREATE')" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -158,7 +157,7 @@ onMounted(() => {
           v-model="search"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Filtrar intalações..."
+          placeholder="Filtrar instalações..."
         />
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">

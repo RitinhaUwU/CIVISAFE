@@ -35,7 +35,7 @@ const fetchEntity = async () => {
       description: 'O Caminho que o trouxe aqui aponta para uma Prioridade inválida',
       color: 'error'
     });
-    useRouter().push('/incidentPriorities');
+    await useRouter().push('/incidentPriorities');
     return;
   }
 

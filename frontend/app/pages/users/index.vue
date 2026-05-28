@@ -80,18 +80,20 @@ const columns: TableColumn<User>[] = [
             })
           }
         ),
-        auth.hasPermission('USERS_VIEW_ANY') && (auth.hasPermission('USERS_UPDATE_ANY') || auth.hasPermission('USERS_UPDATE_OWN')) && h(UButton, {
+        h(UButton, {
           'data-testid': 'edit-user',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
+          disabled: row.original.id === auth.currentUserID ? !auth.hasPermission('USERS_VIEW_OWN') : !auth.hasPermission('USERS_VIEW_ANY'),
           onClick: () => navigateTo(`/users/${row.original.id}`)
         }),
-        auth.hasPermission('USERS_DELETE') && h(UButton, {
+        h(UButton, {
           'data-testid': 'delete-user',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !auth.hasPermission('USERS_DELETE') || auth.currentUserID === row.original.id,
           onClick: () => {
             selectedUserById.value = row.original
             deleteModalOpen.value = true
@@ -128,7 +130,19 @@ const fetch = async() => {
 }
 
 const patchUser = async (user: User) => {
-  if (!auth.hasPermission('USERS_UPDATE_ANY') && !auth.hasPermission('USERS_UPDATE_OWN')) return
+
+  if(user.id === auth.currentUserID && !auth.hasPermission('USERS_UPDATE_OWN')) return
+
+  if(user.id !== auth.currentUserID && !auth.hasPermission('USERS_UPDATE_ANY')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
 
   try {
     const updated = !user.locked
@@ -166,6 +180,12 @@ watch(search, () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+  if(!auth.hasPermission('USERS_VIEW_ANY'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(

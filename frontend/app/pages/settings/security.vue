@@ -39,6 +39,17 @@ onMounted(async () => {
 const user = computed(() => auth.currentUser)
 
 const handleSave = async () => {
+  if (!auth.hasPermission('USERS_UPDATE_OWN')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   saving.value = true
 
   try {
@@ -86,7 +97,13 @@ const handleSave = async () => {
                 Alterar Palavra-Passe
               </h1>
               <div class="flex items-center gap-2">
-                <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+                <UButton
+                  label="Guardar"
+                  color="primary"
+                  :loading="saving"
+                  @click="handleSave"
+                  :disabled="auth.hasPermission('USERS_UPDATE_OWN')"
+                />
               </div>
             </div>
           </div>

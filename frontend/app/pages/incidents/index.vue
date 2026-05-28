@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
+import type {Incident} from "~/types";
+import {UBadge, UButton} from "#components";
 
 const api = useApiStore()
 
@@ -30,33 +32,6 @@ const prioritySearch = ref('')
 
 const deleteModalOpen = ref(false)
 const selectedIncidentById = ref<Incident | null>(null)
-
-type Incident = {
-  id: number;
-  identifier: string;
-  incident_type_id: number;
-  incident_state_id: number;
-  user_id: number;
-  incident_priority_id: number;
-  start_datetime: Date;
-  end_datetime: Date;
-  coordinates: string;
-  common_place: string;
-  address: string;
-  parish: string;
-  municipality: string;
-  district: string;
-  command_post: string;
-  is_major: boolean;
-  alert_source_relationship: string;
-  alert_source_name: string;
-  alert_source_contact: string;
-  obs: string;
-  incident_id: number;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date;
-}
 
 const columns: TableColumn<Incident>[] = [
   {
@@ -120,11 +95,14 @@ const columns: TableColumn<Incident>[] = [
             navigateTo(`/incidents/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('INCIDENTS_DELETE'),
           onClick: () => {
+            //TODO: Implementar remoção/cancelamento de ocorrência
             //?????????????????????????????????????????????
             //selectedIncidentById.value = row.original
             //deleteModalOpen.value = true
@@ -142,6 +120,7 @@ const fetchStates = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentStates({
       page: statePage.value,
       per_page: 10,
+      //TODO: Implementação deste filtro no acesso offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -162,6 +141,7 @@ const fetchPriorities = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentPriorities({
       page: priorityPage.value,
       per_page: 10,
+      //TODO: Implementação deste filtro no acesso offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -231,6 +211,12 @@ watchDebounced(prioritySearch, async (value) => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('INCIDENTS_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
   fetchStates()
   fetchPriorities()

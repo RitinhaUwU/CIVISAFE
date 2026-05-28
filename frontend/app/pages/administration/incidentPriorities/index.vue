@@ -77,6 +77,7 @@ const columns: TableColumn<IncidentPriority>[] = [
             icon: 'i-lucide-trash',
             color: 'error',
             variant: 'ghost',
+            disabled: !useAuthStore().hasPermission('INCIDENT_PRIORITIES_DELETE'),
             onClick: () => {
               selectedPriorityById.value = row.original
               deleteModalOpen.value = true
@@ -133,6 +134,12 @@ watch([search, statusFilter], () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('INCIDENT_PRIORITIES_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(
@@ -157,7 +164,10 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Prioridades de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Prioridades.</p>
         </div>
-          <IncidentPrioritiesAddModal @created="fetch" />
+          <IncidentPrioritiesAddModal
+            @created="fetch"
+            v-if="useAuthStore().hasPermission('INCIDENT_PRIORITIES_CREATE')"
+          />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput

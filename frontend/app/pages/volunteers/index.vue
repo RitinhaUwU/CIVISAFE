@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
+import type {Volunteer} from "~/types";
+import {UBadge, UButton} from "#components";
 
 const api = useApiStore()
 const toast = useToast()
@@ -18,28 +20,6 @@ const classificationFilter = ref('all')
 
 const deleteModalOpen = ref(false)
 const selectedVolunteerById = ref<Volunteer | null>(null)
-
-type Volunteer = {
-  id: number;
-  name: string;
-  start_datetime: Date;
-  end_datetime: Date;
-  contact: string;
-  email: string;
-  num_elements: number
-  mission: string;
-  team_identification: string
-  classification: string
-  has_accommodation: boolean;
-  location: string;
-  has_meal: boolean;
-  meal_notes: string;
-  meal_location: string;
-  incident_id: number;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date;
-}
 
 const classificationMap: Record<string, string> = {
   single: 'Individual',
@@ -136,11 +116,13 @@ const columns: TableColumn<Volunteer>[] = [
             navigateTo(`/volunteers/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           'data-testid': 'delete-volunteer',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('VOLUNTEER_DELETE'),
           onClick: () => {
             selectedVolunteerById.value = row.original
             deleteModalOpen.value = true
@@ -200,6 +182,13 @@ watch([search, accommodationFilter, mealFilter, classificationFilter], () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('VOLUNTEERS_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(
@@ -224,7 +213,10 @@ onMounted(() => {
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <VolunteersAddModal @created="fetch" />
+          <VolunteersAddModal
+            @created="fetch"
+            v-if="useAuthStore().hasPermission('VOLUNTEERS_CREATE')"
+          />
         </template>
       </UDashboardNavbar>
     </template>

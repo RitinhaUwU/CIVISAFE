@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useApiStore } from '@/stores/api'
+import {useToast} from "@nuxt/ui/composables";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const api = useApiStore()
-
-const saving = ref(false)
 
 const typeMenu = useTemplateRef('typeMenu')
 const typeItems = ref<any[]>([])
@@ -51,8 +50,18 @@ const state = reactive({
 })
 
 const fetchIncident = async () => {
-  const res = await api.getIncident(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    useToast().add({
+      title: 'Ocorrência inválida',
+      description: 'O Caminho que o trouxe aqui aponta para uma Ocorrência inválida',
+      color: 'error'
+    });
+    await useRouter().push('/incidents');
+    return;
+  }
+
+  const data = (await api.getIncident(parseInt(routeID))).data.data
 
   Object.assign(state, {
     ...data,
@@ -88,6 +97,7 @@ const fetchTypes = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentTypes({
       page: typePage.value,
       per_page: 10,
+      //TODO: Implementar este filtro para o offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -116,6 +126,7 @@ const fetchStates = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentStates({
       page: statePage.value,
       per_page: 10,
+      //TODO: Implementar este filtro para o offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -139,6 +150,7 @@ const fetchPriorities = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentPriorities({
       page: priorityPage.value,
       per_page: 10,
+      //TODO: Implementar este filtro para o offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -240,7 +252,14 @@ onMounted(async () => {
             {{ state.identifier }}
           </h1>
           <div class="flex items-center gap-2">
-            <!-- <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" /> -->
+            <!-- TODO: Implementar funcionalidade de gravação -->
+<!--            <UButton-->
+<!--              label="Guardar"-->
+<!--              color="primary"-->
+<!--              :loading="saving"-->
+<!--              @click="handleSave"-->
+<!--              :disabled="!useAuthStore().hasPermission('INCIDENTS_UPDATE')"-->
+<!--            />-->
           </div>
         </div>
       </div>

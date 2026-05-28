@@ -32,7 +32,7 @@ const fetchEntityType = async () => {
       description: 'O Caminho que o trouxe aqui aponta para um tipo de entidade inválido',
       color: 'error'
     });
-    useRouter().push('/entityTypes');
+    await useRouter().push('/entityTypes');
     return;
   }
 

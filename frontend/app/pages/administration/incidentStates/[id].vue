@@ -37,7 +37,7 @@ const fetchEntity = async () => {
       description: 'O Caminho que o trouxe aqui aponta para um Estado de Ocorrência inválido',
       color: 'error'
     });
-    useRouter().push('/incidentStates');
+    await useRouter().push('/incidentStates');
     return;
   }
 

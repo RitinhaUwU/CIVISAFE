@@ -17,6 +17,18 @@ const openModel = computed({
 })
 
 const onSubmit = async () => {
+  if (!useAuthStore().hasPermission('FACILITIES_DELETE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
+
   if (!props.id) return
 
   try {

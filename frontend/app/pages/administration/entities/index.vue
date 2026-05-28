@@ -84,6 +84,7 @@ const fetchTypes = async (search?: string, loadMore = false) => {
     const res = await api.getEntityTypes({
       page: typesPage.value,
       per_page: 10,
+      //TODO: Implementar suporte para este filtro offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -147,6 +148,13 @@ watchDebounced(typesSearch, async (value) => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('ENTITIES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
   fetchTypes()
 
@@ -192,7 +200,10 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Entidades</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas as Entidades.</p>
         </div>
-        <EntitiesAddModal @created="fetch" />
+        <EntitiesAddModal
+          @created="fetch"
+          v-if="useAuthStore().hasPermission('ENTITIES_CREATE')"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput

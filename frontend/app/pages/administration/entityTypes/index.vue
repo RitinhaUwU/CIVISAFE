@@ -55,6 +55,7 @@ const columns: TableColumn<EntityType>[] = [
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('ENTITY_TYPES_DELETE'),
           onClick: () => {
             selectedEntityTypeById.value = row.original
             deleteModalOpen.value = true
@@ -106,6 +107,13 @@ watch(search, () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+
+  if(!useAuthStore().hasPermission('ENTITY_TYPES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
 
   useInfiniteScroll(
@@ -130,7 +138,10 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Entidades</h2>
           <p class="text-sm text-muted max-w-md">Lista de todos os tipos de Entidade.</p>
         </div>
-        <EntityTypesAddModal @created="fetch" />
+        <EntityTypesAddModal
+          @created="fetch"
+          v-if="useAuthStore().hasPermission('ENTITY_TYPES_CREATE')"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
