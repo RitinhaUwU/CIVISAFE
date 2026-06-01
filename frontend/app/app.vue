@@ -98,6 +98,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <VitePwaManifest />
   <UApp>
     <NuxtLoadingIndicator />
 

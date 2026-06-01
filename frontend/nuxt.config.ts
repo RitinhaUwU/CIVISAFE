@@ -91,6 +91,16 @@ export default defineNuxtConfig({
       short_name: 'CIVISAFE',
       description: 'Plataforma CIVISAFE',
       theme_color: '#ffffff',
+      icons: [
+        { src: '/icon_64.png', type: 'image/png', sizes: '64x64' },
+        { src: '/icon_192.png', type: 'image/png', sizes: '192x192' },
+        { src: '/icon_256.png', type: 'image/png', sizes: '256x256' },
+        { src: '/icon_512.png', type: 'image/png', sizes: '512x512' },
+        { src: '/icon_512.png', type: 'image/png', purpose: 'any', sizes: '512x512' },
+      ],
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#ffffff'
     },
 
     workbox: {
