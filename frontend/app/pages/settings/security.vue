@@ -102,7 +102,7 @@ const handleSave = async () => {
                   color="primary"
                   :loading="saving"
                   @click="handleSave"
-                  :disabled="auth.hasPermission('USERS_UPDATE_OWN')"
+                  :disabled="!auth.hasPermission('USERS_UPDATE_OWN')"
                 />
               </div>
             </div>

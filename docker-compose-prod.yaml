@@ -5,23 +5,26 @@ services:
     image: postgis/postgis:18-3.6-alpine
     restart: on-failure:3
     shm_size: 256mb
+    container_name: database
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: civisafe
     volumes:
       - ./docker/postgres-data:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready", "-U", "postgres", "-d", "backend" ]
+      test: [ "CMD-SHELL", "pg_isready", "-U", "postgres", "-d", "civisafe" ]
       interval: 30s
       timeout: 60s
       retries: 5
       start_period: 30s
 
   redis:
+    container_name: redis
     image: redis:alpine
     restart: on-failure:3
 
   minio-storage:
+    container_name: minio-storage
     image: quay.io/minio/aistor/minio
     env_file:
       - .env
@@ -42,7 +45,8 @@ services:
       - ./docker/proxymanager-letsencrypt:/etc/letsencrypt
 
   backend:
-    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    container_name: backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
     #build: ./backend
     entrypoint: /app/docker-entrypoint.sh
     command: frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile
@@ -69,7 +73,7 @@ services:
         condition: service_started
 
   queue-worker-default:
-    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
     #build: ./backend
     command: php /app/artisan queue:work
     env_file:
@@ -94,7 +98,7 @@ services:
         condition: service_started
 
   queue-worker-notifications:
-    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
     #build: ./backend
     command: php /app/artisan queue:work --queue=notifications
     env_file:
@@ -117,7 +121,7 @@ services:
         condition: service_started
 
   queue-worker-imports:
-    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
     #build: ./backend
     command: php /app/artisan queue:work --queue=imports
     env_file:
@@ -140,7 +144,8 @@ services:
         condition: service_started
 
   reverb:
-    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    container_name: reverb
+    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
     #build: ./backend
     command: php /app/artisan reverb:start
     env_file:
@@ -165,7 +170,8 @@ services:
         condition: service_started
 
   frontend:
-    image: ghcr.io/ritinhauwu/civisafe-frontend:latest
+    container_name: frontend
+    image: ghcr.io/ritinhauwu/civisafe-frontend:e00eca9ee63ced9e2931dc0e65aed47714819b20
     #build: ./frontend
     environment:
       - NODE_ENV=production
