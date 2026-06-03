@@ -1,9 +1,7 @@
-name: "Imagem de produção \"latest\""
+name: "Imagens de produção"
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
     branches: [ "master" ]
 
 jobs:
