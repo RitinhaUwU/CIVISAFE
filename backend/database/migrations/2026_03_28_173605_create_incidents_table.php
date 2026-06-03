@@ -22,13 +22,14 @@ return new class extends Migration {
             $table->string('parish')->nullable();
             $table->string('municipality')->nullable();
             $table->string('district')->nullable();
-            $table->string('command_post');
             $table->boolean('is_major');
             $table->string('alert_source_relationship')->nullable();
             $table->string('alert_source_name')->nullable();
             $table->string('alert_source_contact')->nullable();
             $table->longText('obs')->nullable();
             $table->foreignId('incident_id')->nullable()->constrained('incidents');
+            $table->string('coordinates_pco')->nullable();
+            $table->string('name_pco')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

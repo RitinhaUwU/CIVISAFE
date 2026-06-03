@@ -7,6 +7,7 @@ use App\Models\Entity;
 use App\Models\Facility;
 use App\Models\Incident;
 use App\Models\IncidentParty;
+use App\Models\IncidentPCO;
 use App\Models\User;
 use App\Models\Volunteer;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -54,14 +55,15 @@ class DatabaseSeeder extends Seeder
             'locked' => false,
         ])->assignRole(enum_value(RolesEnum::USER));
 
-        User::factory(10)->create()->each(function ($user) {
+        User::factory(60)->create()->each(function ($user) {
             $role = Role::inRandomOrder()->first();
             $user->assignRole($role->name);
         });
         Entity::factory(10)->create();
         Incident::factory(60)->create();
-        Volunteer::factory(10)->create();
+        Volunteer::factory(60)->create();
         Facility::factory(10)->create();
+        IncidentPCO::factory(60)->create();
 
         for ($i = 0; $i <= 20; $i++) {
             Incident::factory()->create([

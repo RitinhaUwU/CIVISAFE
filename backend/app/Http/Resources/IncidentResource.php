@@ -16,14 +16,12 @@ class IncidentResource extends JsonResource
             'identifier' => $this->identifier,
             'start_datetime' => $this->start_datetime,
             'end_datetime' => $this->end_datetime,
-
             'coordinates' => $this->coordinates,
             'common_place' => $this->common_place,
             'address' => $this->address,
             'parish' => $this->parish,
             'municipality' => $this->municipality,
             'district' => $this->district,
-            'command_post' => $this->command_post,
             'is_major' => $this->is_major,
             'alert_source_relationship' => $this->alert_source_relationship,
             'alert_source_name' => $this->alert_source_name,
@@ -32,9 +30,11 @@ class IncidentResource extends JsonResource
             'incident_id' => $this->incident_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'coordinates_pco' => $this->coordinates_pco,
+            'name_pco' => $this->name_pco,
 
-            'user_id' => $this->user_id,
-
+            'children_incidents' => IncidentResource::collection($this->whenLoaded('childrenIncidents')),
+            'user' => new UserResource($this->whenLoaded('user')),
             'incidentType' => new IncidentTypeResource($this->whenLoaded('incidentType')),
             'incidentPriority' => new IncidentPriorityResource($this->whenLoaded('incidentPriority')),
             'incidentState' => new IncidentStateResource($this->whenLoaded('incidentState')),

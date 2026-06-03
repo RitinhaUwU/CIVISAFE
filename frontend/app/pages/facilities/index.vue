@@ -31,7 +31,7 @@ type Facilities = {
 const columns: TableColumn<Facilities | null>[] = [
   {
     accessorKey: "name",
-    header: "Responsável",
+    header: "Nome",
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-col' }, [
         h('span', { class: 'font-medium text-highlighted' }, row.original.name),
