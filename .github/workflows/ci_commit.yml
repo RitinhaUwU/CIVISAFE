@@ -3,8 +3,6 @@ name: "Imagens por commit"
 on:
   push:
     branches: [ "**", "!master" ]
-  pull_request:
-    branches: [ "**", "!master" ]
 
 jobs:
 
@@ -26,10 +24,10 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: ghcr.io/ritinhauwu/civisafe-backend:${{ env.GITHUB_SHA }}
+          tags: ghcr.io/ritinhauwu/civisafe-backend:${{ github.sha }}
 
       - uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/ritinhauwu/civisafe-frontend:${{ env.GITHUB_SHA }}
+          tags: ghcr.io/ritinhauwu/civisafe-frontend:${{ github.sha }}
