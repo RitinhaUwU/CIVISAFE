@@ -31,9 +31,6 @@ const fetchEntity = async () => {
 
   Object.assign(state, res.data.data)
 }
-const handleCancel = () => {
-  router.back()
-}
 
 const items = ref<BreadcrumbItem[]>([
   {
@@ -61,9 +58,6 @@ onMounted(fetchEntity)
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight truncate max-w-full">
             {{ state.type }}
           </h1>
-          <div class="flex items-center gap-2">
-            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel"/>
-          </div>
         </div>
       </div>
     </header>

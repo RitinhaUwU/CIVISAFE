@@ -28,7 +28,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   label: 'Aparência',
   icon: 'i-lucide-sun-moon',
   children: [{
-    label: 'Light',
+    label: 'Claro',
     icon: 'i-lucide-sun',
     type: 'checkbox',
     checked: colorMode.value === 'light',
@@ -38,7 +38,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
       colorMode.preference = 'light'
     }
   }, {
-    label: 'Dark',
+    label: 'Escuro',
     icon: 'i-lucide-moon',
     type: 'checkbox',
     checked: colorMode.value === 'dark',

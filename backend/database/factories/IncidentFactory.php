@@ -17,13 +17,13 @@ class IncidentFactory extends Factory
     public function definition(): array
     {
         $is_major = $this->faker->boolean(20);
-        $major_id = null;
+        $major_id = $is_major ? Incident::inRandomOrder()->value('id') : null;
 
         $start = $this->faker->dateTime('-1 week')->format('Y-m-d H:i:s');
         $end = $this->faker->dateTimeBetween($start, 'yesterday')->format('Y-m-d H:i:s');
 
         return [
-            'identifier' => date('Y') . "/" . $this->faker->randomNumber(4),
+            'identifier' => date('Y') . "/" . $this->faker->unique()->randomNumber(4),
             'start_datetime' => $start,
             'end_datetime' => $end,
             'coordinates' => implode(", ", $this->faker->localCoordinates()),
@@ -32,7 +32,8 @@ class IncidentFactory extends Factory
             'parish' => $this->faker->city(),
             'municipality' => $this->faker->city(),
             'district' => $this->faker->city(),
-            'command_post' => $this->faker->word(),
+            'coordinates_pco' => implode(", ", $this->faker->localCoordinates()),
+            'name_pco' => $this->faker->name(),
             'is_major' => $is_major,
             'alert_source_relationship' => $this->faker->randomElement(['Proprietário', 'Vizinho', 'Empresa', 'Proteção Civil']),
             'alert_source_name' => $this->faker->name(),

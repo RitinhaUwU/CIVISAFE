@@ -9,7 +9,7 @@ beforeEach(function () {
     $this->seed();
 });
 
-it('logs in successfully', function () {
+it('login successfully', function () {
 
     $response = $this->postJson('/api/v1/login', [
         'email' => 'admin@example.com',

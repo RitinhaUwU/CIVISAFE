@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
+import {useAuthStore} from "@/stores/auth";
 import type { TableColumn } from '@nuxt/ui'
 import type {Incident} from "~/types";
 import {UBadge, UButton} from "#components";
 
+const auth = useAuthStore()
 const api = useApiStore()
+const toast = useToast()
 
 const incidents = ref<Incident[]>([])
 const page = ref(1)
@@ -30,6 +33,7 @@ const priorityLastPage = ref(Infinity)
 const priorityLoading = ref(false)
 const prioritySearch = ref('')
 
+const createModalOpen = ref(false)
 const deleteModalOpen = ref(false)
 const selectedIncidentById = ref<Incident | null>(null)
 
@@ -102,10 +106,8 @@ const columns: TableColumn<Incident>[] = [
           variant: 'ghost',
           disabled: !useAuthStore().hasPermission('INCIDENTS_DELETE'),
           onClick: () => {
-            //TODO: Implementar remoção/cancelamento de ocorrência
-            //?????????????????????????????????????????????
-            //selectedIncidentById.value = row.original
-            //deleteModalOpen.value = true
+            selectedIncidentById.value = row.original
+            deleteModalOpen.value = true
           }
         })
       )
@@ -274,7 +276,14 @@ onMounted(() => {
     <template #header>
       <UDashboardNavbar title="Ocorrências">
         <template #leading>
-          <UDashboardSidebarCollapse />
+          <UDashboardSidebarCollapse @created="fetch" />
+        </template>
+        <template #right>
+          <UButton
+            label="Nova Ocorrência"
+            icon="i-lucide-plus"
+            @click="createModalOpen = true"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -329,15 +338,18 @@ onMounted(() => {
           class="w-full"
         />
       </div>
-
-      <!-- ????????????????????????????????????????
-      <EntitiesDeleteModal
-        v-if="selectedEntityById"
+      <IncidentsDeleteModal
+        v-if="selectedIncidentById"
         v-model:open="deleteModalOpen"
-        :id="selectedEntityById?.id"
-        :name="selectedEntityById?.name"
+        :id="selectedIncidentById?.id"
+        :identifier="selectedIncidentById?.identifier"
         @deleted="fetch"
-      />-->
+      />
+      <InicioFormRegisto
+        v-model="createModalOpen"
+        :coords="{ lat: 39.9139, lng: -8.1547 }"
+        @created="fetch"
+      />
     </template>
   </UDashboardPanel>
 </template>

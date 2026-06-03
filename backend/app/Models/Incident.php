@@ -80,12 +80,13 @@ class Incident extends Model
         'parish',
         'municipality',
         'district',
-        'command_post',
         'is_major',
         'alert_source_relationship',
         'alert_source_name',
         'alert_source_contact',
         'obs',
         'incident_id',
+        'coordinates_pco',
+        'name_pco'
     ];
 }

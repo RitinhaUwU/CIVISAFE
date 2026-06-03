@@ -7,6 +7,7 @@ use App\Models\Entity;
 use App\Models\Facility;
 use App\Models\Incident;
 use App\Models\IncidentParty;
+use App\Models\IncidentPCO;
 use App\Models\User;
 use App\Models\Volunteer;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -62,6 +63,7 @@ class DatabaseSeeder extends Seeder
         Incident::factory(600)->create();
         Volunteer::factory(100)->create();
         Facility::factory(30)->create();
+        IncidentPCO::factory(60)->create();
 
         for ($i = 0; $i <= 100; $i++) {
             Incident::factory()->create([
