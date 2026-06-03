@@ -7,3 +7,5 @@ phpunit.xml
 .gitignore
 .gitattributes
 .editorconfig
+.env.example
+.env.testing.example

@@ -119,6 +119,8 @@ export default defineNuxtConfig({
   },
 
   // In addition, you *must* have this Nitro option set to pre-render the homepage, even if you have SSR turned off:
+  // Tive de comentar isto para as variáveis de ambiente carregarem. Parece que dá um erro no primeiro carregamento mas
+  // depois como a página já está em cache, ele não se queixa
   nitro: {
     prerender: {
       routes: ['/'],

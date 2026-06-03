@@ -1,0 +1,35 @@
+name: "Imagem de produção \"latest\""
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ritinhauwu
+          password: ${{ secrets.ACTIONS_MAKE_PACKAGES }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/ritinhauwu/civisafe-backend:latest
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/ritinhauwu/civisafe-frontend:latest

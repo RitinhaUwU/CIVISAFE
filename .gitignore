@@ -1,3 +1,5 @@
 .idea/*
 minio.license
 CIVISAFE/opencollection.yml
+.env
+docker/

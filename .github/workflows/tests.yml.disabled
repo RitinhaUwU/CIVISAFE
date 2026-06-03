@@ -1,0 +1,292 @@
+name: "Testes do Backend e Frontend"
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Actions does not support top-level YAML anchors, so services are
+# duplicated across jobs. Keep them in sync if you change versions/credentials.
+# ─────────────────────────────────────────────────────────────────────────────
+
+env:
+  # PostgreSQL / PostGIS
+  DB_HOST: 127.0.0.1
+  DB_PORT: 5432
+  DB_DATABASE: testing
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  # Redis
+  REDIS_HOST: 127.0.0.1
+  REDIS_PORT: 6379
+  # MinIO (S3-compatible)
+  MINIO_ROOT_USER: minio
+  MINIO_ROOT_PASSWORD: minio123
+  AWS_ACCESS_KEY_ID: minio
+  AWS_SECRET_ACCESS_KEY: minio123
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_BUCKET: testing
+  AWS_ENDPOINT: http://127.0.0.1:9000
+  AWS_USE_PATH_STYLE_ENDPOINT: "true"
+
+jobs:
+
+  backend:
+    name: Backend Tests (Pest)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: minio123
+        ports:
+          - 9000:9000
+          - 9001:9001
+        options: >-
+          --health-cmd="curl -f http://localhost:9000/minio/health/live"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, redis, bcmath, curl, xml, zip
+          coverage: none
+
+      # The postgis/postgis image ships with the extension available but it must
+      # be activated in the target database before migrations run.
+      - name: Enable PostGIS extension
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d testing \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        working-directory: ./backend
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          composer require pestphp/pest --dev --no-interaction
+          composer require pestphp/pest-plugin-browser --dev --no-interaction
+
+      - name: Create MinIO bucket
+        run: |
+          curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://127.0.0.1:9000 minio minio123
+          mc mb local/testing --ignore-existing
+          mc anonymous set download local/testing
+
+      - name: Prepare Laravel environment
+        working-directory: ./backend
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      - name: Install Pest
+        working-directory: ./backend
+        run: php artisan pest:install --no-interaction
+
+      - name: Run Pest
+        working-directory: ./backend
+        run: php artisan test
+
+  # ─────────────────────────────────────────────
+  # FRONTEND — Nuxt.js + Playwright
+  # ─────────────────────────────────────────────
+  frontend:
+    name: Frontend Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: backend
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: minio123
+        ports:
+          - 9000:9000
+          - 9001:9001
+        options: >-
+          --health-cmd="curl -f http://localhost:9000/minio/health/live"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── PHP / Laravel ─────────────────────────────────────────────────────
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, redis, bcmath, curl, xml, zip
+          coverage: none
+
+      - name: Enable PostGIS extension
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -d testing \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        working-directory: ./backend
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Create MinIO bucket
+        run: |
+          curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://127.0.0.1:9000 minio minio123
+          mc mb local/testing --ignore-existing
+          mc anonymous set download local/testing
+
+      - name: Prepare Laravel environment
+        working-directory: ./backend
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      # ── Start backend processes ───────────────────────────────────────────
+      - name: Start Laravel server
+        working-directory: ./backend
+        run: php artisan serve --env=testing --host=0.0.0.0 --port=8000 &
+
+      - name: Start Reverb (WebSockets)
+        working-directory: ./backend
+        run: php artisan reverb:start &
+
+      - name: Start queue workers
+        working-directory: ./backend
+        run: |
+          php artisan queue:work &
+          php artisan queue:work --queue=notifications &
+          php artisan queue:work --queue=imports &
+
+      # ── Node / Nuxt ───────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install Node dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright & browsers
+        working-directory: ./frontend
+        run: |
+          npm install playwright@latest
+          npx playwright install --with-deps
+
+      - name: Build Nuxt app
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          NUXT_PUBLIC_API_BASE: http://localhost:8000
+
+      - name: Start Nuxt preview server
+        working-directory: ./frontend
+        run: npm run preview &
+
+      - name: Wait for all servers to be ready
+        run: npx wait-on http://localhost:8000 http://localhost:3000 http://localhost:9000/minio/health/live --timeout 60000
+
+      # ── Run Playwright ────────────────────────────────────────────────────
+      - name: Run Playwright tests
+        working-directory: ./frontend
+        run: npx playwright test --project=chromium --project=firefox
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          retention-days: 7
