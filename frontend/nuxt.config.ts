@@ -55,32 +55,6 @@ export default defineNuxtConfig({
   //   },
   // },
 
-  // pwa: {
-  //   registerType: 'autoUpdate',
-  //   manifest: {
-  //     name: 'CIVISAFE - Gestão de Ocorrências',
-  //     short_name: 'CIVISAFE',
-  //     // theme_color: '#ff6900',
-  //     // background_color: '#ffffff',
-  //     lang: 'pt',
-  //     display: 'standalone',
-  //     // start_url: '/',
-  //     icons: [
-  //       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-  //       { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }
-  //     ]
-  //   },
-  //   workbox: {
-  //     navigateFallback: '/',
-  //     globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}']
-  //   },
-  //   devOptions: {
-  //     enabled: true,
-  //     type: 'module'
-  //   }
-  // },
-
-
   // Fonte: https://stackoverflow.com/a/79379859
   // workbox, manifest devOptions **must** be set. registerType might be able to also be autoUpdate, but haven't tried it
   pwa: {
@@ -104,7 +78,21 @@ export default defineNuxtConfig({
     },
 
     workbox: {
-      globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+      // 1. Cache all standard assets, but explicitly LEAVE OUT 'html'
+      globPatterns: ['**/*.{js,css,svg,png,ico}'],
+
+      // 2. Explicitly tell Workbox to ignore the empty static file on disk
+      globIgnores: ['**/index.html'],
+
+      // 3. Force the Service Worker to fetch the root route during installation.
+      // This forces the request through Nitro, caching the HTML *with* your injected env vars.
+      additionalManifestEntries: [
+        { url: '/', revision: `${Date.now()}` }
+      ],
+
+      // 4. Set the SPA fallback to the populated route we just cached
+      navigateFallback: '/',
+
       cleanupOutdatedCaches: true,
       clientsClaim: true,
     },
@@ -112,7 +100,6 @@ export default defineNuxtConfig({
     devOptions: {
       enabled: false,
       suppressWarnings: true,
-      navigateFallback: '/',
       navigateFallbackAllowlist: [/^\/$/],
       type: 'module',
     },
@@ -121,9 +108,9 @@ export default defineNuxtConfig({
   // In addition, you *must* have this Nitro option set to pre-render the homepage, even if you have SSR turned off:
   // Tive de comentar isto para as variáveis de ambiente carregarem. Parece que dá um erro no primeiro carregamento mas
   // depois como a página já está em cache, ele não se queixa
-  nitro: {
-    prerender: {
-      routes: ['/'],
-    },
-  },
+  // nitro: {
+  //   prerender: {
+  //     routes: ['/'],
+  //   },
+  // },
 })

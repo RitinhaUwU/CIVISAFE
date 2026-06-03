@@ -42,8 +42,8 @@ services:
       - ./docker/proxymanager-letsencrypt:/etc/letsencrypt
 
   backend:
-    #image: ghcr.io/ritinhauwu/mcemc-cc-ind-backend:latest
-    build: ./backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    #build: ./backend
     entrypoint: /app/docker-entrypoint.sh
     command: frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile
     env_file:
@@ -69,8 +69,8 @@ services:
         condition: service_started
 
   queue-worker-default:
-    #image: ghcr.io/ritinhauwu/mcemc-cc-ind-backend:latest
-    build: ./backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    #build: ./backend
     command: php /app/artisan queue:work
     env_file:
       - .env
@@ -94,8 +94,8 @@ services:
         condition: service_started
 
   queue-worker-notifications:
-    #image: ghcr.io/ritinhauwu/mcemc-cc-ind-backend:latest
-    build: ./backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    #build: ./backend
     command: php /app/artisan queue:work --queue=notifications
     env_file:
       - .env
@@ -117,8 +117,8 @@ services:
         condition: service_started
 
   queue-worker-imports:
-    #image: ghcr.io/ritinhauwu/mcemc-cc-ind-backend:latest
-    build: ./backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    #build: ./backend
     command: php /app/artisan queue:work --queue=imports
     env_file:
       - .env
@@ -140,8 +140,8 @@ services:
         condition: service_started
 
   reverb:
-    #image: ghcr.io/ritinhauwu/mcemc-cc-ind-websocket:latest
-    build: ./backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:latest
+    #build: ./backend
     command: php /app/artisan reverb:start
     env_file:
       - .env
@@ -165,15 +165,8 @@ services:
         condition: service_started
 
   frontend:
-    #image: ghcr.io/ritinhauwu/mcemc-cc-ind-frontend:latest
-    build:
-      context: ./frontend
-      args:
-        - NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE}
-        - NUXT_PUBLIC_REVERB_APP_KEY=${NUXT_PUBLIC_REVERB_APP_KEY}
-        - NUXT_PUBLIC_REVERB_HOST=${NUXT_PUBLIC_REVERB_HOST}
-        - NUXT_PUBLIC_REVERB_PORT=${NUXT_PUBLIC_REVERB_PORT}
-        - NUXT_PUBLIC_REVERB_SCHEME=${NUXT_PUBLIC_REVERB_SCHEME}
+    image: ghcr.io/ritinhauwu/civisafe-frontend:latest
+    #build: ./frontend
     environment:
       - NODE_ENV=production
     env_file:
@@ -183,9 +176,3 @@ services:
       - backend
       - reverb
       - minio-storage
-
-  adminer:
-    image: adminer
-    restart: on-failure:3
-    ports:
-      - "8081:8080"
