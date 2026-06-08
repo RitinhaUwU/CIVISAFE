@@ -99,9 +99,11 @@ const fetch = async () => {
       page: page.value,
       per_page: 10
     }
+
     if (search.value) {
       params.filter = { search: search.value }
     }
+
     if (statusFilter.value !== 'all') {
       params.filter = {
         ...params.filter,

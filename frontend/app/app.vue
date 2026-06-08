@@ -28,7 +28,7 @@ useHead({
 
 
 const INTERVAL_MS = 5000
-let intervalId: number | null = null
+let intervalId: number | null | NodeJS.Timeout = null
 
 async function checkInternetAccess() {
   const online = await checkServerAccess()

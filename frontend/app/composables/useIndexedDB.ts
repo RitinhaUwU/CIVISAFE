@@ -87,7 +87,7 @@ export async function storeData(objectStore: string, object: object) {
   await tx.done;
 }
 
-export async function retrieveData(objectStore: string, index: number = -1) {
+export async function retrieveData(objectStore: string, index: number = -1, params?: QueryParams) {
   if (typeof index !== 'number') {
     throw new Error("Typeof do index inválido: " + typeof index);
   }
@@ -104,11 +104,17 @@ export async function retrieveData(objectStore: string, index: number = -1) {
 
   const store = tx.objectStore(objectStore);
 
-  console.log(objectStore, index);
-
   let data = null;
   if (index <= 0) {
+
     data = await store.getAll();
+
+    if(params !== undefined && params.filter !== undefined){
+      if(params.filter.search !== undefined)
+      {
+          data = searchFilter(data, params.filter.search.toLowerCase());
+      }
+    }
   } else {
     data = await store.get(index);
   }
@@ -139,24 +145,19 @@ export async function retrieveDataPaginated(objectStore: string, params?: QueryP
 
   const page = params.page ?? 1;
   const perPage = params.per_page ?? 10;
-  const search = params.search?.toLowerCase() ?? '';
 
   const offset = (page - 1) * perPage;
 
-  const allRecords: unknown[] = await store.getAll();
+  let records: unknown[] = await store.getAll();
 
-  const filtered = search
-    ? allRecords.filter((record) => {
-      if (typeof record !== 'object' || record === null) return false;
-      return Object.values(record).some((val) =>
-        String(val).toLowerCase().includes(search)
-      );
-    })
-    : allRecords;
+  if(params.filter?.search)
+  {
+    records = searchFilter(records, params.filter.search.toLowerCase());
+  }
 
-  const total = filtered.length;
+  const total = records.length;
   const totalPages = Math.ceil(total / perPage);
-  const data = filtered.slice(offset, offset + perPage);
+  const data = records.slice(offset, offset + perPage);
 
   // Simula a estrutura da resposta do servidor
   return {
@@ -179,4 +180,13 @@ export async function clearSensitiveTables() {
 
   await database?.clear('users');
   await database?.clear('volunteers');
+}
+
+function searchFilter(data: unknown[], searchString: string) {
+  return data.filter((record) => {
+    if (typeof record !== 'object' || record === null) return false;
+    return Object.values(record).some((val) =>
+      String(val).toLowerCase().includes(searchString)
+    );
+  })
 }

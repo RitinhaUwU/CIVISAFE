@@ -10,9 +10,12 @@ const timeAgo = (date: Date) => formatTimeAgoIntl(new Date(date), { locale: 'pt-
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h2 class="text-base font-semibold">Notificações</h2>
-        <button class="text-xs text-muted hover:text-primary transition" @click="useNotificationStore().readAll()">
-          Marcar todos como lidas
-        </button>
+        <div class="space-x-3">
+          <button class="text-xs text-muted hover:text-primary transition" @click="useNotificationStore().readAll()">
+            Marcar todos como lidas
+          </button>
+          <button @click="isNotificationsSlideoverOpen = false">X</button>
+        </div>
       </div>
     </template>
     <template #body>

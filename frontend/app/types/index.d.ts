@@ -73,7 +73,17 @@ export interface Notification {
 export interface QueryParams{
   page?: number
   per_page?: number
-  search?: string
+  filter?: {
+    search?: string // Pesquisa
+    type?: string // Usado nas entidades para filtrar por tipo de entidade
+    status?: boolean
+    state?: string // Usado nas ocorrências para filtrar por estados de ocorrência
+    terminates?: boolean // Usado nos tipos de ocorrência para determinar se termina a ocorrência
+    priority?: string // Usado nas ocorrências para filtrar por prioridade
+    classification?: string
+    has_accommodation?: boolean
+    has_meal?: boolean
+  }
 }
 
 export interface Facilities {
