@@ -12,11 +12,14 @@ const markers: Marker[] = []
 const props = withDefaults(defineProps<{
   center?: [number, number]
   zoom?: number
-  incidents?: any[]
+  incidents?: any[],
+  dropMarkerOnClick?: boolean
+  selectedCoords?: [number, number]
 }>(), {
-  center: () => [39.917504, -8.145675],
+  center: () => [39.917504, -8.145675], // Centra em Pedrógão Grande
   zoom: 15,
-  incidents: () => []
+  incidents: () => [],
+  dropMarkerOnClick: false
 })
 
 const emit = defineEmits<{
@@ -26,7 +29,6 @@ const emit = defineEmits<{
 function createIcons(L: any) {
   const incidentIcon = L.icon({
     iconUrl: '/markers/incident-blue.png',
-    //shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     iconSize: [30, 30],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34]
@@ -34,7 +36,6 @@ function createIcons(L: any) {
 
   const selectedIcon = L.icon({
     iconUrl: '/markers/selected-grey.png',
-    //shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     iconSize: [30, 30],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34]
@@ -61,7 +62,7 @@ function renderMarkers(L: any) {
       .split(',')
       .map((v: string) => Number(v.trim()))
 
-    if (isNaN(lat) || isNaN(lng)) return
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return
 
     const marker = L.marker([lat, lng], {
       icon: incidentIcon
@@ -87,16 +88,18 @@ onMounted(async () => {
 
   const { selectedIcon } = createIcons(L)
 
-  map = L.map(mapContainer.value).setView(props.center, props.zoom)
+  map = L.map(mapContainer.value).setView(props.selectedCoords ?? props.center, props.zoom)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19
   }).addTo(map)
 
-  selectedMarker = L.marker(props.center, {
-    icon: selectedIcon
-  }).addTo(map)
+  if(props.selectedCoords) {
+    selectedMarker = L.marker(props.selectedCoords, {
+      icon: selectedIcon
+    }).addTo(map)
+  }
 
   renderMarkers(L)
 
@@ -106,13 +109,15 @@ onMounted(async () => {
       lng: Number(e.latlng.lng.toFixed(6))
     }
 
-    if (selectedMarker) {
-      selectedMarker.remove()
-    }
+    if(props.dropMarkerOnClick) {
+      if (selectedMarker) {
+        selectedMarker.remove()
+      }
 
-    selectedMarker = L.marker([coords.lat, coords.lng], {
-      icon: selectedIcon
-    }).addTo(map!)
+      selectedMarker = L.marker([coords.lat, coords.lng], {
+        icon: selectedIcon
+      }).addTo(map!)
+    }
 
     emit('map-click', coords)
   })

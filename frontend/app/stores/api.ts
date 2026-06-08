@@ -47,7 +47,7 @@ export const useApiStore = defineStore('api', () => {
 
       return response;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('users', params);
     }
   }
@@ -60,7 +60,7 @@ export const useApiStore = defineStore('api', () => {
 
       return response;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('users', id);
     }
   }
@@ -95,7 +95,7 @@ export const useApiStore = defineStore('api', () => {
 
       return response;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('incidentTypes', params);
     }
   }
@@ -106,7 +106,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidentTypes', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('incidentTypes', id);
     }
   }
@@ -127,7 +127,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('entities', res.data.data);
       return res
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('entities', params);
     }
   }
@@ -138,7 +138,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('entities', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('entities', id);
     }
   }
@@ -167,7 +167,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('entityTypes', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('entityTypes', params);
     }
   }
@@ -178,7 +178,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('entityTypes', res.data.data);
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('entityTypes', id);
     }
   }
@@ -207,7 +207,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidents', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('incidents', params);
     }
   }
@@ -218,7 +218,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidents', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('incidents', id);
     }
   }
@@ -299,7 +299,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidentStates', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('incidentStates', params);
     }
   }
@@ -310,7 +310,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidentStates', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('incidentStates', id);
     }
   }
@@ -339,7 +339,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidentPriorities', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('incidentPriorities', params);
     }
   }
@@ -350,7 +350,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('incidentPriorities', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('incidentPriorities', id);
     }
   }
@@ -379,7 +379,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('volunteers', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('volunteers', params);
     }
   }
@@ -390,7 +390,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('volunteers', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('volunteers', id);
     }
   }
@@ -437,7 +437,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('facilities', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveDataPaginated('facilities', params);
     }
   }
@@ -448,7 +448,7 @@ export const useApiStore = defineStore('api', () => {
       await storeData('facilities', res.data.data)
       return res;
     } else {
-      console.log("OFFLINE DATA")
+      console.debug("OFFLINE DATA")
       return await retrieveData('facilities', id);
     }
   }

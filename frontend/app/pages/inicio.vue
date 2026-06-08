@@ -2,15 +2,26 @@
 import InicioStats from '../components/inicio/InicioStats.vue'
 import InicioFormRegisto from '../components/inicio/InicioFormRegisto.vue'
 import { useApiStore } from '~/stores/api'
+import type {Incident} from "~/types";
+import {useToast} from "@nuxt/ui/composables";
 
 const apiStore = useApiStore()
 
 const selectedCoords = ref<{ lat: number, lng: number }>({lat: 0, lng: 0})
 const openModal = ref(false)
 
-const incidents = ref([])
+const incidents = ref<Incident[]>([])
 
-function handleMapClick(coords: { lat: number, lng: number }) {
+async function handleMapClick(coords: { lat: number, lng: number }) {
+  if(!await checkServerAccess())
+  {
+    useToast().add({
+      title: 'Não é possível adicionar ocorrências offline',
+      color: 'error'
+    });
+    return;
+  }
+
   selectedCoords.value = coords
   openModal.value = true
 }

@@ -575,13 +575,14 @@ onMounted(() => {
           </UTabs>
           <Map
             v-if="!state.is_major"
-            :center="[props.coords?.lat, props.coords?.lng]"
+            :selectedCoords="[props.coords?.lat, props.coords?.lng]"
             :zoom="13"
+            :dropMarkerOnClick="true"
             class="w-full h-[400px] rounded-lg"
             @map-click="updateCoordinates"
           />
         </div>
-        <div class="flex justify-end gap-2 p-4 bg-white shrink-0">
+        <div class="flex justify-end gap-2 p-4 shrink-0">
           <UButton
             label="Cancelar"
             color="neutral"
@@ -598,7 +599,3 @@ onMounted(() => {
     </template>
   </UModal>
 </template>
-
-<style scoped>
-
-</style>
