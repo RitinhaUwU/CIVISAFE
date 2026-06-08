@@ -5,6 +5,8 @@ use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
 use App\Http\Controllers\IncidentController;
+use App\Http\Controllers\IncidentPartyController;
+use App\Http\Controllers\IncidentPCOController;
 use App\Http\Controllers\IncidentPriorityController;
 use App\Http\Controllers\IncidentStateController;
 use App\Http\Controllers\IncidentTypeController;
@@ -60,6 +62,21 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/incidentStates', IncidentStateController::class);
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);
         Route::apiResource('/incidents', IncidentController::class);
+        Route::prefix('incidents/{incident}')->group(function () {
+            Route::get('/pco', [IncidentPCOController::class, 'index']);
+            Route::post('/pco', [IncidentPCOController::class, 'store']);
+            //Route::get('/pco/{incidentPCO}', [IncidentPCOController::class, 'show']);
+            Route::put('/pco/{incidentPCO}', [IncidentPCOController::class, 'update']);
+            Route::patch('/pco/{incidentPCO}', [IncidentPCOController::class, 'update']);
+            Route::delete('/pco/{pco}', [IncidentPCOController::class, 'destroy']);
+
+            Route::get('/parties', [IncidentPartyController::class, 'index']);
+            Route::post('/parties', [IncidentPartyController::class, 'store']);
+            //Route::get('/parties/{party}', [IncidentPartyController::class, 'show']);
+            Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
+            Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
+            Route::delete('/parties/{party}', [IncidentPartyController::class, 'destroy']);
+        });
         Route::apiResource('/facilities', FacilitiesController::class);
     });
 });

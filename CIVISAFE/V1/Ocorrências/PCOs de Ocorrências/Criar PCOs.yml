@@ -1,0 +1,28 @@
+info:
+  name: Criar PCOs
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/incidents/1/pco"
+  body:
+    type: json
+    data: |-
+      {
+        "function_pco": "Oficial Logistica",
+        "resp_pco": "José Antunes Miranda",
+        "category_pco": "ut",
+        "contact1_pco": "913577340",
+        "localization_pco": "Rio Maior",
+        "rob_pco": "sit1785",
+        "srp_pco": "nam538",
+        "start_pco_datetime": "2026-05-19 10:00:00"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

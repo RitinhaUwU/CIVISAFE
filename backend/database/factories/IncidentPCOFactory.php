@@ -15,7 +15,7 @@ class incidentPCOFactory extends Factory
     {
         return [
             'function_pco' => $this->faker->randomElement(['COS', 'Oficial Operações', 'Oficial Logistica', 'Oficial  Planeamento', 'Oficial Operações Aérias', 'Adjunto Segurança', 'Adjunto Realações Públicas', 'Adjunto Ligação']),
-            'resp_pco' => $this->faker->word(),
+            'resp_pco' => $this->faker->name(),
             'category_pco' => $this->faker->word(),
             'contact1_pco' => $this->faker->phoneNumber(),
             'contact2_pco' => $this->faker->phoneNumber(),

@@ -1,0 +1,23 @@
+info:
+  name: Editar Logística
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/incidents/1/parties/101"
+  body:
+    type: json
+    data: |-
+      {
+        "vehicle_count": 5,
+        "human_count": 10,
+        "entity_id": 2
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

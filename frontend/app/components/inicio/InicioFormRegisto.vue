@@ -574,6 +574,7 @@ onMounted(() => {
             </template>
           </UTabs>
           <Map
+            v-if="!state.is_major"
             :center="[props.coords?.lat, props.coords?.lng]"
             :zoom="13"
             class="w-full h-[400px] rounded-lg"
