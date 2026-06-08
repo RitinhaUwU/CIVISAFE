@@ -668,7 +668,7 @@ onMounted(async () => {
               size="xl"
               :loading="saving"
               @click="handleSaveGeral"
-              class="fixed bottom-6 right-6 z-400 rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
+              class="fixed bottom-6 right-6 z-1000 rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
             />
           </div>
         </template>
@@ -763,9 +763,7 @@ onMounted(async () => {
                 </template>
                 <div class="space-y-3">
                   <div class="space-y-3">
-                    <div v-for="item in pcoList" :key="item.id"
-                         class="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 shadow-sm transition hover:shadow-md hover:border-stone-300 dark:hover:border-stone-700"
-                    >
+                    <div v-for="item in pcoList" :key="item.id" class="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 shadow-sm transition hover:shadow-md hover:border-stone-300 dark:hover:border-stone-700">
                       <div class="flex flex-col gap-1">
                         <p class="font-semibold text-stone-900 dark:text-white">{{ item.function_pco }}</p>
                         <p class="text-sm text-stone-500 flex items-center gap-2 flex-wrap">
@@ -793,7 +791,7 @@ onMounted(async () => {
                           icon="i-lucide-pencil"
                           color="warning"
                           variant="soft"
-                          class="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-red-950/40"
+                          class="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
                           :ui="{ rounded: 'rounded-full' }"
                           @click="editPCO(item)"
                         />
@@ -841,7 +839,7 @@ onMounted(async () => {
                     color="warning"
                     variant="soft"
                     size="sm"
-                    class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-red-950/40"
+                    class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
                     :ui="{ rounded: 'rounded-full' }"
                     @click="editLogistic(row.original)"
                   />
