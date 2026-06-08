@@ -18,7 +18,7 @@ class IncidentPartyResource extends JsonResource
             'entity_id' => $this->entity_id,
 
             'incident' => new IncidentResource($this->whenLoaded('incident')),
-            'entity' => EntityResource::collection($this->whenLoaded('entity')),
+            'entity' => new EntityResource($this->whenLoaded('entity')),
         ];
     }
 }

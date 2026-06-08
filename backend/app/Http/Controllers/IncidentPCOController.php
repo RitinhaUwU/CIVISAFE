@@ -4,25 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\IncidentPCORequest;
 use App\Http\Resources\IncidentPCOResource;
-use App\Models\incidentPCO;
-use Spatie\QueryBuilder\QueryBuilder;
+use App\Models\IncidentPCO;
 
 class IncidentPCOController extends Controller
 {
-    public function index()
+    public function index($incidentId)
     {
-        $incidentPCO = QueryBuilder::for(IncidentPCO::class)
-            ->with([
-                'incidentPCO',
-            ])
-            ->orderBy('id', 'desc');
-
-        return IncidentPCOResource::collection($incidentPCO);
+        return IncidentPCOResource::collection(
+            IncidentPCO::where('incident_id', $incidentId)
+                ->orderBy('id', 'desc')
+                ->get()
+        );
     }
 
-    public function store(IncidentPCORequest $request)
+    public function store(IncidentPCORequest $request, $incidentId)
     {
-        return new IncidentPCOResource(IncidentPCO::create($request->validated()));
+        $data = $request->validated();
+        $data['incident_id'] = $incidentId;
+
+        return new IncidentPCOResource(IncidentPCO::create($data));
     }
 
     public function show(IncidentPCO $incidentPCO)
@@ -39,10 +39,13 @@ class IncidentPCOController extends Controller
         return new IncidentPCOResource($incidentPCO);
     }
 
-    public function destroy(IncidentPCO $incidentPCO)
+    public function destroy($incidentId, IncidentPCO $pco)
     {
-        $incidentPCO->delete();
+        if ($pco->incident_id !== (int) $incidentId) {
+            abort(404);
+        }
 
+        $pco->delete();
         return response()->json();
     }
 }

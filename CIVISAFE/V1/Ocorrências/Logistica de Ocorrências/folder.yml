@@ -1,7 +1,7 @@
 info:
-  name: Utilizadores
+  name: Logistica de Ocorrências
   type: folder
-  seq: 10
+  seq: 14
 
 request:
   auth: inherit

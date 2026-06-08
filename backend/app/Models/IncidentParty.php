@@ -11,7 +11,6 @@ class IncidentParty extends Model
 {
     use SoftDeletes, HasFactory;
 
-
     public function incident(): BelongsTo
     {
         return $this->belongsTo(Incident::class);
@@ -21,4 +20,11 @@ class IncidentParty extends Model
     {
         return $this->belongsTo(Entity::class);
     }
+
+    protected $fillable = [
+        'incident_id',
+        'entity_id',
+        'vehicle_count',
+        'human_count',
+    ];
 }

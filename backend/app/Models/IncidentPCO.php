@@ -13,13 +13,13 @@ class IncidentPCO extends Model
 
     protected $table = 'incident_pcos';
 
-    public function incidentPCO(): BelongsTo
+    public function incident(): BelongsTo
     {
         return $this->belongsTo(Incident::class);
     }
 
     protected $with = [
-        'incidentPCO'
+        'incident'
     ];
 
     protected $fillable = [

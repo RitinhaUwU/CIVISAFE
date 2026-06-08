@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Models\incidentPCO;
+use App\Models\IncidentPCO;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,7 +27,7 @@ class IncidentPCOResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'incidentPCO' => new incidentResource($this->whenLoaded('incidentPCO')),
+            'incidentPCO' => new IncidentResource($this->whenLoaded('incidentPCO')),
         ];
     }
 }

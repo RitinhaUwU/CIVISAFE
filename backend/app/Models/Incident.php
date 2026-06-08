@@ -42,7 +42,7 @@ class Incident extends Model
         return $this->hasMany(Incident::class);
     }
 
-    public function resources(): HasMany
+    public function parties(): HasMany
     {
         return $this->hasMany(IncidentParty::class);
     }
@@ -52,7 +52,7 @@ class Incident extends Model
         'incidentState',
         'incidentPriority',
         'user',
-        'resources',
+        'parties',
         'parentIncident',
         'childrenIncidents'
     ];
