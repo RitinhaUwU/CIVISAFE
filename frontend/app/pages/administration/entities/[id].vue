@@ -162,6 +162,12 @@ watchDebounced(entityTypeSearch, async (val) => {
 }, { debounce: 300 })
 
 onMounted(() => {
+  if(!useAuthStore().hasPermission('ENTITIES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetchEntity()
   fetchEntityTypes()
 

@@ -38,6 +38,11 @@ const columns: TableColumn<Facilities | null>[] = [
 ]
 
 const fetch = async() => {
+  if(!useAuthStore().hasPermission('FACILITIES_LIST')){
+    await useRouter().push('/inicio');
+    return;
+  }
+
   try{
     const routeID = useRoute().params.id;
     if (typeof routeID !== 'string') {

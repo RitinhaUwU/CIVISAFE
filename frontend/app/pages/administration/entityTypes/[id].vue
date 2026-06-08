@@ -25,6 +25,12 @@ const state = reactive<Partial<Schema>>({
 const toast = useToast()
 
 const fetchEntityType = async () => {
+  if(!useAuthStore().hasPermission('ENTITY_TYPES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
   const routeID = route.params.id;
   if (typeof routeID !== 'string') {
     toast.add({

@@ -17,6 +17,12 @@ const state = reactive({
 const toast = useToast()
 
 const fetchEntity = async () => {
+  if(!useAuthStore().hasPermission('INCIDENT_TYPES_LIST'))
+  {
+    await useRouter().push('/inicio');
+    return;
+  }
+
   const routeID = route.params.id;
   if (typeof routeID !== 'string') {
     toast.add({

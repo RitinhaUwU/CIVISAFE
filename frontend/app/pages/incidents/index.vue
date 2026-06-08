@@ -5,9 +5,7 @@ import type { TableColumn } from '@nuxt/ui'
 import type {Incident} from "~/types";
 import {UBadge, UButton} from "#components";
 
-const auth = useAuthStore()
 const api = useApiStore()
-const toast = useToast()
 
 const incidents = ref<Incident[]>([])
 const page = ref(1)
@@ -122,7 +120,6 @@ const fetchStates = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentStates({
       page: statePage.value,
       per_page: 10,
-      //TODO: Implementação deste filtro no acesso offline
       filter: {
         ...(search ? { search } : {})
       }
@@ -143,7 +140,6 @@ const fetchPriorities = async (search?: string, loadMore = false) => {
     const res = await api.getIncidentPriorities({
       page: priorityPage.value,
       per_page: 10,
-      //TODO: Implementação deste filtro no acesso offline
       filter: {
         ...(search ? { search } : {})
       }

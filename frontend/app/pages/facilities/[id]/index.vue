@@ -106,6 +106,11 @@ const items = ref<BreadcrumbItem[]>([
 ])
 
 onMounted(() => {
+  if(!useAuthStore().hasPermission('FACILITIES_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetchFacility()
 })
 </script>

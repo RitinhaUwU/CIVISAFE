@@ -109,6 +109,18 @@ const fetchUser = async () => {
     return;
   }
 
+  if(!auth.hasPermission('USERS_VIEW_ANY'))
+  {
+    await useRouter().push('/inicio');
+    return;
+  }
+
+  if(auth.currentUserID == parseInt(routeID) && !auth.hasPermission('USERS_VIEW_SELF'))
+  {
+    await useRouter().push('/users');
+    return;
+  }
+
   const data = (await api.getUser(parseInt(routeID))).data.data
 
   Object.assign(state, {

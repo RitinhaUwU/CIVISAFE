@@ -84,7 +84,6 @@ const fetchTypes = async (search?: string, loadMore = false) => {
     const res = await api.getEntityTypes({
       page: typesPage.value,
       per_page: 10,
-      //TODO: Implementar suporte para este filtro offline
       filter: {
         ...(search ? { search } : {})
       }

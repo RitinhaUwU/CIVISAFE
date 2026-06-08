@@ -147,7 +147,6 @@ const fetchIncidents = async (search?: string, loadMore = false) => {
     const res = await api.getIncidents({
       page: incidentPage.value,
       per_page: 10,
-      //TODO: Adicionar suporte para este filtro no modo offline
       filter: {
         ...(search ? { search } : {})
       }

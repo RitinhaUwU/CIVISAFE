@@ -30,6 +30,11 @@ const state = reactive<Partial<Schema>>({
 const toast = useToast()
 
 const fetchEntity = async () => {
+  if(!useAuthStore().hasPermission('INCIDENT_STATES_LIST')){
+    await useRouter().push('/inicio');
+    return;
+  }
+
   const routeID = route.params.id;
   if (typeof routeID !== 'string') {
     toast.add({
