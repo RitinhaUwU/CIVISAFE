@@ -30,6 +30,6 @@ jobs:
         with:
           context: ./frontend
           build-args: |
-            COMMIT-SHA=${{ github.sha }}
+            COMMIT_SHA=${{ github.sha }}
           push: true
           tags: ghcr.io/ritinhauwu/civisafe-frontend:${{ github.sha }}

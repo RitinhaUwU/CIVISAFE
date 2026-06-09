@@ -51,7 +51,7 @@ services:
 
   backend:
     container_name: backend
-    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
     #build: ./backend
     entrypoint: /app/docker-entrypoint.sh
     command: frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile
@@ -78,7 +78,7 @@ services:
         condition: service_started
 
   queue-worker-default:
-    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
     #build: ./backend
     command: php /app/artisan queue:work
     env_file:
@@ -103,7 +103,7 @@ services:
         condition: service_started
 
   queue-worker-notifications:
-    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
     #build: ./backend
     command: php /app/artisan queue:work --queue=notifications
     env_file:
@@ -126,7 +126,7 @@ services:
         condition: service_started
 
   queue-worker-imports:
-    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
     #build: ./backend
     command: php /app/artisan queue:work --queue=imports
     env_file:
@@ -150,7 +150,7 @@ services:
 
   reverb:
     container_name: reverb
-    image: ghcr.io/ritinhauwu/civisafe-backend:e00eca9ee63ced9e2931dc0e65aed47714819b20
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
     #build: ./backend
     command: php /app/artisan reverb:start
     env_file:
@@ -176,7 +176,7 @@ services:
 
   frontend:
     container_name: frontend
-    image: ghcr.io/ritinhauwu/civisafe-frontend:e00eca9ee63ced9e2931dc0e65aed47714819b20
+    image: ghcr.io/ritinhauwu/civisafe-frontend:${IMAGE_VERSION}
     #build: ./frontend
     environment:
       - NODE_ENV=production

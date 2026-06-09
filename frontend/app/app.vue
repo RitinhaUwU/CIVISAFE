@@ -5,6 +5,7 @@ import {useHead} from "nuxt/app";
 import {useColorMode} from "@vueuse/core";
 import {checkServerAccess} from "@/utils";
 import {useAuthStore} from "@/stores/auth";
+import {useRegisterSW} from 'virtual:pwa-register/vue'
 
 const toast = useToast()
 const colorMode = useColorMode()
@@ -13,12 +14,12 @@ let last_connectivity_state = true;
 
 useHead({
   meta: [
-    { charset: 'utf-8' },
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-    { key: 'theme-color', name: 'theme-color', content: color }
+    {charset: 'utf-8'},
+    {name: 'viewport', content: 'width=device-width, initial-scale=1'},
+    {key: 'theme-color', name: 'theme-color', content: color}
   ],
   link: [
-    { rel: 'icon', href: '' }
+    {rel: 'icon', href: ''}
   ],
   htmlAttrs: {
     lang: 'pt-pt'
@@ -33,8 +34,7 @@ let intervalId: number | null | NodeJS.Timeout = null
 async function checkInternetAccess() {
   const online = await checkServerAccess()
 
-  if(online !== last_connectivity_state)
-  {
+  if (online !== last_connectivity_state) {
     last_connectivity_state = online;
 
     if (online) {
@@ -45,9 +45,7 @@ async function checkInternetAccess() {
       });
 
       await useAuthStore().getUser();
-    }
-    else
-    {
+    } else {
       toast.add({
         'title': 'Ligação perdida!',
         'description': 'A sua à internet foi perdida!',
@@ -84,6 +82,17 @@ function handleOnline() {
   startConnectivityLoop()
 }
 
+useRegisterSW({
+  onRegisteredSW(_, r) {
+    // Poll for updates every hour
+    setInterval(() => r?.update(), 60 * 60 * 1000)
+  },
+})
+
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  window.location.reload()
+})
+
 onMounted(() => {
   startConnectivityLoop()
   window.addEventListener('offline', handleOffline)
@@ -98,12 +107,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <VitePwaManifest />
+  <VitePwaManifest/>
   <UApp>
-    <NuxtLoadingIndicator />
+    <NuxtLoadingIndicator/>
 
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage/>
     </NuxtLayout>
   </UApp>
 </template>

@@ -60,7 +60,7 @@ export default defineNuxtConfig({
   // Fonte: https://stackoverflow.com/a/79379859
   // workbox, manifest devOptions **must** be set. registerType might be able to also be autoUpdate, but haven't tried it
   pwa: {
-    registerType: 'prompt',
+    registerType: 'autoUpdate',
 
     manifest: {
       name: 'CIVISAFE',
@@ -98,6 +98,7 @@ export default defineNuxtConfig({
 
       cleanupOutdatedCaches: true,
       clientsClaim: true,
+      skipWaiting: true,
     },
 
     devOptions: {
