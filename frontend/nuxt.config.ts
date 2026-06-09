@@ -25,6 +25,8 @@ export default defineNuxtConfig({
       reverbHost: '',
       reverbPort: '',
       reverbScheme: '',
+
+      appVersion: process.env.COMMIT_SHA ?? 'dev - ' + (new Date().toLocaleString('pt-PT'))
     },
   },
 
@@ -74,7 +76,8 @@ export default defineNuxtConfig({
       ],
       start_url: '/',
       display: 'standalone',
-      background_color: '#ffffff'
+      background_color: '#ffffff',
+      lang: 'pt'
     },
 
     workbox: {

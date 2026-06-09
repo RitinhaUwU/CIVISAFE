@@ -1,5 +1,9 @@
 # Build Stage 1
 FROM node:22 AS build
+
+ARG COMMIT_SHA=unset
+ENV COMMIT_SHA=$COMMIT_SHA
+
 WORKDIR /app
 
 RUN corepack enable
