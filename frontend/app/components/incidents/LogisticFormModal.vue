@@ -34,17 +34,33 @@ watch(
         entity_id: val.entity?.id ?? val.entity_id ?? null
       })
     } else {
-      Object.assign(form, { human_count: 0, vehicle_count: 0, entity_id: null })
+      Object.assign(form, {
+        human_count: 0,
+        vehicle_count: 0,
+        entity_id: null
+      })
     }
   },
   { immediate: true }
 )
 
+const toast = useToast()
 const close = () => emit('update:open', false)
 
 const submit = () => {
   const result = schema.safeParse(form)
-  if (!result.success) return
+
+  if (!result.success) {
+    result.error.issues.forEach((err) => {
+      toast.add({
+        title: 'Erro de validação',
+        description: err.message,
+        color: 'error'
+      })
+    })
+    return
+  }
+
   emit('save', result.data)
   close()
 }
@@ -53,8 +69,8 @@ const submit = () => {
 <template>
   <UModal
     :open="props.open"
-    :title="modelValue?.id ? 'Editar Logística' : 'Nova Logística'"
-    description="Preencha os dados de logística"
+    :title="modelValue?.id ? 'Editar Equipa' : 'Nova Equipa'"
+    description="Preencha os dados da equipa"
     @update:open="emit('update:open', $event)"
   >
     <template #body>

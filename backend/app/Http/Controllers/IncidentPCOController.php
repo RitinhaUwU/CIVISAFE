@@ -22,21 +22,47 @@ class IncidentPCOController extends Controller
         $data = $request->validated();
         $data['incident_id'] = $incidentId;
 
-        return new IncidentPCOResource(IncidentPCO::create($data));
+        $conflict = IncidentPCO::where('incident_id', $incidentId)
+            ->where('function_pco', $data['function_pco'])
+            ->whereNull('end_pco_datetime')
+            ->exists();
+
+        if ($conflict) {
+            return response()->json(['message' => 'Já existe uma função ativa com este cargo no PCO.'], 422);
+        }
+
+        $pco = IncidentPCO::create($data);
+
+        return new IncidentPCOResource($pco);
     }
 
-    public function show(IncidentPCO $incidentPCO)
+    public function show(IncidentPCO $pco)
     {
-        return new IncidentPCOResource($incidentPCO -> load([
+        return new IncidentPCOResource($pco -> load([
             'incidentPCO'
         ]));
     }
 
-    public function update(IncidentPCORequest $request, IncidentPCO $incidentPCO)
+    public function update(IncidentPCORequest $request,  $incidentId, IncidentPCO $pco)
     {
-        $incidentPCO->update($request->validated());
+        $data = $request->validated();
 
-        return new IncidentPCOResource($incidentPCO);
+        if ($pco->function_pco !== $data['function_pco']) {
+
+            $conflict = IncidentPCO::where('incident_id', $incidentId)
+                ->where('function_pco', $data['function_pco'])
+                ->whereNull('end_pco_datetime')
+                ->where('id', '!=', $pco->id)
+                ->exists();
+
+            if ($conflict) {
+                return response()->json(['message' => 'Já existe uma função ativa com este cargo no PCO.'], 422);
+            }
+        }
+
+        $pco->update($data);
+
+        return new IncidentPCOResource($pco);
     }
 
     public function destroy($incidentId, IncidentPCO $pco)

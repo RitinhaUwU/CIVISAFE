@@ -65,17 +65,14 @@ Route::prefix('v1')->group(function () {
         Route::prefix('incidents/{incident}')->group(function () {
             Route::get('/pco', [IncidentPCOController::class, 'index']);
             Route::post('/pco', [IncidentPCOController::class, 'store']);
-            //Route::get('/pco/{incidentPCO}', [IncidentPCOController::class, 'show']);
-            Route::put('/pco/{incidentPCO}', [IncidentPCOController::class, 'update']);
-            Route::patch('/pco/{incidentPCO}', [IncidentPCOController::class, 'update']);
+            Route::put('/pco/{pco}', [IncidentPCOController::class, 'update'])->whereNumber('pco');
+            Route::patch('/pco/{pco}', [IncidentPCOController::class, 'update'])->whereNumber('pco');
             Route::delete('/pco/{pco}', [IncidentPCOController::class, 'destroy']);
 
             Route::get('/parties', [IncidentPartyController::class, 'index']);
             Route::post('/parties', [IncidentPartyController::class, 'store']);
-            //Route::get('/parties/{party}', [IncidentPartyController::class, 'show']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
-            Route::delete('/parties/{party}', [IncidentPartyController::class, 'destroy']);
         });
         Route::apiResource('/facilities', FacilitiesController::class);
     });
