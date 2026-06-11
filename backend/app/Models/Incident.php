@@ -34,12 +34,12 @@ class Incident extends Model
 
     public function parentIncident(): BelongsTo
     {
-        return $this->belongsTo(Incident::class);
+        return $this->belongsTo(Incident::class, 'incident_id', 'id');
     }
 
     public function childrenIncidents(): HasMany
     {
-        return $this->hasMany(Incident::class);
+        return $this->hasMany(Incident::class, 'incident_id', 'id');
     }
 
     public function parties(): HasMany
@@ -53,8 +53,6 @@ class Incident extends Model
         'incidentPriority',
         'user',
         'parties',
-        'parentIncident',
-        'childrenIncidents'
     ];
 
     protected function casts(): array

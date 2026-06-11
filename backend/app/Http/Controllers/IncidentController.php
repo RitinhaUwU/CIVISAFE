@@ -46,8 +46,9 @@ class IncidentController extends Controller
                     $query->where('incident_priority_id', $value);
                 }),
                 AllowedFilter::callback('is_major', function (Builder $query, $value) {
-                    $query->where('is_major', filter_var($value, FILTER_VALIDATE_BOOLEAN));
-                })
+                    if ($value === 'all' || $value === null) return;
+                    $query->where('is_major', $value);
+                }),
             )
             ->orderBy('id', 'asc')
             ->paginate($request->input('per_page', 10))

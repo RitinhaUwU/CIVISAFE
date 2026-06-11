@@ -47,40 +47,39 @@ const form = reactive({
   end_pco_datetime: '',
 })
 
-watch(
-  () => props.modelValue,
-  (val) => {
-    if (val) {
-      Object.assign(form, {
-        function_pco: val.function_pco ?? '',
-        resp_pco: val.resp_pco ?? '',
-        category_pco: val.category_pco ?? '',
-        contact1_pco: val.contact1_pco ?? '',
-        contact2_pco: val.contact2_pco ?? '',
-        localization_pco: val.localization_pco ?? '',
-        rob_pco: val.rob_pco ?? '',
-        srp_pco: val.srp_pco ?? '',
-        activation_pco_datetime: toDatetimeLocal(val.activation_pco_datetime),
-        start_pco_datetime: toDatetimeLocal(val.start_pco_datetime),
-        end_pco_datetime: toDatetimeLocal(val.end_pco_datetime),
-      })
-    } else {
-      Object.assign(form, {
-        function_pco: '',
-        resp_pco: '',
-        category_pco: '',
-        contact1_pco: '',
-        contact2_pco: '',
-        localization_pco: '',
-        rob_pco: '',
-        srp_pco: '',
-        activation_pco_datetime: '',
-        start_pco_datetime: '',
-        end_pco_datetime: '',
-      })
-    }
-  },
-  { immediate: true }
+const resetForm = () => {
+  Object.assign(form, {
+    function_pco: '',
+    resp_pco: '',
+    category_pco: '',
+    contact1_pco: '',
+    contact2_pco: '',
+    localization_pco: '',
+    rob_pco: '',
+    srp_pco: '',
+    activation_pco_datetime: '',
+    start_pco_datetime: '',
+    end_pco_datetime: '',
+  })
+}
+
+watch(() => props.modelValue, (val) => {if (val) {
+    Object.assign(form, {
+      function_pco: val.function_pco ?? '',
+      resp_pco: val.resp_pco ?? '',
+      category_pco: val.category_pco ?? '',
+      contact1_pco: val.contact1_pco ?? '',
+      contact2_pco: val.contact2_pco ?? '',
+      localization_pco: val.localization_pco ?? '',
+      rob_pco: val.rob_pco ?? '',
+      srp_pco: val.srp_pco ?? '',
+      activation_pco_datetime: toDatetimeLocal(val.activation_pco_datetime),
+      start_pco_datetime: toDatetimeLocal(val.start_pco_datetime),
+      end_pco_datetime: toDatetimeLocal(val.end_pco_datetime),
+    })
+  } else {
+    resetForm()
+  }}, { immediate: true }
 )
 
 const toast = useToast()

@@ -2,15 +2,16 @@
 import Map from '../Map.vue'
 import * as z from "zod"
 import type { FormSubmitEvent } from "@nuxt/ui"
-import { useApiStore } from "../../stores/api"
-import { useAuthStore } from "../../stores/auth"
+import { useApiStore } from "~/stores/api"
+import { useAuthStore } from "~/stores/auth"
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const props = defineProps<{
   modelValue: boolean
   coords: { lat: number, lng: number }
 }>()
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const authStore = useAuthStore()
 
 const emit = defineEmits([
@@ -32,36 +33,6 @@ const tabs = [
 ]
 
 const options = ref([])
-
-const incidentStateMenu = useTemplateRef('incidentStateMenu')
-const incidentPriorityMenu = useTemplateRef('incidentPriorityMenu')
-const incidentTypeMenu = useTemplateRef('incidentTypeMenu')
-const incidentMenu = useTemplateRef('incidentMenu')
-
-const incidentStateItems = ref<any[]>([])
-const incidentPriorityItems = ref<any[]>([])
-const incidentTypeItems = ref<any[]>([])
-const incidentItems = ref<any[]>([])
-
-const incidentStatePage = ref(1)
-const incidentPriorityPage = ref(1)
-const incidentTypePage = ref(1)
-const incidentPage = ref(1)
-
-const incidentStateLastPage = ref(Infinity)
-const incidentPriorityLastPage = ref(Infinity)
-const incidentTypeLastPage = ref(Infinity)
-const incidentLastPage = ref(Infinity)
-
-const incidentStateLoading = ref(false)
-const incidentPriorityLoading = ref(false)
-const incidentTypeLoading = ref(false)
-const incidentLoading = ref(false)
-
-const incidentStateSearch = ref('')
-const incidentPrioritySearch = ref('')
-const incidentTypeSearch = ref('')
-const incidentSearch = ref('')
 
 const toast = useToast()
 
@@ -89,6 +60,42 @@ const schema = z.object({
 })
 
 type Schema = z.output<typeof schema>
+
+const typeMenu = useTemplateRef('typeMenu')
+const stateMenu = useTemplateRef('stateMenu')
+const priorityMenu = useTemplateRef('priorityMenu')
+const incidentsMenu = useTemplateRef('incidentsMenu')
+
+const types = usePaginatedSelect({
+  fetcher: api.getIncidentTypes,
+  menuRef: typeMenu,
+  map: (t: any) => ({
+    id: t.id,
+    name: `${t.code} - ${t.species}`
+  })
+})
+const states = usePaginatedSelect({
+  fetcher: api.getIncidentStates,
+  menuRef: stateMenu,
+  map: (s: any) => ({
+    id: s.id,
+    name: s.name
+  })
+})
+const priorities = usePaginatedSelect({
+  fetcher: api.getIncidentPriorities,
+  menuRef: priorityMenu,
+  map: (p: any) => ({
+    id: p.id,
+    name: `${p.name} - ${p.description}`
+  })
+})
+const incidents = usePaginatedSelect({
+  fetcher: api.getIncidents,
+  menuRef: incidentsMenu,
+  filters: () => ({is_major: !state.is_major}),
+  map: (i: any) => ({id: i.id, name: i.identifier})
+})
 
 const state = reactive<any>({
   is_major: false,
@@ -119,11 +126,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     const payload = {
       ...event.data,
       user_id: authStore.currentUserID,
-      incident_id: !state.is_major && state.incident_id ? state.incident_id.id : null,
-      children_incidents: state.is_major ? state.incident_id : []
+      incident_state_id: event.data.incident_state_id,
+      incident_priority_id: event.data.incident_priority_id,
+      incident_type_id: event.data.incident_type_id,
+      is_major: state.is_major,
+      incident_id: state.is_major ? state.incident_id?.map((i: any) => i.id ?? i) : state.incident_id?.id ?? state.incident_id ?? null,
+      children_incidents: state.is_major ? (state.incident_id ?? []).map((i: any) => i.id ?? i) : []
     }
 
-    await apiStore.createIncident(payload)
+    await api.createIncident(payload)
 
     emit('created')
     emit('update:modelValue', false)
@@ -158,8 +169,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       name_pco: ''
     })
   } catch (e) {
-    console.error('Validation errors:', e.response?.data?.errors)
-    console.log(e.response?.data)
+    const errors = e?.response?.data?.errors
+
+    if (errors?.identifier?.length) {
+      toast.add({
+        title: 'Identificador duplicado',
+        description: 'O identificador já se encontra em uso',
+        color: 'error'
+      })
+      return
+    }
 
     toast.add({
       title: 'Erro',
@@ -169,6 +188,19 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
+watch(() => state.is_major, async (isMajor) => {
+  state.incident_id = isMajor ? [] : null
+
+  if (isMajor) {
+    state.coordinates = ''
+  } else if (props.coords) {
+    state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
+  }
+
+  await incidents.reset()
+})
+
+// Map
 function updateCoordinates(coords: { lat: number, lng: number }) {
   state.coordinates = `${coords.lat}, ${coords.lng}`
 }
@@ -179,255 +211,13 @@ watch(() => props.coords, (newCoords) => {
   }
 }, { immediate: true })
 
-const fetchIncidentStates = async (search?: string) => {
-  if (incidentStateLoading.value) return
-
-  incidentStateLoading.value = true
-
-  try {
-    const res = await apiStore.getIncidentStates({
-      page: incidentStatePage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    incidentStateLastPage.value = res.data.meta.last_page
-
-    const mapped = data.map((s: any) => ({
-      id: s.id,
-      name: s.name
-    }))
-
-    const existingIds = new Set(incidentStateItems.value.map(i => i.id))
-
-    incidentStateItems.value = [
-      ...incidentStateItems.value,
-      ...mapped.filter(i => !existingIds.has(i.id))
-    ]
-  } finally {
-    incidentStateLoading.value = false
-  }
-}
-
-const fetchIncidentPriorities = async (search?: string) => {
-  if (incidentPriorityLoading.value) return
-
-  incidentPriorityLoading.value = true
-
-  try {
-    const res = await apiStore.getIncidentPriorities({
-      page: incidentPriorityPage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    incidentPriorityLastPage.value = res.data.meta.last_page
-
-    const mapped = data.map((p: any) => ({
-      id: p.id,
-      name: `${p.name} - ${p.description}`
-    }))
-
-    const existingIds = new Set(incidentPriorityItems.value.map(i => i.id))
-
-    incidentPriorityItems.value = [
-      ...incidentPriorityItems.value,
-      ...mapped.filter(i => !existingIds.has(i.id))
-    ]
-  } finally {
-    incidentPriorityLoading.value = false
-  }
-}
-
-const fetchIncidentTypes = async (search?: string) => {
-  if (incidentTypeLoading.value) return
-
-  incidentTypeLoading.value = true
-
-  try {
-    const res = await apiStore.getIncidentTypes({
-      page: incidentTypePage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    incidentTypeLastPage.value = res.data.meta.last_page
-
-    const mapped = data.map((t: any) => ({
-      id: t.id,
-      name: `${t.code} - ${t.species}`
-    }))
-
-    const existingIds = new Set(incidentTypeItems.value.map(i => i.id))
-
-    incidentTypeItems.value = [
-      ...incidentTypeItems.value,
-      ...mapped.filter(i => !existingIds.has(i.id))
-    ]
-  } finally {
-    incidentTypeLoading.value = false
-  }
-}
-
-const fetchIncidents = async (search?: string) => {
-  if (incidentLoading.value) return
-
-  incidentLoading.value = true
-
-  try {
-    const res = await apiStore.getIncidents({
-      page: incidentPage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {}),
-        is_major: !state.is_major
-      }
-    })
-
-    const data = res.data.data
-    incidentLastPage.value = res.data.meta.last_page
-
-    const mapped = data.map((t: any) => ({
-      id: t.id,
-      name: t.identifier
-    }))
-
-    const existingIds = new Set(incidentItems.value.map(i => i.id))
-
-    incidentItems.value = [
-      ...incidentItems.value,
-      ...mapped.filter(i => !existingIds.has(i.id))
-    ]
-  } finally {
-    incidentLoading.value = false
-  }
-}
-
-watchDebounced(incidentStateSearch, async (val) => {
-  incidentStatePage.value = 1
-  incidentStateItems.value = []
-  incidentStateLastPage.value = Infinity
-  await fetchIncidentStates(val)
-}, { debounce: 300 })
-
-watchDebounced(incidentPrioritySearch, async (val) => {
-  incidentPriorityPage.value = 1
-  incidentPriorityItems.value = []
-  incidentPriorityLastPage.value = Infinity
-  await fetchIncidentPriorities(val)
-}, { debounce: 300 })
-
-watchDebounced(incidentTypeSearch, async (val) => {
-  incidentTypePage.value = 1
-  incidentTypeItems.value = []
-  incidentTypeLastPage.value = Infinity
-  await fetchIncidentTypes(val)
-}, { debounce: 300 })
-
-watchDebounced(incidentSearch, async (val) => {
-  incidentPage.value = 1
-  incidentItems.value = []
-  incidentLastPage.value = Infinity
-  await fetchIncidents(val)
-}, { debounce: 300 })
-
-watch(
-  () => state.is_major,
-  async (isMajor) => {
-    state.incident_id = isMajor ? [] : null
-
-    if (isMajor) {
-      state.coordinates = ''
-    } else if (props.coords) {
-      state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
-    }
-
-    incidentPage.value = 1
-    incidentItems.value = []
-    incidentLastPage.value = Infinity
-
-    await fetchIncidents(incidentSearch.value)
-  }
-)
-
-onMounted(() => {
-  fetchIncidentStates()
-  fetchIncidentPriorities()
-  fetchIncidentTypes()
-  fetchIncidents()
-
-  // Ocorrências Prioridades
-  useInfiniteScroll(
-    () => incidentPriorityMenu.value?.viewportRef,
-    () => {
-      if (incidentPriorityPage.value < incidentPriorityLastPage.value) {
-        incidentPriorityPage.value++
-        fetchIncidents(incidentPrioritySearch.value)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !incidentPriorityLoading.value &&
-        incidentPriorityPage.value < incidentPriorityLastPage.value
-    }
-  )
-
-  // Ocorrências Estados
-  useInfiniteScroll(
-    () => incidentStateMenu.value?.viewportRef,
-    () => {
-      if (incidentStatePage.value < incidentStateLastPage.value) {
-        incidentStatePage.value++
-        fetchIncidentStates(incidentStateSearch.value)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !incidentStateLoading.value &&
-        incidentStatePage.value < incidentStateLastPage.value
-    }
-  )
-
-  // Ocorrências Tipos
-  useInfiniteScroll(
-    () => incidentTypeMenu.value?.viewportRef,
-    () => {
-      if (incidentTypePage.value < incidentTypeLastPage.value) {
-        incidentTypePage.value++
-        fetchIncidentTypes(incidentTypeSearch.value)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !incidentTypeLoading.value &&
-        incidentTypePage.value < incidentTypeLastPage.value
-    }
-  )
-
-  // Ocorrências
-  useInfiniteScroll(
-    () => incidentMenu.value?.viewportRef,
-    () => {
-      if (incidentPage.value < incidentLastPage.value) {
-        incidentPage.value++
-        fetchIncidents(incidentSearch.value)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !incidentLoading.value &&
-        incidentPage.value < incidentLastPage.value
-    }
-  )
+onMounted(async() => {
+  await Promise.all([
+    states.fetchItems(),
+    priorities.fetchItems(),
+    types.fetchItems(),
+    incidents.fetchItems()
+  ])
 })
 </script>
 
@@ -457,58 +247,58 @@ onMounted(() => {
                     </UFormField>
                     <UFormField label="Estado:" name="incident_state_id">
                       <USelectMenu
-                        ref="incidentStateMenu"
+                        ref="stateMenu"
                         v-model="state.incident_state_id"
-                        v-model:search-term="incidentStateSearch"
-                        :items="incidentStateItems"
-                        :loading="incidentStateLoading"
+                        v-model:search-term="states.search.value"
+                        :items="states.items.value"
+                        :loading="states.loading.value"
                         value-key="id"
                         label-key="name"
-                        ignore-filter
                         class="w-full"
+                        ignore-filter
                         placeholder="Selecionar estado"
                       />
                     </UFormField>
                     <UFormField label="Prioridade:" name="incident_priority_id">
                       <USelectMenu
-                        ref="incidentPriorityMenu"
+                        ref="priorityMenu"
                         v-model="state.incident_priority_id"
-                        v-model:search-term="incidentPrioritySearch"
-                        :items="incidentPriorityItems"
-                        :loading="incidentPriorityLoading"
+                        v-model:search-term="priorities.search.value"
+                        :items="priorities.items.value"
+                        :loading="priorities.loading.value"
                         value-key="id"
                         label-key="name"
-                        ignore-filter
                         class="w-full"
+                        ignore-filter
                         placeholder="Selecionar prioridade"
                       />
                     </UFormField>
                     <UFormField label="Tipo de Ocorrência:" name="incident_type_id">
                       <USelectMenu
-                        ref="incidentTypeMenu"
+                        ref="typeMenu"
                         v-model="state.incident_type_id"
-                        v-model:search-term="incidentTypeSearch"
-                        :items="incidentTypeItems"
-                        :loading="incidentTypeLoading"
+                        v-model:search-term="types.search.value"
+                        :items="types.items.value"
+                        :loading="types.loading.value"
                         value-key="id"
                         label-key="name"
-                        ignore-filter
                         class="w-full"
+                        ignore-filter
                         placeholder="Selecionar tipo"
                       />
                     </UFormField>
                     <UFormField label="Associar Evento:" name="incident_id">
                       <USelectMenu
-                        ref="incidentMenu"
+                        ref="incidentsMenu"
                         v-model="state.incident_id"
-                        v-model:search-term="incidentSearch"
-                        :items="incidentItems"
-                        :loading="incidentLoading"
+                        v-model:search-term="incidents.search.value"
+                        :items="incidents.items.value"
+                        :loading="incidents.loading.value"
                         value-key="id"
                         label-key="name"
-                        ignore-filter
                         :multiple="state.is_major"
                         class="w-full"
+                        ignore-filter
                         :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
                       />
                     </UFormField>

@@ -2,7 +2,6 @@
 import {useToast} from "@nuxt/ui/composables";
 import {computed, onMounted, onUnmounted, ref, watch} from "vue";
 import {useHead} from "nuxt/app";
-import {useColorMode} from "@vueuse/core";
 import {checkServerAccess} from "@/utils";
 import {useAuthStore} from "@/stores/auth";
 import {useRegisterSW} from 'virtual:pwa-register/vue'

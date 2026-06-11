@@ -21,14 +21,14 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
   const lastPage = ref(Infinity)
   const loading = ref(false)
   const search = ref('')
+  const prepended = ref<any[]>([])
 
   const prependSelected = (itemsToAdd: any[]) => {
-    const existingIds = new Set(items.value.map(i => i.id))
+    const existingIds = new Set(items.value.map((i: any) => i.id))
+    const toAdd = itemsToAdd.filter(i => !existingIds.has(i.id))
 
-    items.value = [
-      ...itemsToAdd.filter(i => !existingIds.has(i.id)),
-      ...items.value
-    ]
+    prepended.value = [...toAdd]
+    items.value = [...toAdd, ...items.value]
   }
 
   const fetchItems = async (loadMore = false) => {
@@ -41,23 +41,35 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
         page: page.value,
         per_page: 10,
         filter: {
-          ...(search.value ? { search: search.value } : {}),
+          ...(search.value ? {search: search.value} : {}),
           ...(filters?.() ?? {})
         }
       })
 
       lastPage.value = res.data.meta.last_page
       const mapped = res.data.data.map(map)
-      const existingIds = new Set( items.value.map((i: any) => i.id) )
-      const merged = mapped.filter( (i: any) => !existingIds.has(i.id) )
-      items.value = loadMore ? [...items.value, ...merged] : merged }
+
+      if (loadMore) {
+        const existingIds = new Set(items.value.map((i: any) => i.id))
+        const merged = mapped.filter((i: any) => !existingIds.has(i.id))
+        items.value = [...items.value, ...merged]
+      } else {
+        const prependedIds = new Set(prepended.value.map((i: any) => i.id))
+        const merged = mapped.filter((i: any) => !prependedIds.has(i.id))
+        items.value = [...prepended.value, ...merged]
+      }
+    }
     finally {
       loading.value = false
     }
   }
 
-  const reset = async () => {
-    items.value = []
+  const reset = async (clearPrepended = false) => {
+    if (clearPrepended) {
+      prepended.value = []
+    }
+
+    items.value = [...prepended.value]
     page.value = 1
     lastPage.value = Infinity
 
@@ -83,7 +95,7 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
   return {
     items,
     page,
-    loading,
+    loading: computed(() => loading.value),
     search,
     reset,
     fetchItems,

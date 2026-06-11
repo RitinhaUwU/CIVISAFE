@@ -98,6 +98,7 @@ const items = ref<BreadcrumbItem[]>([
 const schema = z.object({
   is_major: z.boolean(),
   identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
+  user_id: z.number(),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
   incident_state_id: z.number({required_error: 'O estado é obrigatório'}).nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
@@ -174,6 +175,14 @@ function updateCoordinates(coords: { lat: number, lng: number }) {
 }
 
 // Geral
+const loadingIncident = ref(true)
+
+const formatDateForApi = (value?: string | null) => {
+  if (!value) return null
+
+  return value.replace('T', ' ') + ':00'
+}
+
 const handleSaveGeral = async () => {
   const result = schema.safeParse(state)
 
@@ -185,30 +194,54 @@ const handleSaveGeral = async () => {
         color: 'error'
       })
     })
+
     return
   }
 
   saving.value = true
+
   try {
     const payload = {
-      ...state,
-      incident_id: state.is_major ? undefined : state.incident_id,
-      children_incidents: state.is_major ? (state.incident_id as number[]) ?? [] : []
+      user_id: state.user_id,
+      identifier: state.identifier,
+      start_datetime: formatDateForApi(state.start_datetime),
+      end_datetime: formatDateForApi(state.end_datetime),
+      coordinates: state.coordinates,
+      common_place: state.common_place,
+      address: state.address,
+      parish: state.parish,
+      municipality: state.municipality,
+      district: state.district,
+      is_major: state.is_major,
+      alert_source_relationship: state.alert_source_relationship,
+      alert_source_name: state.alert_source_name,
+      alert_source_contact: state.alert_source_contact,
+      obs: state.obs,
+      incident_type_id: state.incident_type_id,
+      incident_priority_id: state.incident_priority_id,
+      incident_state_id: state.incident_state_id,
+      coordinates_pco: state.coordinates_pco,
+      name_pco: state.name_pco,
     }
 
-    await api.updateIncident(parseInt(<string>route.params.id), payload)
+    console.log('PAYLOAD', payload)
+    await api.updateIncident(Number(route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
-      description: 'Ocorrrência atualizada',
+      description: 'Ocorrência atualizada',
       color: 'success'
     })
-  } catch (e) {
+
+  } catch (e: any) {
+    console.error(e.response?.data)
+
     toast.add({
       title: 'Erro',
-      description: 'Erro ao atualizar',
+      description: e.response?.data?.message ?? 'Erro ao atualizar',
       color: 'error'
     })
+
   } finally {
     saving.value = false
   }
@@ -216,29 +249,35 @@ const handleSaveGeral = async () => {
 
 const fetchIncident = async () => {
   const routeID = route.params.id;
+
   if (typeof routeID !== 'string') {
-    useToast().add({
+    toast.add({
       title: 'Ocorrência inválida',
       description: 'O Caminho que o trouxe aqui aponta para uma Ocorrência inválida',
       color: 'error'
     });
-    await useRouter().push('/incidents');
+
+    await router.push('/incidents');
     return;
   }
 
   const data = (await api.getIncident(parseInt(routeID))).data.data
 
-  Object.assign(state, {
-    ...data,
-    user_id: data.user?.id,
-    user: data.user,
-    incident_type_id: data.incidentType?.id,
-    incident_state_id: data.incidentState?.id,
-    incident_priority_id: data.incidentPriority?.id,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => i.id) : data.parentIncident?.id ?? null,
-    start_datetime: toDatetimeLocal(data.start_datetime),
-    end_datetime: toDatetimeLocal(data.end_datetime),
-  })
+  state.is_major = data.is_major
+  await incidents.fetchItems()
+
+  if (data.is_major && data.children_incidents?.length) {
+    incidents.prependSelected(data.children_incidents.map((i: any) => ({
+      id: i.id,
+      name: i.identifier
+    })))
+  }
+  else if (!data.is_major && data.parentIncident) {
+    incidents.prependSelected([{
+      id: data.parentIncident.id,
+      name: data.parentIncident.identifier
+    }])
+  }
 
   if (data.is_major) {
     state.coordinates = ''
@@ -265,17 +304,22 @@ const fetchIncident = async () => {
     }])
   }
 
-  if (data.is_major && data.children_incidents?.length) {
-    incidents.prependSelected(data.children_incidents.map((i: any) => ({
-      id: i.id,
-      name: i.identifier
-    })))
-  } else if (!data.is_major && data.parentIncident) {
-    incidents.prependSelected([{
-      id: data.parentIncident.id,
-      name: data.parentIncident.identifier
-    }])
-  }
+  await nextTick()
+
+  Object.assign(state, {
+    ...data,
+    user_id: data.user?.id,
+    user: data.user,
+    incident_type_id: data.incidentType?.id ?? null,
+    incident_state_id: data.incidentState?.id ?? null,
+    incident_priority_id: data.incidentPriority?.id ?? null,
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => i.id) : data.parentIncident?.id ?? null,
+    start_datetime: toDatetimeLocal(data.start_datetime),
+    end_datetime: toDatetimeLocal(data.end_datetime),
+    coordinates: data.is_major ? '' : data.coordinates,
+  })
+
+  loadingIncident.value = false
 }
 
 // Posto
@@ -309,10 +353,7 @@ const openEditPCO = (item: any) => {
 }
 
 const findActiveConflict = (payload: any) => {
-  return pcoList.value.find(p =>
-    p.function_pco === payload.function_pco &&
-    !p.end_pco_datetime
-  )
+  return pcoList.value.find(p => p.function_pco === payload.function_pco && !p.end_pco_datetime && p.id !== editingPCO.value?.id)
 }
 
 const savePCOFromModal = (payload: any) => {
@@ -394,6 +435,7 @@ const logisticModalOpen = ref(false)
 const editingLogistic = ref<any | null>(null)
 const logistics = ref<any[]>([])
 const deleteLogisticModalOpen = ref(false)
+const logisticTotals = ref({ total_vehicles: 0, total_humans: 0 })
 
 const openCreateLogistic = () => {
   editingLogistic.value = null
@@ -433,8 +475,6 @@ const saveLogistic = async (payload: any) => {
   }
 }
 
-const logisticTotals = ref({ total_vehicles: 0, total_humans: 0 })
-
 const fetchLogistics = async () => {
   const res = await api.getIncidentLogistics(Number(route.params.id))
   logistics.value = res?.data?.data ?? []
@@ -442,9 +482,11 @@ const fetchLogistics = async () => {
 }
 
 watch(() => state.is_major, async () => {
+  if (loadingIncident.value) return
+
   state.incident_id = state.is_major ? [] : null
 
-  await incidents.reset()
+  await incidents.reset(true)
 
   if (state.is_major) {
     state.coordinates = ''
@@ -452,7 +494,6 @@ watch(() => state.is_major, async () => {
 })
 
 onMounted(async () => {
-
   if (!useAuthStore().hasPermission('INCIDENTS_LIST')) {
     await router.push('/inicio');
     return;
@@ -462,7 +503,6 @@ onMounted(async () => {
     types.fetchItems(),
     states.fetchItems(),
     priorities.fetchItems(),
-    incidents.fetchItems(),
     entities.fetchItems(),
     fetchPCOList(),
     fetchLogistics()
@@ -547,7 +587,7 @@ onMounted(async () => {
                     v-model="state.incident_id"
                     v-model:search-term="incidents.search.value"
                     :items="incidents.items.value"
-                    :loading="incidents.loading.value"
+                    :key="state.is_major ? 'multi' : 'single'"
                     label-key="name"
                     value-key="id"
                     ignore-filter

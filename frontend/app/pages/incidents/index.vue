@@ -15,6 +15,8 @@ const total = ref(0)
 
 const search = ref('')
 
+const is_majorFilter = ref<boolean|string>('all')
+
 const statusFilter = ref('all')
 const stateMenu = useTemplateRef('stateMenu')
 const stateItems = ref<any[]>([])
@@ -173,6 +175,9 @@ const fetch = async() => {
     if (prioritiesFilter.value !== 'all') {
       params.filter.priority = prioritiesFilter.value
     }
+    if (is_majorFilter.value !== 'all') {
+      params.filter.is_major = is_majorFilter.value
+    }
     const res = await api.getIncidents(params)
 
     incidents.value.push(...res.data.data)
@@ -185,7 +190,7 @@ const fetch = async() => {
   }
 }
 
-watch([search, statusFilter, prioritiesFilter], () => {
+watch([search, statusFilter, prioritiesFilter, is_majorFilter], () => {
   page.value = 1
   lastPage.value = Infinity
   incidents.value = []
@@ -292,6 +297,15 @@ onMounted(() => {
           placeholder="Filtrar ocorrências..."
         />
         <div class="flex flex-wrap items-center gap-1.5">
+          <USelect
+            v-model="is_majorFilter"
+            :items="[
+              { label: 'Ocorrência Major', value: 'all' },
+              { label: 'Sim', value: true },
+              { label: 'Não', value: false }
+            ]"
+            class="min-w-48"
+          />
           <USelectMenu
             ref="stateMenu"
             v-model="statusFilter"

@@ -224,11 +224,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createIncident = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/incidents`, {params})
+    return axios.post(`${config.public.apiBase}/incidents`, params)
   }
 
   const updateIncident = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/incidents/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/incidents/${id}`, params)
   }
 
   const deleteIncident = (id: number) => {
@@ -245,11 +245,7 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, { params })
   }
 
-  /*const getIncidentPCO = (incidentId: number, pcoId: number) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco/${pcoId}`)
-  }*/
-
-  const createIncidentPCO = (incidentId: number, params) => {
+  const createIncidentPCO = (incidentId: number, params: any) => {
     return axios.post(`${config.public.apiBase}/incidents/${incidentId}/pco`, params)
   }
 
@@ -271,20 +267,12 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, { params })
   }
 
-  /*const getIncidentLogistic = (incidentId: number, logisticId: number) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties/${logisticId}`)
-  }*/
-
-  const createIncidentLogistic = (incidentId: number, params) => {
+  const createIncidentLogistic = (incidentId: number, params: any) => {
     return axios.post(`${config.public.apiBase}/incidents/${incidentId}/parties`, params)
   }
 
   const updateIncidentLogistic = (incidentId: number, logisticId: number, params: any) => {
     return axios.put(`${config.public.apiBase}/incidents/${incidentId}/parties/${logisticId}`, params)
-  }
-
-  const deleteIncidentLogistic = (incidentId: number, logisticId: number) => {
-    return axios.delete(`${config.public.apiBase}/incidents/${incidentId}/parties/${logisticId}`)
   }
 
   /*************************
@@ -496,15 +484,12 @@ export const useApiStore = defineStore('api', () => {
     createIncident,
     deleteIncident,
     getIncidentPCOs,
-    //getIncidentPCO,
     updateIncidentPCO,
     createIncidentPCO,
     deleteIncidentPCO,
     getIncidentLogistics,
-    //getIncidentLogistic,
     updateIncidentLogistic,
     createIncidentLogistic,
-    deleteIncidentLogistic,
     getIncidentStates,
     getIncidentState,
     updateIncidentState,

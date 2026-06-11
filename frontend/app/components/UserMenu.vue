@@ -31,24 +31,19 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     label: 'Claro',
     icon: 'i-lucide-sun',
     type: 'checkbox',
-    checked: colorMode.value === 'light',
+    checked: colorMode.preference === 'light',
     onSelect(e: Event) {
       e.preventDefault()
-
       colorMode.preference = 'light'
     }
   }, {
     label: 'Escuro',
     icon: 'i-lucide-moon',
     type: 'checkbox',
-    checked: colorMode.value === 'dark',
-    onUpdateChecked(checked: boolean) {
-      if (checked) {
-        colorMode.preference = 'dark'
-      }
-    },
+    checked: colorMode.preference === 'dark',
     onSelect(e: Event) {
       e.preventDefault()
+      colorMode.preference = 'dark'
     }
   }]
 }], [{
