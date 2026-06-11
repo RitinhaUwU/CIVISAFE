@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '../../stores/api'
+import { useApiStore } from '~/stores/api'
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
 
@@ -28,15 +28,15 @@ const state = reactive<Partial<Schema>>({
   address: '',
   contact: '',
   description: '',
-  image: undefined
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await apiStore.createFacility(event.data)
+    await api.createFacility(event.data)
 
     emit('created')
     open.value = false
+
     toast.add({
       title: 'Sucesso',
       description: 'Instalação criada com sucesso',
@@ -49,10 +49,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       address: '',
       contact: '',
       description: '',
-      image: undefined
     })
-
-  } catch (e: any) {
+  }
+  catch (e: any) {
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar instalação',

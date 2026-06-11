@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '../../stores/api'
+import { useApiStore } from '~/stores/api'
 import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const api = useApiStore()
@@ -53,7 +53,11 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await api.createEntity(event.data)
+    const payload = {
+      ...event.data
+    }
+
+    await api.createEntity(payload)
 
     emit('created')
     open.value = false
@@ -76,7 +80,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       description: '',
       entity_type_id: null as number,
     })
-  } catch (e: any) {
+  }
+  catch (e: any) {
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar entidade',
@@ -156,7 +161,7 @@ onMounted(async () => {
             <UFormField label="Contacto do Responsável:" name="poc_phone">
               <UInput v-model="state.poc_phone" class="w-full" />
             </UFormField>
-            <UFormField label="Observações:" name="description">
+            <UFormField label="Descrição:" name="description">
               <UTextarea v-model="state.description" class="w-full" />
             </UFormField>
           </div>

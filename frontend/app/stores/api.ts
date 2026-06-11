@@ -144,11 +144,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createEntity = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/entities`, {params})
+    return axios.post(`${config.public.apiBase}/entities`, params)
   }
 
   const updateEntity = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/entities/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/entities/${id}`, params)
   }
 
   const deleteEntity = (id: number) => {
@@ -184,11 +184,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createEntityType = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/entityTypes`, {params})
+    return axios.post(`${config.public.apiBase}/entityTypes`, params)
   }
 
   const updateEntityType = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, params)
   }
 
   const deleteEntityType = (id: number) => {
