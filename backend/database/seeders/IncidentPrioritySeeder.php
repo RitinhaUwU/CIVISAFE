@@ -12,31 +12,36 @@ class IncidentPrioritySeeder extends Seeder
         IncidentPriority::factory()->create([
             'name' => 'P1',
             'description' => 'Emergente',
-            'hex_color' => '#ff0000'
+            'hex_color' => '#ff0000',
+            'is_active' => true,
         ]);
 
         IncidentPriority::factory()->create([
             'name' => 'P2',
             'description' => 'Muito Urgente',
-            'hex_color' => '#ff7300'
+            'hex_color' => '#ff7300',
+            'is_active' => true,
         ]);
 
         IncidentPriority::factory()->create([
             'name' => 'P3',
             'description' => 'Urgente',
-            'hex_color' => '#ffff00'
+            'hex_color' => '#ffff00',
+            'is_active' => true,
         ]);
 
         IncidentPriority::factory()->create([
             'name' => 'P4',
             'description' => 'Pouco Urgente',
-            'hex_color' => '#00ff00'
+            'hex_color' => '#00ff00',
+            'is_active' => true,
         ]);
 
         IncidentPriority::factory()->create([
             'name' => 'P5',
             'description' => 'Não Urgente',
-            'hex_color' => '#00bffff'
+            'hex_color' => '#00bffff',
+            'is_active' => true,
         ]);
 
     }

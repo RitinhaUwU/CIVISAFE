@@ -62,6 +62,19 @@ enum PermissionsEnum: string
     case FACILITIES_DELETE = 'FACILITIES_DELETE';
     case FACILITIES_FILES_UPLOAD = 'FACILITIES_FILES_UPLOAD';
     case FACILITIES_FILES_DELETE = 'FACILITIES_FILES_DELETE';
+
+    # DONATION CATEGORIES
+    case DONATION_GOODS_TYPES_LIST = 'DONATION_GOODS_TYPES_LIST';
+    case DONATION_GOODS_TYPES_CREATE = 'DONATION_GOODS_TYPES_CREATE';
+    case DONATION_GOODS_TYPES_UPDATE = 'DONATION_GOODS_TYPES_UPDATE';
+    case DONATION_GOODS_TYPES_DELETE = 'DONATION_GOODS_TYPES_DELETE';
+
+    # DONATION LOG
+    case DONATION_LOG_LIST = 'DONATION_LOG_LIST';
+    case DONATION_LOG_CREATE = 'DONATION_LOG_CREATE';
+    case DONATION_LOG_UPDATE = 'DONATION_LOG_UPDATE';
+    case DONATION_LOG_DELETE = 'DONATION_LOG_DELETE';
+
     public function label(): string
     {
         return match ($this) {
@@ -112,6 +125,16 @@ enum PermissionsEnum: string
             self::FACILITIES_DELETE => 'Eliminar Instalações',
             self::FACILITIES_FILES_UPLOAD => 'Carregar Ficheiros de Instalações',
             self::FACILITIES_FILES_DELETE => 'Eliminar Ficheiros de Instalações',
+            # DONATION CATEGORIES
+            self::DONATION_GOODS_TYPES_LIST => 'Ver Tipos de Bens Doáveis',
+            self::DONATION_GOODS_TYPES_CREATE => 'Criar Tipos de Bens Doáveis',
+            self::DONATION_GOODS_TYPES_UPDATE => 'Editar Tipos de Bens Doáveis',
+            self::DONATION_GOODS_TYPES_DELETE => 'Eliminar Tipos de Bens Doáveis',
+            # DONATION LOG
+            self::DONATION_LOG_LIST => 'Ver Lista de Doações',
+            self::DONATION_LOG_CREATE => 'Registar uma nova Doação',
+            self::DONATION_LOG_UPDATE => 'Editar uma Doação',
+            self::DONATION_LOG_DELETE => 'Remover uma Doação'
         };
     }
 }

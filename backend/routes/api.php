@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DonationGoodsTypeController;
+use App\Http\Controllers\DonationLogController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
@@ -19,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
 Route::post('/test/reset', function (Request $request) {
+    if(app()->environment('production')) {
+        abort(404);
+    }
+
     if ($request->header('TEST-TOKEN') !== 'civisafe-test') {
         abort(403);
     }
@@ -78,5 +84,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('/parties/{party}', [IncidentPartyController::class, 'destroy']);
         });
         Route::apiResource('/facilities', FacilitiesController::class);
+
+        Route::apiResource('/donationGoodsTypes', DonationGoodsTypeController::class);
+        Route::apiResource('/donations', DonationLogController::class);
     });
 });

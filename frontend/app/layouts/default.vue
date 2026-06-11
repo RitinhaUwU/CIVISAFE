@@ -28,16 +28,6 @@ onMounted(() => {
     }
   ] satisfies NavigationMenuItem[];
 
-
-  if(auth.hasPermission('USERS_VIEW_ANY')){
-    holder.push({
-      label: 'Utilizadores',
-      icon: 'i-lucide-user',
-      to: '/users',
-      onSelect: () => (open.value = false)
-    });
-  }
-
   if(auth.hasPermission('INCIDENTS_LIST')){
     holder.push({
       label: 'Ocorrências',
@@ -47,10 +37,19 @@ onMounted(() => {
     });
   }
 
+  if(auth.hasPermission('DONATION_LOG_LIST')){
+    holder.push({
+      label: 'Doações',
+      icon: 'i-lucide-blocks',
+      to: '/donations',
+      onSelect: () => (open.value = false)
+    });
+  }
+
   if(auth.hasPermission('VOLUNTEERS_LIST')){
     holder.push({
       label: 'Voluntários',
-      icon: 'i-lucide-flame',
+      icon: 'i-lucide-users-round',
       to: '/volunteers',
       onSelect: () => (open.value = false)
     });
@@ -59,8 +58,17 @@ onMounted(() => {
   if(auth.hasPermission('FACILITIES_LIST')){
     holder.push({
       label: 'Instalações',
-      icon: 'i-lucide-flame',
+      icon: 'i-lucide-building',
       to: '/facilities',
+      onSelect: () => (open.value = false)
+    });
+  }
+
+  if(auth.hasPermission('USERS_VIEW_ANY')){
+    holder.push({
+      label: 'Utilizadores',
+      icon: 'i-lucide-user',
+      to: '/users',
       onSelect: () => (open.value = false)
     });
   }
@@ -123,6 +131,14 @@ onMounted(() => {
       label: 'Entidades',
       children: entitiesChildren,
     })
+  }
+
+  if(auth.hasPermission('DONATION_GOODS_TYPES_LIST')){
+    administrationChildren.push({
+      label: 'Tipos de Bens Doáveis',
+      to: '/administration/donationGoodsTypes',
+      onSelect: () => (open.value = false)
+    });
   }
 
   if(administrationChildren.length > 0)

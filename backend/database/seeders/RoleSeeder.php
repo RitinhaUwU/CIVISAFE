@@ -13,15 +13,12 @@ class RoleSeeder extends Seeder
     {
         $admin = Role::firstOrCreate(['name' => RolesEnum::ADMIN->value]);
         $manager = Role::firstOrCreate(['name' => RolesEnum::MANAGER->value]);
+        $donations_manager = Role::firstOrCreate(['name' => RolesEnum::DONATION_MANAGER->value]);
         $user = Role::firstOrCreate(['name' => RolesEnum::USER->value]);
 
         $admin->syncPermissions(
             collect(PermissionsEnum::cases())->pluck('value')
         );
-
-        $manager->syncPermissions([
-
-        ]);
 
         $user->syncPermissions([
             PermissionsEnum::USERS_VIEW_OWN->value,
@@ -35,6 +32,18 @@ class RoleSeeder extends Seeder
             PermissionsEnum::INCIDENT_STATES_LIST->value,
             PermissionsEnum::INCIDENT_PRIORITIES_LIST->value,
             PermissionsEnum::FACILITIES_LIST->value,
+
+        ]);
+
+        $donations_manager->syncPermissions($user->permissions, [
+            PermissionsEnum::DONATION_LOG_LIST->value,
+            PermissionsEnum::DONATION_LOG_CREATE->value,
+            PermissionsEnum::DONATION_LOG_UPDATE->value,
+            PermissionsEnum::DONATION_LOG_DELETE->value,
+        ]);
+
+        $manager->syncPermissions($user->permissions, [
+
         ]);
     }
 }

@@ -35,13 +35,14 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: [
+        '@tanstack/table-core',
         '@vue/devtools-core',
         '@vue/devtools-kit',
         'axios',
-        'laravel-echo',
-        'pusher-js',
         'idb',
-        'leaflet'
+        'laravel-echo',
+        'leaflet',
+        'pusher-js',
       ]
     }
   },

@@ -8,6 +8,7 @@ enum RolesEnum: string
 
     case ADMIN = 'admin';
     case MANAGER = 'manager';
+    case DONATION_MANAGER = 'donation_manager';
     case USER = 'user';
 
     public function label(): string
@@ -15,6 +16,7 @@ enum RolesEnum: string
         return match ($this) {
             self::ADMIN => 'Administrador',
             self::MANAGER => 'Gestor',
+            self::DONATION_MANAGER => 'Responsável Doações',
             self::USER => 'Utilizador',
         };
     }

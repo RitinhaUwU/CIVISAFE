@@ -20,3 +20,25 @@ export async function checkServerAccess() {
     return false
   }
 }
+
+export function convertedMeasurementUnit(techString: string) {
+  switch (techString) {
+    case 'units':
+      return "Unidades";
+
+    case 'liters':
+      return "Litros";
+
+    case 'kilos':
+      return "Quilos";
+
+    case 'linear_meters':
+      return "Metros";
+
+    case 'squared_meters':
+      return "Metros Quadrados";
+
+    default:
+      return techString;
+  }
+}

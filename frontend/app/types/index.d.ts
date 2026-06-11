@@ -145,3 +145,12 @@ export interface Volunteer {
   updated_at: Date;
   deleted_at: Date;
 }
+
+export interface DonationGoodType {
+  id: number;
+  name: string;
+  is_type_countable: boolean;
+  unit: string;
+  created_at: Date;
+  updated_at: Date;
+}

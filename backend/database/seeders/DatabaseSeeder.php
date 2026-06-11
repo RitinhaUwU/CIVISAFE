@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
+use App\Models\Donations\DonationContent;
+use App\Models\Donations\DonationGoodsType;
+use App\Models\Donations\DonationLog;
 use App\Models\Entity;
 use App\Models\Facility;
 use App\Models\Incident;
@@ -42,6 +45,12 @@ class DatabaseSeeder extends Seeder
         ])->assignRole(enum_value(RolesEnum::ADMIN));
 
         User::factory()->create([
+            'name' => 'Utilizador Doações',
+            'email' => 'doacoes@example.com',
+            'locked' => false,
+        ])->assignRole(enum_value(RolesEnum::DONATION_MANAGER));
+
+        User::factory()->create([
             'name' => 'Utilizador Manager',
             'email' => 'manager@example.com',
             'password' => bcrypt('password'),
@@ -73,6 +82,10 @@ class DatabaseSeeder extends Seeder
         }
 
         IncidentParty::factory(500)->create();
+
+        DonationGoodsType::factory(35)->create();
+        DonationLog::factory(70)->create();
+        DonationContent::factory(150)->create();
 
     }
 }

@@ -22,6 +22,10 @@ class VolunteerController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'per_page' => 'sometimes|integer',
+        ]);
+
         $volunteer = QueryBuilder::for(Volunteer::class)
             ->allowedFilters(
                 AllowedFilter::callback('search', function (Builder $query, $value) {
