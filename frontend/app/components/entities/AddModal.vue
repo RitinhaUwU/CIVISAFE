@@ -2,19 +2,24 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '../../stores/api'
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
 
 const toast = useToast()
 
-const entityTypeMenu = useTemplateRef('entityTypeMenu')
-const entityTypeItems = ref<any[]>([])
-const entityTypePage = ref(1)
-const entityTypeLastPage = ref(Infinity)
-const entityTypeLoading = ref(false)
-const entityTypeSearch = ref('')
+const entityTypesMenu = useTemplateRef('entityTypesMenu')
+
+const entityTypes = usePaginatedSelect({
+  fetcher: api.getEntityTypes,
+  menuRef: entityTypesMenu,
+  map: (i: any) => ({
+    id: i.id,
+    name: i.name
+  })
+})
 
 const imageFile = ref(null)
 
@@ -48,10 +53,11 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await apiStore.createEntity(event.data)
+    await api.createEntity(event.data)
 
     emit('created')
     open.value = false
+
     toast.add({
       title: 'Sucesso',
       description: 'Entidade criada com sucesso',
@@ -79,53 +85,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-const fetchEntityTypes = async (search?: string) => {
-  if (entityTypeLoading.value) return
-
-  entityTypeLoading.value = true
-  try {
-    const res = await apiStore.getEntityTypes({
-      page: entityTypePage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    entityTypeLastPage.value = res.data.meta.last_page
-    const mapped = data.map((e: any) => ({ id: e.id, name: e.name }))
-    const existingIds = new Set(entityTypeItems.value.map(i => i.id))
-    entityTypeItems.value = [...entityTypeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
-  } finally {
-    entityTypeLoading.value = false
-  }
-}
-
-watchDebounced(entityTypeSearch, async (val) => {
-  entityTypePage.value = 1
-  entityTypeItems.value = []
-  entityTypeLastPage.value = Infinity
-  await fetchEntityTypes(val)
-}, { debounce: 300 })
-
-onMounted(() => {
-  fetchEntityTypes()
-
-  useInfiniteScroll(
-    () => entityTypeMenu.value?.viewportRef,
-    () => {
-      if (entityTypePage.value < entityTypeLastPage.value) {
-        entityTypePage.value++
-        fetchEntityTypes(entityTypeSearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !entityTypeLoading.value &&
-        entityTypePage.value < entityTypeLastPage.value
-    }
-  )
+onMounted(async () => {
+  await entityTypes.fetchItems()
 })
 </script>
 
@@ -160,11 +121,11 @@ onMounted(() => {
             <UFormField label="Tipo de Entidade:" name="entity_type_id">
               <USelectMenu
                 data-testid="entity-type-select"
-                ref="entityTypeMenu"
+                ref="entityTypesMenu"
                 v-model="state.entity_type_id"
-                v-model:search-term="entityTypeSearch"
-                :items="entityTypeItems"
-                :loading="entityTypeLoading"
+                v-model:search-term="entityTypes.search.value"
+                :items="entityTypes.items.value"
+                :loading="entityTypes.loading.value"
                 value-key="id"
                 label-key="name"
                 ignore-filter

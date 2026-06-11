@@ -147,14 +147,6 @@ const state = reactive<Partial<Schema>>({
   name_pco: '',
 })
 
-//https://stackoverflow.com/questions/30166338/setting-value-of-datetime-local-from-date
-// Converte o ISO que vem da API para um objeto Date.
-const toDatetimeLocal = (value?: string | null) => {
-  if (!value) return ''
-
-  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
-}
-
 // Map
 const mapCenter = computed(() => {
   if (!state.coordinates) {
@@ -177,10 +169,12 @@ function updateCoordinates(coords: { lat: number, lng: number }) {
 // Geral
 const loadingIncident = ref(true)
 
-const formatDateForApi = (value?: string | null) => {
-  if (!value) return null
+//https://stackoverflow.com/questions/30166338/setting-value-of-datetime-local-from-date
+// Converte o ISO que vem da API para um objeto Date.
+const toDatetimeLocal = (value?: string | null) => {
+  if (!value) return ''
 
-  return value.replace('T', ' ') + ':00'
+  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
 }
 
 const handleSaveGeral = async () => {
@@ -204,8 +198,8 @@ const handleSaveGeral = async () => {
     const payload = {
       user_id: state.user_id,
       identifier: state.identifier,
-      start_datetime: formatDateForApi(state.start_datetime),
-      end_datetime: formatDateForApi(state.end_datetime),
+      start_datetime: toDatetimeLocal(state.start_datetime),
+      end_datetime: toDatetimeLocal(state.end_datetime),
       coordinates: state.coordinates,
       common_place: state.common_place,
       address: state.address,
@@ -224,7 +218,6 @@ const handleSaveGeral = async () => {
       name_pco: state.name_pco,
     }
 
-    console.log('PAYLOAD', payload)
     await api.updateIncident(Number(route.params.id), payload)
 
     toast.add({
@@ -234,8 +227,6 @@ const handleSaveGeral = async () => {
     })
 
   } catch (e: any) {
-    console.error(e.response?.data)
-
     toast.add({
       title: 'Erro',
       description: e.response?.data?.message ?? 'Erro ao atualizar',
@@ -465,8 +456,6 @@ const saveLogistic = async (payload: any) => {
     await fetchLogistics()
     logisticModalOpen.value = false
   } catch (e: any) {
-    console.error('Payload enviado:', payload)
-    console.error('Erro da API:', e.response?.data)
     toast.add({
       title: 'Erro',
       description: 'Erro ao guardar logística',

@@ -4,6 +4,8 @@ import {useAuthStore} from "@/stores/auth";
 import type { TableColumn } from '@nuxt/ui'
 import type {Incident} from "~/types";
 import {UBadge, UButton} from "#components";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import state from "pusher-js/src/core/http/state";
 
 const api = useApiStore()
 
@@ -18,20 +20,26 @@ const search = ref('')
 const is_majorFilter = ref<boolean|string>('all')
 
 const statusFilter = ref('all')
-const stateMenu = useTemplateRef('stateMenu')
-const stateItems = ref<any[]>([])
-const statePage = ref(1)
-const stateLastPage = ref(Infinity)
-const stateLoading = ref(false)
-const stateSearch = ref('')
-
 const prioritiesFilter = ref('all')
+const stateMenu = useTemplateRef('stateMenu')
 const priorityMenu = useTemplateRef('priorityMenu')
-const priorityItems = ref<any[]>([])
-const priorityPage = ref(1)
-const priorityLastPage = ref(Infinity)
-const priorityLoading = ref(false)
-const prioritySearch = ref('')
+
+const states = usePaginatedSelect({
+  fetcher: api.getIncidentStates,
+  menuRef: stateMenu,
+  map: (s: any) => ({
+    id: s.id,
+    name: s.name
+  })
+})
+const priorities = usePaginatedSelect({
+  fetcher: api.getIncidentPriorities,
+  menuRef: priorityMenu,
+  map: (p: any) => ({
+    id: p.id,
+    name: `${p.name} - ${p.description}`
+  })
+})
 
 const createModalOpen = ref(false)
 const deleteModalOpen = ref(false)
@@ -115,46 +123,6 @@ const columns: TableColumn<Incident>[] = [
   }
 ]
 
-const fetchStates = async (search?: string, loadMore = false) => {
-  stateLoading.value = true
-
-  try {
-    const res = await api.getIncidentStates({
-      page: statePage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    stateLastPage.value = res.data.meta.last_page
-    stateItems.value = loadMore ? [...stateItems.value, ...data] : [{ id: 'all', name: 'Estados' }, ...data]
-  } finally {
-    stateLoading.value = false
-  }
-}
-
-const fetchPriorities = async (search?: string, loadMore = false) => {
-  priorityLoading.value = true
-
-  try {
-    const res = await api.getIncidentPriorities({
-      page: priorityPage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    priorityLastPage.value = res.data.meta.last_page
-    priorityItems.value = loadMore ? [...priorityItems.value, ...data] : [{ id: 'all', name: 'Prioridades' }, ...data]
-  } finally {
-    priorityLoading.value = false
-  }
-}
-
 const fetch = async() => {
   if (loading.value) return
   if (page.value > lastPage.value) return
@@ -197,78 +165,15 @@ watch([search, statusFilter, prioritiesFilter, is_majorFilter], () => {
   fetch()
 })
 
-watchDebounced(stateSearch, async (value) => {
-  statePage.value = 1
-  stateItems.value = []
-  stateLastPage.value = Infinity
-  await fetchStates(value)
-}, { debounce: 300 })
-
-watchDebounced(prioritySearch, async (value) => {
-  priorityPage.value = 1
-  priorityItems.value = []
-  priorityLastPage.value = Infinity
-  await fetchPriorities(value)
-}, { debounce: 300 })
-
-const scrollContainer = ref<HTMLElement | null>(null)
-
 onMounted(() => {
-
   if(!useAuthStore().hasPermission('INCIDENTS_LIST')){
     useRouter().push('/inicio');
     return;
   }
 
   fetch()
-  fetchStates()
-  fetchPriorities()
-
-  // ----------
-  // Tables
-  // ----------
-  useInfiniteScroll(
-    scrollContainer,
-    () => {
-      page.value++
-      fetch()
-    },
-    {
-      distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
-    }
-  )
-
-  // ----------
-  // Filters
-  // ----------
-  // States
-  useInfiniteScroll(
-    () => stateMenu.value?.viewportRef,
-    () => {
-      if (statePage.value < stateLastPage.value) {
-        statePage.value++
-        fetchStates(stateSearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () => !stateLoading.value && statePage.value < stateLastPage.value
-    }
-  )
-
-  // Priorities
-  useInfiniteScroll(
-    () => priorityMenu.value?.viewportRef,
-    () => {
-      if (priorityPage.value < priorityLastPage.value) {
-        priorityPage.value++
-        fetchPriorities(prioritySearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () => !priorityLoading.value && priorityPage.value < priorityLastPage.value
-    }
-  )
+  states.fetchItems()
+  priorities.fetchItems()
 })
 </script>
 
@@ -309,9 +214,12 @@ onMounted(() => {
           <USelectMenu
             ref="stateMenu"
             v-model="statusFilter"
-            v-model:search-term="stateSearch"
-            :items="stateItems"
-            :loading="stateLoading"
+            v-model:search-term="states.search.value"
+            :items="[
+              { id: 'all', name: 'Estados' },
+              ...states.items.value
+            ]"
+            :loading="states.loading.value"
             value-key="id"
             label-key="name"
             ignore-filter
@@ -321,9 +229,12 @@ onMounted(() => {
           <USelectMenu
             ref="priorityMenu"
             v-model="prioritiesFilter"
-            v-model:search-term="prioritySearch"
-            :items="priorityItems"
-            :loading="priorityLoading"
+            v-model:search-term="priorities.search.value"
+            :items="[
+              { id: 'all', name: 'Prioridades' },
+              ...priorities.items.value
+            ]"
+            :loading="priorities.loading.value"
             value-key="id"
             label-key="name"
             ignore-filter

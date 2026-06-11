@@ -4,18 +4,23 @@ import { useApiStore } from '@/stores/api'
 import { useAuthStore } from '@/stores/auth'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const route = useRoute()
 const api = useApiStore()
 
 const saving = ref(false)
 
-const entityTypeMenu = useTemplateRef('entityTypeMenu')
-const entityTypeItems = ref<any[]>([])
-const entityTypePage = ref(1)
-const entityTypeLastPage = ref(Infinity)
-const entityTypeLoading = ref(false)
-const entityTypeSearch = ref('')
+const entityTypesMenu = useTemplateRef('entityTypesMenu')
+
+const entityTypes = usePaginatedSelect({
+  fetcher: api.getEntityTypes,
+  menuRef: entityTypesMenu,
+  map: (i: any) => ({
+    id: i.id,
+    name: i.name
+  })
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -66,10 +71,10 @@ const fetchEntity = async () => {
   })
 
   if (data.entityType) {
-    entityTypeItems.value = [{
+    entityTypes.prependSelected([{
       id: data.entityType.id,
       name: data.entityType.name
-    }]
+    }])
   }
 }
 
@@ -119,29 +124,6 @@ const handleSave = async () => {
   }
 }
 
-const fetchEntityTypes = async (search?: string) => {
-  if (entityTypeLoading.value) return
-
-  entityTypeLoading.value = true
-  try {
-    const res = await api.getEntityTypes({
-      page: entityTypePage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    entityTypeLastPage.value = res.data.meta.last_page
-    const mapped = data.map((t: any) => ({ id: t.id, name: t.name }))
-    const existingIds = new Set(entityTypeItems.value.map(i => i.id))
-    entityTypeItems.value = [...entityTypeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
-  } finally {
-    entityTypeLoading.value = false
-  }
-}
-
 const items = ref<BreadcrumbItem[]>([
   {
     label: 'Entidades',
@@ -154,35 +136,14 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
-watchDebounced(entityTypeSearch, async (val) => {
-  entityTypePage.value = 1
-  entityTypeItems.value = []
-  entityTypeLastPage.value = Infinity
-  await fetchEntityTypes(val)
-}, { debounce: 300 })
-
 onMounted(() => {
-  if(!useAuthStore().hasPermission('ENTITIES_LIST'))
-  {
+  if(!useAuthStore().hasPermission('ENTITIES_LIST')) {
     useRouter().push('/inicio');
     return;
   }
 
   fetchEntity()
-  fetchEntityTypes()
-
-  useInfiniteScroll(
-    () => entityTypeMenu.value?.viewportRef,
-    () => {
-      if (entityTypePage.value < entityTypeLastPage.value) {
-        entityTypePage.value++
-        fetchEntityTypes(entityTypeSearch.value)
-      }
-    },
-    {
-      canLoadMore: () => !entityTypeLoading.value && entityTypePage.value < entityTypeLastPage.value
-    }
-  )
+  entityTypes.fetchItems()
 })
 </script>
 
@@ -218,11 +179,11 @@ onMounted(() => {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <UFormField label="Tipo" class="sm:col-span-2">
                 <USelectMenu
-                  ref="entityTypeMenu"
+                  ref="entityTypesMenu"
                   v-model="state.entity_type_id"
-                  v-model:search-term="entityTypeSearch"
-                  :items="entityTypeItems"
-                  :loading="entityTypeLoading"
+                  v-model:search-term="entityTypes.search.value"
+                  :items="entityTypes.items.value"
+                  :loading="entityTypes.loading.value"
                   value-key="id"
                   label-key="name"
                   ignore-filter

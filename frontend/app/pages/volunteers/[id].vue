@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const route = useRoute()
 const router = useRouter()
@@ -11,12 +12,15 @@ const toast = useToast()
 
 const saving = ref(false)
 
-const incidentMenu = useTemplateRef('incidentMenu')
-const incidentItems = ref<any[]>([])
-const incidentPage = ref(1)
-const incidentLastPage = ref(Infinity)
-const incidentLoading = ref(false)
-const incidentSearch = ref('')
+const incidentsMenu = useTemplateRef('incidentsMenu')
+const incidents = usePaginatedSelect({
+  fetcher: api.getIncidents,
+  menuRef: incidentsMenu,
+  filters: () => ({
+    is_major: false
+  }),
+  map: (i: any) => ({id: i.id, name: i.identifier})
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -132,33 +136,10 @@ const fetchVolunteer = async () => {
   })
 
   if (data.incident) {
-    incidentItems.value = [{
+    incidents.prependSelected([{
       id: data.incident.id,
       name: data.incident.identifier
-    }]
-  }
-}
-
-const fetchIncidents = async (search?: string, loadMore = false) => {
-  if (incidentLoading.value) return
-
-  incidentLoading.value = true
-  try {
-    const res = await api.getIncidents({
-      page: incidentPage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    incidentLastPage.value = res.data.meta.last_page
-    const mapped = data.map((t: any) => ({ id: t.id, name: t.identifier }))
-    const existingIds = new Set(incidentItems.value.map(i => i.id))
-    incidentItems.value = [...incidentItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
-  } finally {
-    incidentLoading.value = false
+    }])
   }
 }
 
@@ -174,36 +155,14 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
-watchDebounced(incidentSearch, async (val) => {
-  incidentPage.value = 1
-  incidentItems.value = []
-  incidentLastPage.value = Infinity
-  await fetchIncidents(val)
-}, { debounce: 300 })
-
 onMounted(async () => {
-
-  if(!useAuthStore().hasPermission('VOLUNTEERS_LIST'))
-  {
+  if(!useAuthStore().hasPermission('VOLUNTEERS_LIST')) {
     await useRouter().push('/volunteers');
     return;
   }
 
   await fetchVolunteer()
-  await fetchIncidents()
-
-  useInfiniteScroll(
-    () => incidentMenu.value?.viewportRef,
-    () => {
-      if (incidentPage.value < incidentLastPage.value) {
-        incidentPage.value++
-        fetchIncidents(incidentSearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () => !incidentLoading.value && incidentPage.value < incidentLastPage.value
-    }
-  )
+  await incidents.fetchItems()
 })
 </script>
 
@@ -269,11 +228,11 @@ onMounted(async () => {
           </UFormField>
           <UFormField label="Ocorrência">
             <USelectMenu
-              ref="incidentMenu"
+              ref="incidentsMenu"
               v-model="state.incident_id"
-              v-model:search-term="incidentSearch"
-              :items="incidentItems"
-              :loading="incidentLoading"
+              v-model:search-term="incidents.search.value"
+              :items="incidents.items.value"
+              :loading="incidents.loading.value"
               value-key="id"
               label-key="name"
               ignore-filter

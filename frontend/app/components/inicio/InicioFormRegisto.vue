@@ -32,8 +32,6 @@ const tabs = [
   }
 ]
 
-const options = ref([])
-
 const toast = useToast()
 
 const schema = z.object({
@@ -93,8 +91,13 @@ const priorities = usePaginatedSelect({
 const incidents = usePaginatedSelect({
   fetcher: api.getIncidents,
   menuRef: incidentsMenu,
-  filters: () => ({is_major: !state.is_major}),
-  map: (i: any) => ({id: i.id, name: i.identifier})
+  filters: () => ({
+    is_major: !state.is_major
+  }),
+  map: (i: any) => ({
+    id: i.id,
+    name: i.identifier
+  })
 })
 
 const state = reactive<any>({
@@ -169,8 +172,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       name_pco: ''
     })
   } catch (e) {
-    const errors = e?.response?.data?.errors
-
     if (errors?.identifier?.length) {
       toast.add({
         title: 'Identificador duplicado',
