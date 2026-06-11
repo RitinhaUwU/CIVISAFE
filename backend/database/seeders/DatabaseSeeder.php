@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             IncidentStateSeeder::class,
             IncidentPrioritySeeder::class,
             EntityTypesSeeder::class,
+            DonationGoodsTypeSeeder::class
         ]);
 
 
@@ -83,7 +84,6 @@ class DatabaseSeeder extends Seeder
 
         IncidentParty::factory(500)->create();
 
-        DonationGoodsType::factory(35)->create();
         DonationLog::factory(70)->create();
         DonationContent::factory(150)->create();
 

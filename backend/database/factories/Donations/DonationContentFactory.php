@@ -20,4 +20,6 @@ class DonationContentFactory extends Factory
             'donation_goods_types_id' => DonationGoodsType::inRandomOrder()->first()->id,
         ];
     }
+
+
 }

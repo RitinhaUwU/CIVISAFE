@@ -6,6 +6,7 @@ import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
 const api = useApiStore()
+const toast = useToast()
 
 const saving = ref(false)
 
@@ -13,17 +14,27 @@ const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   is_type_countable: z.boolean(),
   unit: z.string().optional().nullable(),
-})
+  danger_level: z.number().min(1).optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.is_type_countable) {
+    if (!data.unit) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['unit'],
+        message: 'O campo Unidade é obrigatório quando o tipo tem uma Unidade associada.',
+      });
+    }
+  }
+});
 
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
   name: '',
   is_type_countable: false,
-  unit: ''
+  unit: '',
+  danger_level: null,
 })
-
-const toast = useToast()
 
 const fetchGoodType = async () => {
   if (!useAuthStore().hasPermission('DONATION_GOODS_TYPES_LIST')) {
@@ -93,6 +104,7 @@ const handleSave = async () => {
 }
 
 watch(state, () => {
+  //Para o nome no breadcrumb
   if (items.value.length !== 1) {
     items.value.pop()
   }
@@ -100,6 +112,13 @@ watch(state, () => {
   items.value.push({
     label: `Dados de ${state?.name}`
   })
+
+  //Para limpar os campos por de trás do switch
+  if(!state.is_type_countable)
+  {
+    state.unit = null;
+    state.danger_level = null;
+  }
 })
 
 const items = ref<BreadcrumbItem[]>([
@@ -146,35 +165,48 @@ onMounted(fetchGoodType)
               <UFormField label="Nome" class="sm:col-span-2">
                 <UInput v-model="state.name" class="w-full"/>
               </UFormField>
+              <UFormField
+                label="Tem Unidade Associada?"
+                description="Se o Tipo de Bem é quantificável/medível"
+                name="is_type_countable">
+                <div class="flex items-center gap-3">
+                  <USwitch
+                    v-model="state.is_type_countable"
+                    checked-icon="i-lucide-check"
+                    unchecked-icon="i-lucide-x"
+                  />
+                  <span class="text-sm font-medium">{{ state.is_type_countable ? 'Sim' : 'Não' }}</span>
+                </div>
+              </UFormField>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <UFormField
-                  label="Tem Unidade Associada?"
-                  description="Se o Tipo de Bem é quantificável/medível"
-                  name="is_type_countable">
-                  <div class="flex items-center gap-3">
-                    <USwitch
-                      v-model="state.is_type_countable"
-                      checked-icon="i-lucide-check"
-                      unchecked-icon="i-lucide-x"
-                    />
-                    <span class="text-sm font-medium">{{ state.is_type_countable ? 'Sim' : 'Não' }}</span>
-                  </div>
-                </UFormField>
-                <UFormField v-if="state.is_type_countable" label="Unidade">
-                  <USelect
-                    v-model="state.unit"
-                    class="w-full"
-                    :items="[
+                <template v-if="state.is_type_countable">
+                  <UFormField label="Unidade">
+                    <USelect
+                      v-model="state.unit"
+                      class="w-full"
+                      :items="[
                       { label: 'Litros', value: 'liters' },
                       { label: 'Quilos', value: 'kilos' },
                       { label: 'Unidades', value: 'units' },
                       { label: 'Metros', value: 'linear_meters' },
                       { label: 'Metros Quadrados', value: 'squared_meters' }
                     ]"
-                  />
-                </UFormField>
+                    />
+                  </UFormField>
+
+                  <UFormField
+                    label="Número mínimo"
+                    description="(Opcional) Quantidade crítica para mostrar alertas na dashboard"
+                    name="danger_level"
+                  >
+                    <UInputNumber v-model="state.danger_level" class="w-full" min="1" />
+                    <UButton label="Limpar" @click="state.danger_level=null"></UButton>
+                  </UFormField>
+
+                </template>
               </div>
             </div>
+            Última Atualização: {{ new Date(state.updated_at).toLocaleString('pt-PT') }}
           </section>
         </div>
       </div>

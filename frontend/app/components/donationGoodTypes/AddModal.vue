@@ -13,19 +13,38 @@ const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   is_type_countable: z.boolean(),
   unit: z.string().optional().nullable(),
-})
+  danger_level: z.number().min(1).optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.is_type_countable) {
+    if (!data.unit) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['unit'],
+        message: 'O campo Unidade é obrigatório quando o tipo tem uma Unidade associada.',
+      });
+    }
+  }
+});
 
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
   name: '',
   is_type_countable: false,
-  unit: ''
+  unit: '',
+  danger_level: null,
+})
+
+watch(state, () => {
+  if(!state.is_type_countable)
+  {
+    state.unit = null;
+    state.danger_level = null;
+  }
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    console.log(event.data)
     await apiStore.createDonationGoodType(event.data)
 
     emit('created')
@@ -39,7 +58,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     Object.assign(state, {
       name: '',
       is_type_countable: false,
-      unit: ''
+      unit: '',
+      danger_level: null,
     })
 
   } catch (e: any) {
@@ -86,19 +106,30 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             <span class="text-sm font-medium">{{ state.is_type_countable ? 'Sim' : 'Não' }}</span>
           </div>
         </UFormField>
-        <UFormField label="Unidade" name="unit" v-if="state.is_type_countable">
-          <USelect
-            v-model="state.unit"
-            class="w-full"
-            :items="[
+        <template v-if="state.is_type_countable">
+          <UFormField label="Unidade" name="unit" >
+            <USelect
+              v-model="state.unit"
+              class="w-full"
+              :items="[
                 { label: 'Litros', value: 'liters' },
                 { label: 'Quilos', value: 'kilos' },
                 { label: 'Unidades', value: 'units' },
                 { label: 'Metros', value: 'linear_meters' },
                 { label: 'Metros Quadrados', value: 'squared_meters' }
               ]"
-          />
-        </UFormField>
+            />
+          </UFormField>
+
+          <UFormField
+            label="Número mínimo"
+            description="(Opcional) Quantidade crítica para mostrar alertas na dashboard"
+            name="danger_level"
+          >
+            <UInputNumber v-model="state.danger_level" class="w-full" min="1" />
+            <UButton label="Limpar" @click="state.danger_level=null"></UButton>
+          </UFormField>
+        </template>
 
         <div class="flex justify-between gap-3 pt-2">
           <UButton

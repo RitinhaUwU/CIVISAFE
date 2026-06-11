@@ -20,19 +20,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
-Route::post('/test/reset', function (Request $request) {
-    if(app()->environment('production')) {
-        abort(404);
-    }
+if(!app()->environment('production')){
+    Route::post('/test/reset', function (Request $request) {
+        if ($request->header('TEST-TOKEN') !== 'civisafe-test') {
+            abort(403);
+        }
 
-    if ($request->header('TEST-TOKEN') !== 'civisafe-test') {
-        abort(403);
-    }
-
-    Artisan::call('migrate:fresh');
-    Artisan::call('db:seed');
-    return response()->noContent();
-});
+        Artisan::call('migrate:fresh');
+        Artisan::call('db:seed');
+        return response()->noContent();
+    });
+}
 
 Route::prefix('v1')->group(function () {
 

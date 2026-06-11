@@ -16,6 +16,7 @@ class DonationGoodsTypeResource extends JsonResource
             'name' => $this->name,
             'is_type_countable' => $this->is_type_countable,
             'unit' => $this->unit,
+            'danger_level' => $this->danger_level,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

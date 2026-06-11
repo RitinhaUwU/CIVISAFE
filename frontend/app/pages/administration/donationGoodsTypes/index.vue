@@ -53,6 +53,24 @@ const columns: TableColumn<DonationGoodType>[] = [
     }
   },
   {
+    accessorKey: "danger_level",
+    header: () => h('div', { class: 'text-center w-full' }, 'Quantidade Crítica'),
+    cell: ({ row }) => {
+      if(row.original.danger_level)
+      {
+        return h('div', { class: 'flex justify-center'}, row.original.danger_level + " " + convertedMeasurementUnit(row.original.unit));
+      }
+      else
+      {
+        return h(
+          'div',
+          { class: 'flex justify-center' },
+          h(UBadge, { class: 'rounded-full', variant: 'subtle'}, () => "Não Aplicável")
+        )
+      }
+    }
+  },
+  {
     id: 'actions',
     cell: ({ row }) => {
       return h(

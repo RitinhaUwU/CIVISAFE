@@ -44,6 +44,7 @@ class DonationGoodsTypeController extends Controller
         $data = $request->validated();
 
         $data['unit'] = $data['is_type_countable'] ? $data['unit'] : null;
+        $data['danger_level'] = $data['is_type_countable'] ? $data['danger_level'] : null;
 
         return new DonationGoodsTypeResource(DonationGoodsType::create($data));
     }
@@ -58,6 +59,7 @@ class DonationGoodsTypeController extends Controller
         $data = $request->validated();
 
         $data['unit'] = $data['is_type_countable'] ? $data['unit'] : null;
+        $data['danger_level'] = $data['is_type_countable'] ? $data['danger_level'] : null;
 
         $donationGoodsType->update($data);
 

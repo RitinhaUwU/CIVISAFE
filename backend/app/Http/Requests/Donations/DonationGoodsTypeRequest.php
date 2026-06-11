@@ -15,7 +15,13 @@ class DonationGoodsTypeRequest extends FormRequest
                 'required_if:is_type_countable,true',
                 'prohibited_if:is_type_countable,false',
                 'string',
+                'nullable',
             ],
+            'danger_level' => [
+                'prohibited_if:is_type_countable,false',
+                'numeric:strict',
+                'nullable'
+            ]
         ];
     }
 

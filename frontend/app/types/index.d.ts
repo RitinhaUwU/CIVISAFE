@@ -151,6 +151,7 @@ export interface DonationGoodType {
   name: string;
   is_type_countable: boolean;
   unit: string;
+  danger_level: number;
   created_at: Date;
   updated_at: Date;
 }
