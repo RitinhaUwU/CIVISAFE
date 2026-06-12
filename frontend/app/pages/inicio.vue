@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import InicioStats from '../components/inicio/InicioStats.vue'
-import InicioFormRegisto from '../components/inicio/InicioFormRegisto.vue'
-import { useApiStore } from '~/stores/api'
-import type {Incident} from "~/types";
-import {useToast} from "@nuxt/ui/composables";
+import InicioStats from '@/components/inicio/InicioStats.vue'
+import InicioFormRegisto from '@/components/inicio/InicioFormRegisto.vue'
+import { useApiStore } from '@/stores/api'
+import type {Incident} from '@/types'
+import {useToast} from "@nuxt/ui/composables"
 
-const apiStore = useApiStore()
+const api = useApiStore()
 
 const selectedCoords = ref<{ lat: number, lng: number }>({lat: 0, lng: 0})
 const openModal = ref(false)
@@ -31,7 +31,7 @@ const incidentsMap = computed(() =>
 )
 
 async function refreshIncidents() {
-  const res = await apiStore.getIncidents({
+  const res = await api.getIncidents({
     page: 1,
     per_page: 1000
   })

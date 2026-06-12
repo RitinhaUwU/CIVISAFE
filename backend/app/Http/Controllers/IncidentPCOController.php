@@ -22,13 +22,26 @@ class IncidentPCOController extends Controller
         $data = $request->validated();
         $data['incident_id'] = $incidentId;
 
-        $conflict = IncidentPCO::where('incident_id', $incidentId)
+        // Caso já exista uma função ativa (sem data de fim)
+        $activeConflict = IncidentPCO::where('incident_id', $incidentId)
             ->where('function_pco', $data['function_pco'])
             ->whereNull('end_pco_datetime')
-            ->exists();
+            ->first();
 
-        if ($conflict) {
-            return response()->json(['message' => 'Já existe uma função ativa com este cargo no PCO.'], 422);
+        if ($activeConflict) {
+            return response()->json(['type' => 'active_conflict', 'message' => 'Já existe uma função ativa com este cargo no PCO.', ...$activeConflict->toArray()], 422);
+        }
+
+        // Caso haja sobreposição temporal com um registo
+        $overlapConflict = IncidentPCO::where('incident_id', $incidentId)
+            ->where('function_pco', $data['function_pco'])
+            ->whereNotNull('end_pco_datetime')
+            ->where('start_pco_datetime', '<', $data['end_pco_datetime'] ?? '9999-12-31')
+            ->where('end_pco_datetime', '>', $data['start_pco_datetime'])
+            ->first();
+
+        if ($overlapConflict) {
+            return response()->json(['type' => 'overlap', 'message' => 'Existe sobreposição temporal com outro registo desta função.'], 422);
         }
 
         $pco = IncidentPCO::create($data);
@@ -38,26 +51,37 @@ class IncidentPCOController extends Controller
 
     public function show(IncidentPCO $pco)
     {
-        return new IncidentPCOResource($pco -> load([
+        return new IncidentPCOResource($pco->load([
             'incidentPCO'
         ]));
     }
 
-    public function update(IncidentPCORequest $request,  $incidentId, IncidentPCO $pco)
+    public function update(IncidentPCORequest $request, $incidentId, IncidentPCO $pco)
     {
         $data = $request->validated();
 
-        if ($pco->function_pco !== $data['function_pco']) {
+        // Caso já exista uma função ativa (sem data de fim)
+        $activeConflict = IncidentPCO::where('incident_id', $incidentId)
+            ->where('function_pco', $data['function_pco'])
+            ->where('id', '!=', $pco->id)
+            ->whereNull('end_pco_datetime')
+            ->first();
 
-            $conflict = IncidentPCO::where('incident_id', $incidentId)
-                ->where('function_pco', $data['function_pco'])
-                ->whereNull('end_pco_datetime')
-                ->where('id', '!=', $pco->id)
-                ->exists();
+        if ($activeConflict) {
+            return response()->json(['type' => 'active_conflict', 'message' => 'Já existe uma função ativa com este cargo no PCO.'], 422);
+        }
 
-            if ($conflict) {
-                return response()->json(['message' => 'Já existe uma função ativa com este cargo no PCO.'], 422);
-            }
+        // Caso haja sobreposição temporal com um registo
+        $overlapConflict = IncidentPCO::where('incident_id', $incidentId)
+            ->where('function_pco', $data['function_pco'])
+            ->where('id', '!=', $pco->id)
+            ->whereNotNull('end_pco_datetime')
+            ->where('start_pco_datetime', '<', $data['end_pco_datetime'] ?? '9999-12-31')
+            ->where('end_pco_datetime', '>', $data['start_pco_datetime'])
+            ->first();
+
+        if ($overlapConflict) {
+            return response()->json(['type' => 'overlap', 'message' => 'Existe sobreposição temporal com outro registo desta função.', ...$overlapConflict->toArray()], 422);
         }
 
         $pco->update($data);

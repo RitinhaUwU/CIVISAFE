@@ -11,7 +11,7 @@ class UserCreateRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'min:1'],
-            'email' => ['sometimes', 'required', 'email', 'max:254', 'unique:users,email'],
+            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
             'mobile' => ['sometimes', 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'locked' => ['sometimes', 'required', 'boolean'],

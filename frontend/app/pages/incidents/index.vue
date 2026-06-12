@@ -165,6 +165,8 @@ watch([search, statusFilter, prioritiesFilter, is_majorFilter], () => {
   fetch()
 })
 
+const scrollContainer = ref<HTMLElement | null>(null)
+
 onMounted(() => {
   if(!useAuthStore().hasPermission('INCIDENTS_LIST')){
     useRouter().push('/inicio');
@@ -174,6 +176,18 @@ onMounted(() => {
   fetch()
   states.fetchItems()
   priorities.fetchItems()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
 })
 </script>
 

@@ -253,10 +253,6 @@ export const useApiStore = defineStore('api', () => {
     return axios.put(`${config.public.apiBase}/incidents/${incidentId}/pco/${pcoId}`, params)
   }
 
-  const deleteIncidentPCO = (incidentId: number, pcoId: number) => {
-    return axios.delete(`${config.public.apiBase}/incidents/${incidentId}/pco/${pcoId}`)
-  }
-
   /*************************
    *
    *  Incidents Logistic
@@ -486,7 +482,6 @@ export const useApiStore = defineStore('api', () => {
     getIncidentPCOs,
     updateIncidentPCO,
     createIncidentPCO,
-    deleteIncidentPCO,
     getIncidentLogistics,
     updateIncidentLogistic,
     createIncidentLogistic,

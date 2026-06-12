@@ -63,12 +63,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);
         Route::apiResource('/incidents', IncidentController::class);
         Route::prefix('incidents/{incident}')->group(function () {
+            // PCO
             Route::get('/pco', [IncidentPCOController::class, 'index']);
             Route::post('/pco', [IncidentPCOController::class, 'store']);
             Route::put('/pco/{pco}', [IncidentPCOController::class, 'update'])->whereNumber('pco');
             Route::patch('/pco/{pco}', [IncidentPCOController::class, 'update'])->whereNumber('pco');
-            Route::delete('/pco/{pco}', [IncidentPCOController::class, 'destroy']);
-
+            // LOGISTICA
             Route::get('/parties', [IncidentPartyController::class, 'index']);
             Route::post('/parties', [IncidentPartyController::class, 'store']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);

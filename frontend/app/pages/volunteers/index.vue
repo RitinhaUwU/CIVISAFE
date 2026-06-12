@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import type {Volunteer} from "~/types";
+import type {Volunteer} from "@/types";
 import {UBadge, UButton} from "#components";
 
 const api = useApiStore()

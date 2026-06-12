@@ -122,6 +122,8 @@ watch([search, typesFilter], () => {
   fetch()
 })
 
+const scrollContainer = ref<HTMLElement | null>(null)
+
 onMounted(() => {
 
   if(!useAuthStore().hasPermission('ENTITIES_LIST'))
@@ -132,6 +134,21 @@ onMounted(() => {
 
   fetch()
   entityTypes.fetchItems()
+
+  // ----------
+  // Filters
+  // ----------
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
 })
 </script>
 

@@ -7,7 +7,6 @@ import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';
 import Map from '../../components/Map.vue'
 import {computed} from 'vue'
-import DeletePCOModal from "../../components/incidents/DeletePCOModal.vue";
 import LogisticFormModal from "../../components/incidents/LogisticFormModal.vue";
 import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 import PCOFormModal from "~/components/incidents/PCOFormModal.vue";
@@ -317,8 +316,6 @@ const fetchIncident = async () => {
 const pcoList = ref<any[]>([])
 const pcoModalOpen = ref(false)
 const editingPCO = ref<any | null>(null)
-const deleteModalOpen = ref(false)
-const selectedPCO = ref<any | null>(null)
 const savingPCO = ref(false)
 const conflictModalOpen = ref(false)
 const conflictingPCO = ref<any | null>(null)
@@ -365,7 +362,23 @@ const confirmPCOConflict = async () => {
 
   const incidentId = Number(route.params.id)
 
-  await api.updateIncidentPCO(incidentId, conflictingPCO.value.id, {...conflictingPCO.value, end_pco_datetime: new Date().toISOString()})
+  try {
+    await api.updateIncidentPCO(incidentId, conflictingPCO.value.id, {
+      ...conflictingPCO.value,
+      end_pco_datetime: pendingPCOPayload.value.start_pco_datetime
+    })
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: e.response?.data?.message ?? 'Erro ao encerrar função ativa',
+      color: 'error'
+    })
+    conflictModalOpen.value = false
+    conflictingPCO.value = null
+    pendingPCOPayload.value = null
+    return
+  }
+
   await persistPCO(pendingPCOPayload.value)
 
   conflictModalOpen.value = false
@@ -394,6 +407,17 @@ const persistPCO = async (payload: any) => {
 
   } catch (e: any) {
     if (e.response?.status === 422) {
+      const data = e.response.data
+
+      if (data?.type === 'overlap') {
+        toast.add({
+          title: 'Sobreposição temporal',
+          description: `A função ${data.function_pco} já tem um registo que cobre este período. Ajuste as datas antes de guardar.`,
+          color: 'warning'
+        })
+        return
+      }
+
       conflictingPCO.value = e.response.data
       pendingPCOPayload.value = payload
       conflictModalOpen.value = true
@@ -409,16 +433,6 @@ const persistPCO = async (payload: any) => {
   } finally {
     savingPCO.value = false
   }
-}
-
-const openDeletePCO = (item: any) => {
-  selectedPCO.value = item
-  deleteModalOpen.value = true
-}
-
-const refreshAfterDelete = async () => {
-  await fetchPCOList()
-  selectedPCO.value = null
 }
 
 // Logística
@@ -711,14 +725,6 @@ onMounted(async () => {
                     :ui="{ rounded: 'rounded-full' }"
                     @click="openEditPCO(item)"
                   />
-                  <UButton
-                    icon="i-lucide-trash-2"
-                    color="error"
-                    variant="soft"
-                    class="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-red-100 dark:hover:bg-red-950/40"
-                    :ui="{ rounded: 'rounded-full' }"
-                    @click="openDeletePCO(item)"
-                  />
                 </div>
               </div>
               <div v-if="pcoList.length === 0" class="text-center py-6 text-sm text-stone-400">
@@ -781,14 +787,6 @@ onMounted(async () => {
     v-model:open="pcoModalOpen"
     :model-value="editingPCO"
     @save="savePCOFromModal"
-  />
-  <DeletePCOModal
-      v-if="selectedPCO"
-      v-model:open="deleteModalOpen"
-      :incident-id="Number(route.params.id)"
-      :pco-id="selectedPCO?.id"
-      :item-name="selectedPCO?.function_pco"
-      @deleted="refreshAfterDelete"
   />
   <ConflictPCOModal
     v-model:open="conflictModalOpen"
