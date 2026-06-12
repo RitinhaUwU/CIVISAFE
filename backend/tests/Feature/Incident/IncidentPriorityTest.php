@@ -228,7 +228,7 @@ it('fails validation when hex color is invalid', function () {
 
     Sanctum::actingAs($user);
 
-    $response = $this->postJson('/api/v1/incidentPriorities', ['name' => 'Priority', 'description' => 'Description', 'hex_color' => '#FFF', 'is_active' => true,]);
+    $response = $this->postJson('/api/v1/incidentPriorities', [ 'name' => 'Priority', 'description' => 'Description', 'hex_color' => '#ZZZZZZ', 'is_active' => true]);
 
     $response
         ->assertStatus(422)

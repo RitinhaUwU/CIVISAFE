@@ -29,7 +29,7 @@ class IncidentRequest extends FormRequest
             'alert_source_name' => [$is_patch ? 'sometimes' : 'nullable'],
             'alert_source_contact' => [$is_patch ? 'sometimes' : 'nullable'],
             'obs' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
-            'incident_id' => [$is_patch ? 'sometimes' : 'nullable', 'exists:incidents,id'],
+            'incident_id' => [$is_patch ? 'sometimes' : 'nullable', 'nullable', 'exists:incidents,id'],
             'children_incidents' => ['sometimes', 'array'],
             'children_incidents.*' => ['integer', 'exists:incidents,id'],
             'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users,id'],

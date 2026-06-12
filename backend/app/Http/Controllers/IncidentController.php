@@ -82,7 +82,7 @@ class IncidentController extends Controller
                     'childrenIncidents',
                     'user',
                 ])
-            );
+            )->response()->setStatusCode(201);
         });
     }
 

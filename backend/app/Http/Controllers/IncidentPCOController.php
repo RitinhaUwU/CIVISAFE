@@ -72,12 +72,15 @@ class IncidentPCOController extends Controller
         }
 
         // Caso haja sobreposição temporal com um registo
+        $start = $data['start_pco_datetime'] ?? $pco->start_pco_datetime;
+        $end = $data['end_pco_datetime'] ?? $pco->end_pco_datetime;
+
         $overlapConflict = IncidentPCO::where('incident_id', $incidentId)
             ->where('function_pco', $data['function_pco'])
             ->where('id', '!=', $pco->id)
             ->whereNotNull('end_pco_datetime')
-            ->where('start_pco_datetime', '<', $data['end_pco_datetime'] ?? '9999-12-31')
-            ->where('end_pco_datetime', '>', $data['start_pco_datetime'])
+            ->where('start_pco_datetime', '<', $end ?? '9999-12-31')
+            ->where('end_pco_datetime', '>', $start)
             ->first();
 
         if ($overlapConflict) {
