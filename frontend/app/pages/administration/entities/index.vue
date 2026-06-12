@@ -3,7 +3,7 @@ import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
 import type { Entity } from '@/types'
 import {UButton} from "#components";
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 
 const toast = useToast()
 const api = useApiStore()

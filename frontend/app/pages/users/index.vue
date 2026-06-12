@@ -2,7 +2,7 @@
 import type { TableColumn } from '@nuxt/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
-import type {User} from "~/types";
+import type {User} from "@/types";
 import {UBadge, UButton, UTooltip} from "#components";
 
 const api = useApiStore()

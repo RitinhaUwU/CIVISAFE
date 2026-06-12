@@ -4,7 +4,7 @@ import { useApiStore } from '@/stores/api'
 import { useAuthStore } from '@/stores/auth'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 
 const route = useRoute()
 const api = useApiStore()

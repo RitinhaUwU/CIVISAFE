@@ -5,12 +5,12 @@ import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {useApiStore} from '@/stores/api'
 import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';
-import Map from '../../components/Map.vue'
+import Map from '@/components/Map.vue'
 import {computed} from 'vue'
-import LogisticFormModal from "../../components/incidents/LogisticFormModal.vue";
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
-import PCOFormModal from "~/components/incidents/PCOFormModal.vue";
-import ConflictPCOModal from "~/components/incidents/ConflictPCOModal.vue";
+import LogisticFormModal from "@/components/incidents/LogisticFormModal.vue";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import PCOFormModal from "@/components/incidents/PCOFormModal.vue";
+import ConflictPCOModal from "@/components/incidents/ConflictPCOModal.vue";
 
 const router = useRouter()
 const route = useRoute()

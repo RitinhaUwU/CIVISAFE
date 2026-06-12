@@ -2,9 +2,9 @@
 import { useApiStore } from '@/stores/api'
 import {useAuthStore} from "@/stores/auth";
 import type { TableColumn } from '@nuxt/ui'
-import type {Incident} from "~/types";
+import type {Incident} from "@/types";
 import {UBadge, UButton} from "#components";
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import state from "pusher-js/src/core/http/state";
 
 const api = useApiStore()
