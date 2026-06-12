@@ -4,7 +4,7 @@ import { useApiStore } from '@/stores/api'
 import { useAuthStore } from '@/stores/auth'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
-import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const route = useRoute()
 const api = useApiStore()
@@ -22,6 +22,11 @@ const entityTypes = usePaginatedSelect({
   })
 })
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
@@ -32,12 +37,12 @@ const schema = z.object({
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
   description: z.string().optional().nullable(),
-  entity_type_id: z.number().nullable()
+  entity_type_id: selectOptionSchema.nullable()
 })
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema & { entity_type_id: number|null }>>({
+const state = reactive<Partial<Schema>>({
   name: '',
   email_contact: '',
   phone_contact: '',
@@ -46,7 +51,7 @@ const state = reactive<Partial<Schema & { entity_type_id: number|null }>>({
   poc_email: '',
   poc_phone: '',
   description: '',
-  entity_type_id: null,
+  entity_type_id: null as number | null,
 })
 
 const toast = useToast()
@@ -67,7 +72,7 @@ const fetchEntity = async () => {
 
   Object.assign(state, {
     ...data,
-    entity_type_id: data.entityType?.id,
+    entity_type_id: data.entityType ? { id: data.entityType.id, name: data.entityType.name } : null,
   })
 
   if (data.entityType) {
@@ -79,7 +84,6 @@ const fetchEntity = async () => {
 }
 
 const handleSave = async () => {
-
   if (!useAuthStore().hasPermission('ENTITIES_UPDATE')) return
 
   if (!await checkServerAccess()) {
@@ -106,7 +110,12 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateEntity(parseInt(<string>route.params.id), state)
+    const payload = {
+      ...result.data,
+      entity_type_id: result.data.entity_type_id?.id ?? null
+    }
+
+    await api.updateEntity(parseInt(<string>route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
@@ -164,7 +173,7 @@ onMounted(() => {
               color="primary"
               :loading="saving"
               @click="handleSave"
-              :disabled="!useAuthStore().hasPermission('ENTITY_UPDATE')"
+              :disabled="!useAuthStore().hasPermission('ENTITIES_UPDATE')"
             />
           </div>
         </div>
@@ -184,7 +193,6 @@ onMounted(() => {
                   v-model:search-term="entityTypes.search.value"
                   :items="entityTypes.items.value"
                   :loading="entityTypes.loading.value"
-                  value-key="id"
                   label-key="name"
                   ignore-filter
                   class="w-full"

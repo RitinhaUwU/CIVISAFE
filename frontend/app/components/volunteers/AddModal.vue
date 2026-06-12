@@ -11,6 +11,11 @@ const emit = defineEmits(['created'])
 
 const toast = useToast()
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
@@ -26,7 +31,7 @@ const schema = z.object({
   meal_location: z.string().nullable().optional(),
   start_datetime: z.string(),
   end_datetime: z.string(),
-  incident_id: z.number().nullable().optional(),
+  incident_id: selectOptionSchema.nullable().optional(),
 })
 
 type Schema = z.output<typeof schema>
@@ -60,12 +65,15 @@ const state = reactive<Partial<Schema>>({
   meal_location: '',
   start_datetime: '',
   end_datetime: '',
-  incident_id: null,
+  incident_id: null as any,
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await api.createVolunteer(event.data)
+    await api.createVolunteer({
+      ...event.data,
+      incident_id: event.data.incident_id?.id ?? null
+    })
 
     emit('created')
     open.value = false
@@ -164,7 +172,6 @@ onMounted(async() => {
             v-model:search-term="incidents.search.value"
             :items="incidents.items.value"
             :loading="incidents.loading.value"
-            value-key="id"
             label-key="name"
             ignore-filter
             class="w-full"

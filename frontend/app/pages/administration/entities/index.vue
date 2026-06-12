@@ -14,8 +14,13 @@ const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
+const allTypesOption = {
+  id: 'all',
+  name: 'Tipos'
+}
+
 const search = ref('')
-const typesFilter = ref('all')
+const typesFilter = ref(allTypesOption)
 const entityTypesMenu = useTemplateRef('entityTypesMenu')
 
 const entityTypes = usePaginatedSelect({
@@ -96,8 +101,8 @@ const fetch = async() => {
     if (search.value) {
       params.filter.search = search.value
     }
-    if (typesFilter.value !== 'all') {
-      params.filter.type = typesFilter.value
+    if (typesFilter.value?.id !== 'all') {
+      params.filter.type = typesFilter.value?.id
     }
     const res = await api.getEntities(params)
 
@@ -178,11 +183,10 @@ onMounted(() => {
             v-model="typesFilter"
             v-model:search-term="entityTypes.search.value"
             :items="[
-              { id: 'all', name: 'Tipos' },
+              allTypesOption,
               ...entityTypes.items.value
             ]"
             :loading="entityTypes.loading.value"
-            value-key="id"
             label-key="name"
             ignore-filter
             class="w-48"

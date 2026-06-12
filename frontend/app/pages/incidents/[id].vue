@@ -94,16 +94,21 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   is_major: z.boolean(),
   identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
   user_id: z.number(),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
-  incident_state_id: z.number({required_error: 'O estado é obrigatório'}).nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
-  incident_priority_id: z.number({required_error: 'A prioridade é obrigatória'}).nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
-  incident_type_id: z.number({required_error: 'O tipo de ocorrência é obrigatório'}).nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
-  incident_id: z.union([z.number(), z.array(z.number()), z.null()]).optional(),
+  incident_state_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
+  incident_priority_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
+  incident_type_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
+  incident_id: z.union([selectOptionSchema, z.array(selectOptionSchema), z.null()]).optional(),
   children_incidents: z.array(z.any()).optional(),
   alert_source_relationship: z.string().optional().nullable(),
   alert_source_name: z.string().optional().nullable(),
@@ -122,9 +127,10 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 const state = reactive<Partial<Schema>>({
   identifier: '',
-  incident_type_id: null as number,
-  incident_state_id: null as number,
-  incident_priority_id: null as number,
+  incident_type_id: null as any,
+  incident_state_id: null as any,
+  incident_priority_id: null as any,
+  incident_id: null as any,
   user_id: null as number,
   user: null as any,
   start_datetime: '',
@@ -140,7 +146,6 @@ const state = reactive<Partial<Schema>>({
   alert_source_name: '',
   alert_source_contact: '',
   obs: '',
-  incident_id: null as number | number[] | null,
   children_incidents: [] as any[],
   coordinates_pco: '',
   name_pco: '',
@@ -210,9 +215,11 @@ const handleSaveGeral = async () => {
       alert_source_name: state.alert_source_name,
       alert_source_contact: state.alert_source_contact,
       obs: state.obs,
-      incident_type_id: state.incident_type_id,
-      incident_priority_id: state.incident_priority_id,
-      incident_state_id: state.incident_state_id,
+      incident_type_id: state.incident_type_id?.id,
+      incident_priority_id: state.incident_priority_id?.id,
+      incident_state_id: state.incident_state_id?.id,
+      incident_id: state.is_major ? (state.incident_id as any[])?.map(i => i.id) : (state.incident_id as any)?.id ?? null,
+      children_incidents: state.is_major ? (state.incident_id as any[])?.map(i => i.id) : [],
       coordinates_pco: state.coordinates_pco,
       name_pco: state.name_pco,
     }
@@ -300,10 +307,10 @@ const fetchIncident = async () => {
     ...data,
     user_id: data.user?.id,
     user: data.user,
-    incident_type_id: data.incidentType?.id ?? null,
-    incident_state_id: data.incidentState?.id ?? null,
-    incident_priority_id: data.incidentPriority?.id ?? null,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => i.id) : data.parentIncident?.id ?? null,
+    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.species}`} : null,
+    incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
+    incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: i.identifier})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
     coordinates: data.is_major ? '' : data.coordinates,
@@ -550,7 +557,6 @@ onMounted(async () => {
                     v-model:search-term="types.search.value"
                     :items="types.items.value"
                     :loading="types.loading.value"
-                    value-key="id"
                     label-key="name"
                     ignore-filter
                     class="w-full"
@@ -564,7 +570,6 @@ onMounted(async () => {
                       v-model:search-term="states.search.value"
                       :items="states.items.value"
                       :loading="states.loading.value"
-                      value-key="id"
                       label-key="name"
                       ignore-filter
                       class="w-full"
@@ -577,7 +582,6 @@ onMounted(async () => {
                       v-model:search-term="priorities.search.value"
                       :items="priorities.items.value"
                       :loading="priorities.loading.value"
-                      value-key="id"
                       label-key="name"
                       ignore-filter
                       class="w-full"
@@ -592,7 +596,6 @@ onMounted(async () => {
                     :items="incidents.items.value"
                     :key="state.is_major ? 'multi' : 'single'"
                     label-key="name"
-                    value-key="id"
                     ignore-filter
                     :multiple="state.is_major"
                     class="w-full"

@@ -23,6 +23,11 @@ const entityTypes = usePaginatedSelect({
 
 const imageFile = ref(null)
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
@@ -33,7 +38,7 @@ const schema = z.object({
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
   description: z.string().optional().nullable(),
-  entity_type_id: z.number().nullable()
+  entity_type_id: selectOptionSchema.nullable()
 })
 
 type Schema = z.output<typeof schema>
@@ -54,7 +59,8 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const payload = {
-      ...event.data
+      ...event.data,
+      entity_type_id: event.data.entity_type_id?.id,
     }
 
     await api.createEntity(payload)
@@ -78,7 +84,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       poc_phone: '',
       poc_email: '',
       description: '',
-      entity_type_id: null as number,
+      entity_type_id: null,
     })
   }
   catch (e: any) {
@@ -131,7 +137,6 @@ onMounted(async () => {
                 v-model:search-term="entityTypes.search.value"
                 :items="entityTypes.items.value"
                 :loading="entityTypes.loading.value"
-                value-key="id"
                 label-key="name"
                 ignore-filter
                 placeholder="Seleciona o tipo"

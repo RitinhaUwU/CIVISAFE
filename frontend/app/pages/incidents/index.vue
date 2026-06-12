@@ -19,8 +19,19 @@ const search = ref('')
 
 const is_majorFilter = ref<boolean|string>('all')
 
-const statusFilter = ref('all')
-const prioritiesFilter = ref('all')
+const allStatesOption = {
+  id: 'all',
+  name: 'Estados'
+}
+
+const allPrioritiesOption = {
+  id: 'all',
+  name: 'Prioridades'
+}
+
+const statusFilter = ref(allStatesOption)
+const prioritiesFilter = ref(allPrioritiesOption)
+
 const stateMenu = useTemplateRef('stateMenu')
 const priorityMenu = useTemplateRef('priorityMenu')
 
@@ -137,11 +148,11 @@ const fetch = async() => {
     if (search.value) {
       params.filter.search = search.value
     }
-    if (statusFilter.value !== 'all') {
-      params.filter.state = statusFilter.value
+    if (statusFilter.value?.id !== 'all') {
+      params.filter.state = statusFilter.value?.id
     }
-    if (prioritiesFilter.value !== 'all') {
-      params.filter.priority = prioritiesFilter.value
+    if (prioritiesFilter.value?.id !== 'all') {
+      params.filter.priority = prioritiesFilter.value?.id
     }
     if (is_majorFilter.value !== 'all') {
       params.filter.is_major = is_majorFilter.value
@@ -230,11 +241,10 @@ onMounted(() => {
             v-model="statusFilter"
             v-model:search-term="states.search.value"
             :items="[
-              { id: 'all', name: 'Estados' },
+              allStatesOption,
               ...states.items.value
             ]"
             :loading="states.loading.value"
-            value-key="id"
             label-key="name"
             ignore-filter
             class="w-48"
@@ -245,11 +255,10 @@ onMounted(() => {
             v-model="prioritiesFilter"
             v-model:search-term="priorities.search.value"
             :items="[
-              { id: 'all', name: 'Prioridades' },
+              allPrioritiesOption,
               ...priorities.items.value
             ]"
             :loading="priorities.loading.value"
-            value-key="id"
             label-key="name"
             ignore-filter
             class="w-48"

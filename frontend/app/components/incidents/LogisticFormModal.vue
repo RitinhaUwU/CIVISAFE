@@ -12,16 +12,20 @@ const emit = defineEmits<{
   (e: 'save', payload: any): void
 }>()
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   human_count: z.coerce.number().min(0),
   vehicle_count: z.coerce.number().min(0),
-  entity_id: z.number().nullable().refine(v => v !== null, {message: 'A entidade é obrigatória'})
-})
+  entity_id: selectOptionSchema.nullable().refine(v => v !== null, {message: 'A entidade é obrigatória'})})
 
 const form = reactive({
   human_count: 0,
   vehicle_count: 0,
-  entity_id: null as number | null
+  entity_id: null as any
 })
 
 watch(
@@ -31,7 +35,7 @@ watch(
       Object.assign(form, {
         human_count: val.human_count ?? 0,
         vehicle_count: val.vehicle_count ?? 0,
-        entity_id: val.entity?.id ?? val.entity_id ?? null
+        entity_id: val.entity ? {id: val.entity.id, name: val.entity.name} : null
       })
     } else {
       Object.assign(form, {
@@ -61,7 +65,11 @@ const submit = () => {
     return
   }
 
-  emit('save', result.data)
+  emit('save', {
+    ...result.data,
+    entity_id: result.data.entity_id?.id
+  })
+
   close()
 }
 </script>
@@ -79,7 +87,6 @@ const submit = () => {
           <USelectMenu
             v-model="form.entity_id"
             :items="props.entities"
-            value-key="id"
             label-key="name"
             class="w-full"
           />

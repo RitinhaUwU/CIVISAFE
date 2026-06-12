@@ -22,6 +22,11 @@ const incidents = usePaginatedSelect({
   map: (i: any) => ({id: i.id, name: i.identifier})
 })
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
@@ -37,7 +42,7 @@ const schema = z.object({
   meal_location: z.string().nullable().optional(),
   start_datetime: z.string(),
   end_datetime: z.string(),
-  incident_id: z.number().nullable().optional(),
+  incident_id: selectOptionSchema.nullable().optional(),
 })
 
 type Schema = z.output<typeof schema>
@@ -57,7 +62,7 @@ const state = reactive<Partial<Schema>>({
   meal_location: '',
   start_datetime: '',
   end_datetime: '',
-  incident_id: null as number | null
+  incident_id: null as any
 })
 
 const handleSave = async () => {
@@ -87,7 +92,12 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateVolunteer(parseInt(<string>route.params.id), state)
+    const payload = {
+      ...result.data,
+      incident_id: result.data.incident_id?.id ?? null
+    }
+
+    await api.updateVolunteer(parseInt(<string>route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
@@ -132,7 +142,7 @@ const fetchVolunteer = async () => {
     num_elements: Number(data.num_elements),
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    incident_id: data.incident_id ?? data.incident?.id ?? null
+    incident_id: data.incident ? {id: data.incident.id, name: data.incident.identifier} : null
   })
 
   if (data.incident) {
@@ -233,7 +243,6 @@ onMounted(async () => {
               v-model:search-term="incidents.search.value"
               :items="incidents.items.value"
               :loading="incidents.loading.value"
-              value-key="id"
               label-key="name"
               ignore-filter
               class="w-full"

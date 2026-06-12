@@ -34,14 +34,19 @@ const tabs = [
 
 const toast = useToast()
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
 const schema = z.object({
   is_major: z.boolean(),
   identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
-  incident_state_id: z.number({required_error: 'O estado é obrigatório'}).nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
-  incident_priority_id: z.number({required_error: 'A prioridade é obrigatória'}).nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
-  incident_type_id: z.number({required_error: 'O tipo de ocorrência é obrigatório'}).nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
+  incident_state_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
+  incident_priority_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
+  incident_type_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
   incident_id: z.any().optional().nullable(),
   alert_source_relationship: z.string().optional().nullable(),
   alert_source_name: z.string().optional().nullable(),
@@ -58,6 +63,30 @@ const schema = z.object({
 })
 
 type Schema = z.output<typeof schema>
+
+const state = reactive<any>({
+  is_major: false,
+  identifier: '',
+  start_datetime: '',
+  end_datetime: '',
+  incident_state_id: null,
+  incident_priority_id: null,
+  incident_type_id: null,
+  user_id: authStore.currentUserID,
+  incident_id: null,
+  alert_source_relationship: '',
+  alert_source_name: '',
+  alert_source_contact: '',
+  coordinates: '',
+  address: '',
+  district: '',
+  municipality: '',
+  parish: '',
+  common_place: '',
+  obs: '',
+  coordinates_pco: '',
+  name_pco: ''
+})
 
 const typeMenu = useTemplateRef('typeMenu')
 const stateMenu = useTemplateRef('stateMenu')
@@ -100,41 +129,17 @@ const incidents = usePaginatedSelect({
   })
 })
 
-const state = reactive<any>({
-  is_major: false,
-  identifier: '',
-  start_datetime: '',
-  end_datetime: '',
-  incident_state_id: null,
-  incident_priority_id: null,
-  incident_type_id: null,
-  user_id: authStore.currentUserID,
-  incident_id: null,
-  alert_source_relationship: '',
-  alert_source_name: '',
-  alert_source_contact: '',
-  coordinates: '',
-  address: '',
-  district: '',
-  municipality: '',
-  parish: '',
-  common_place: '',
-  obs: '',
-  coordinates_pco: '',
-  name_pco: ''
-})
-
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const payload = {
       ...event.data,
       user_id: authStore.currentUserID,
-      incident_state_id: event.data.incident_state_id,
-      incident_priority_id: event.data.incident_priority_id,
-      incident_type_id: event.data.incident_type_id,
+      incident_state_id: event.data.incident_state_id?.id,
+      incident_priority_id: event.data.incident_priority_id?.id,
+      incident_type_id: event.data.incident_type_id?.id,
       is_major: state.is_major,
-      incident_id: state.is_major ? state.incident_id?.map((i: any) => i.id ?? i) : state.incident_id?.id ?? state.incident_id ?? null,
-      children_incidents: state.is_major ? (state.incident_id ?? []).map((i: any) => i.id ?? i) : []
+      incident_id: state.is_major ? state.incident_id?.map((i: any) => i.id) : state.incident_id?.id ?? null,
+      children_incidents: state.is_major ? (state.incident_id ?? []).map((i: any) => i.id) : []
     }
 
     await api.createIncident(payload)
@@ -253,7 +258,6 @@ onMounted(async() => {
                         v-model:search-term="states.search.value"
                         :items="states.items.value"
                         :loading="states.loading.value"
-                        value-key="id"
                         label-key="name"
                         class="w-full"
                         ignore-filter
@@ -267,7 +271,6 @@ onMounted(async() => {
                         v-model:search-term="priorities.search.value"
                         :items="priorities.items.value"
                         :loading="priorities.loading.value"
-                        value-key="id"
                         label-key="name"
                         class="w-full"
                         ignore-filter
@@ -281,7 +284,6 @@ onMounted(async() => {
                         v-model:search-term="types.search.value"
                         :items="types.items.value"
                         :loading="types.loading.value"
-                        value-key="id"
                         label-key="name"
                         class="w-full"
                         ignore-filter
@@ -295,7 +297,6 @@ onMounted(async() => {
                         v-model:search-term="incidents.search.value"
                         :items="incidents.items.value"
                         :loading="incidents.loading.value"
-                        value-key="id"
                         label-key="name"
                         :multiple="state.is_major"
                         class="w-full"

@@ -27,7 +27,7 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
     const existingIds = new Set(items.value.map((i: any) => i.id))
     const toAdd = itemsToAdd.filter(i => !existingIds.has(i.id))
 
-    prepended.value = [...toAdd]
+    prepended.value = [...prepended.value, ...toAdd]
     items.value = [...toAdd, ...items.value]
   }
 

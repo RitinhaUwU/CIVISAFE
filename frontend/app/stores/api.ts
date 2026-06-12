@@ -300,11 +300,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createIncidentState = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/incidentStates`, {params})
+    return axios.post(`${config.public.apiBase}/incidentStates`, params)
   }
 
   const updateIncidentState = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/incidentStates/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/incidentStates/${id}`, params)
   }
 
   const deleteIncidentState = (id: number) => {
@@ -340,11 +340,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createIncidentPriority = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/incidentPriorities`, {params})
+    return axios.post(`${config.public.apiBase}/incidentPriorities`, params)
   }
 
   const updateIncidentPriority = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, params)
   }
 
   const deleteIncidentPriority = (id: number) => {
@@ -380,11 +380,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createVolunteer = (params: any) => {
-    return axios.post(`${config.public.apiBase}/volunteers`, {params})
+    return axios.post(`${config.public.apiBase}/volunteers`, params)
   }
 
   const updateVolunteer = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/volunteers/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/volunteers/${id}`, params)
   }
 
   const deleteVolunteer = (id: number) => {
@@ -438,11 +438,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createFacility = (params: any) => {
-    return axios.post(`${config.public.apiBase}/facilities`, {params})
+    return axios.post(`${config.public.apiBase}/facilities`, params)
   }
 
   const updateFacility = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/facilities/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/facilities/${id}`, params)
   }
 
   const deleteFacility = (id: number) => {
