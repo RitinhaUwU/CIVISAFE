@@ -88,14 +88,4 @@ class IncidentPCOController extends Controller
 
         return new IncidentPCOResource($pco);
     }
-
-    public function destroy($incidentId, IncidentPCO $pco)
-    {
-        if ($pco->incident_id !== (int) $incidentId) {
-            abort(404);
-        }
-
-        $pco->delete();
-        return response()->json();
-    }
 }

@@ -47,14 +47,4 @@ class IncidentPartyController extends Controller
 
         return new IncidentPartyResource($party);
     }
-
-    public function destroy($incidentId, IncidentParty $party)
-    {
-        if ($party->incident_id !== (int) $incidentId) {
-            abort(404);
-        }
-
-        $party->delete();
-        return response()->json();
-    }
 }
