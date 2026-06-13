@@ -172,12 +172,12 @@ const fetch = async() => {
   }
 }
 
-watch([search, accommodationFilter, mealFilter, classificationFilter], () => {
+watchDebounced([search, accommodationFilter, mealFilter, classificationFilter], () => {
   page.value = 1
   lastPage.value = Infinity
   volunteers.value = []
   fetch()
-})
+}, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 

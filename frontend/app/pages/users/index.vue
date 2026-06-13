@@ -170,12 +170,12 @@ const patchUser = async (user: User) => {
   }
 }
 
-watch(search, () => {
+watchDebounced(search, () => {
   page.value = 1
   lastPage.value = Infinity
   users.value = []
   fetch()
-})
+}, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 

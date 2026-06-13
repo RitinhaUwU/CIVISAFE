@@ -107,12 +107,12 @@ const fetch = async() => {
   }
 }
 
-watch(search, () => {
+watchDebounced(search, () => {
   page.value = 1
   lastPage.value = Infinity
   facilities.value = []
   fetch()
-})
+}, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 

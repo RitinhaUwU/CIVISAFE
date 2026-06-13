@@ -97,12 +97,13 @@ onMounted(async () => {
         <UCard>
           <template #header>
             Doações recentes
-            <UButton label="Nova Doação" icon="i-lucide-plus" size="xs" class="flex float-right ml-4"/>
+<!--            <UButton label="Nova Doação" icon="i-lucide-plus" size="xs" class="flex float-right ml-4"/>-->
+            <DonationAddModal class="flex float-right ml-4" />
             <UInput
               placeholder="Pesquisar..."
               v-model="tableSearchTerm"
               size="xs"
-              class="flex float-right"
+              class="flex float-right invisible sm:visible"
             />
           </template>
 

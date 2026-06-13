@@ -130,12 +130,12 @@ const fetch = async() => {
   }
 }
 
-watch([search, typesFilter], () => {
+watchDebounced([search, typesFilter], () => {
   page.value = 1
   lastPage.value = Infinity
   entities.value = []
   fetch()
-})
+}, {debounce: 300})
 
 watchDebounced(typesSearch, async (value) => {
   typesPage.value = 1

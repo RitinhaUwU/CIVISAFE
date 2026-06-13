@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DonationLog extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
+        'date',
         'name',
         'contact',
         'email',

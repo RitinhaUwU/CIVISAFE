@@ -134,12 +134,12 @@ const fetch = async () => {
   }
 }
 
-watch([search], () => {
+watchDebounced([search], () => {
   page.value = 1
   lastPage.value = Infinity
   tiposBens.value = []
   fetch();
-})
+}, {debounce: 300})
 
 const postDelete = (id: number) => {
   const idx = tiposBens.value.findIndex(x => x.id === id);

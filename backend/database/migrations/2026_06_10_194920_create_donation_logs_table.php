@@ -10,12 +10,12 @@ return new class extends Migration {
         Schema::create('donation_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
+            $table->date('date');
             $table->string('name');
-            $table->string('contact');
-            $table->string('email');
+            $table->string('contact')->nullable();
+            $table->string('email')->nullable();
             $table->string('donor_type');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

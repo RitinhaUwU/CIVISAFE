@@ -185,12 +185,12 @@ const fetch = async() => {
   }
 }
 
-watch([search, statusFilter, prioritiesFilter], () => {
+watchDebounced([search, statusFilter, prioritiesFilter], () => {
   page.value = 1
   lastPage.value = Infinity
   incidents.value = []
   fetch()
-})
+}, {debounce: 300})
 
 watchDebounced(stateSearch, async (value) => {
   statePage.value = 1
