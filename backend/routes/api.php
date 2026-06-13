@@ -23,8 +23,14 @@ Route::post('/test/reset', function (Request $request) {
         abort(403);
     }
 
+    \Log::info('RESET START');
+
     Artisan::call('migrate:fresh');
+    \Log::info('MIGRATE DONE');
+
     Artisan::call('db:seed');
+    \Log::info('SEED DONE');
+
     return response()->noContent();
 });
 

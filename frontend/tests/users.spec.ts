@@ -58,13 +58,17 @@ test('create user fails', async ({ page }) => {
 })
 
 test('edit user', async ({ page }) => {
-
   await page.goto('http://localhost:3000/users')
+
   await page.waitForSelector('table')
 
-  const userRow = page.getByRole('row').filter({ hasText: 'Test User' }).first()
-  await expect(userRow).toBeVisible({ timeout: 20000 })
+  await page.getByPlaceholder('Filtrar utilizadores...').fill('Utilizador User')
+
+  await expect(page.locator('tr').filter({ hasText: 'Utilizador User' }).first()).toBeVisible({ timeout: 20000 })
+
+  const userRow = page.locator('tr').filter({ hasText: 'Utilizador User' }).first()
   await userRow.getByTestId('edit-user').click()
+
   await page.waitForURL('**/users/**')
 
   await expect(page.getByLabel('Nome')).not.toHaveValue('', { timeout: 20000 })

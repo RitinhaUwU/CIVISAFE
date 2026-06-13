@@ -96,20 +96,23 @@ test('view incident type detail', async ({ page }) => {
 })
 
 test('view incident type detail and go back', async ({ page }) => {
-
   await page.goto('http://localhost:3000/administration/incidentTypes')
+
   await page.waitForSelector('table')
 
   const firstRow = page.locator('tbody tr').first()
+
   await expect(firstRow).toBeVisible({ timeout: 20000 })
 
   await firstRow.getByTestId('edit-volunteer').click()
 
   await page.waitForURL('**/incidentTypes/**')
+
   await expect(page.getByLabel('Código')).not.toHaveValue('', { timeout: 20000 })
 
-  await page.getByRole('button', { name: 'Voltar' }).click()
+  await page.getByRole('link', {name: 'Tipos de Ocorrência'}).click()
 
   await page.waitForURL('**/incidentTypes')
+
   await expect(page.getByRole('columnheader', { name: 'Código' })).toBeVisible({ timeout: 20000 })
 })

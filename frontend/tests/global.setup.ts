@@ -6,7 +6,8 @@ async function globalSetup() {
   await api.post('http://127.0.0.1:8000/api/test/reset', {
     headers: {
       'TEST-TOKEN': 'civisafe-test'
-    }
+    },
+    timeout: 120000
   })
 }
 

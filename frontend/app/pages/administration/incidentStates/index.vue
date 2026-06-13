@@ -108,7 +108,7 @@ const columns: TableColumn<IncidentState>[] = [
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
-          disabled: !useAuthStore().hasPermission('INCIDENT_STATE_DELETE'),
+          disabled: !useAuthStore().hasPermission('INCIDENT_STATES_DELETE'),
           onClick: () => {
             selectedStateById.value = row.original
             deleteModalOpen.value = true

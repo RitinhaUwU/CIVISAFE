@@ -89,6 +89,7 @@ const submit = () => {
             :items="props.entities"
             label-key="name"
             class="w-full"
+            placeholder="Selecionar entidade"
           />
         </UFormField>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
