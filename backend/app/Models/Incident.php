@@ -34,15 +34,15 @@ class Incident extends Model
 
     public function parentIncident(): BelongsTo
     {
-        return $this->belongsTo(Incident::class);
+        return $this->belongsTo(Incident::class, 'incident_id', 'id');
     }
 
     public function childrenIncidents(): HasMany
     {
-        return $this->hasMany(Incident::class);
+        return $this->hasMany(Incident::class, 'incident_id', 'id');
     }
 
-    public function resources(): HasMany
+    public function parties(): HasMany
     {
         return $this->hasMany(IncidentParty::class);
     }
@@ -52,9 +52,7 @@ class Incident extends Model
         'incidentState',
         'incidentPriority',
         'user',
-        'resources',
-        'parentIncident',
-        'childrenIncidents'
+        'parties',
     ];
 
     protected function casts(): array
@@ -80,12 +78,13 @@ class Incident extends Model
         'parish',
         'municipality',
         'district',
-        'command_post',
         'is_major',
         'alert_source_relationship',
         'alert_source_name',
         'alert_source_contact',
         'obs',
         'incident_id',
+        'coordinates_pco',
+        'name_pco'
     ];
 }

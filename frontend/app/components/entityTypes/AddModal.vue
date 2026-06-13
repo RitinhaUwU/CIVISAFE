@@ -49,11 +49,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <UModal v-model:open="open" title="Novo Tipo de Entidade" description="Adicione um Novo Tipo de Entidade">
-    <UButton icon="i-lucide-plus" label="Novo Tipo de Entidade" color="primary"/>
+    <UButton icon="i-lucide-plus" label="Novo Tipo de Entidade" color="primary" @click="open = true"/>
     <template #body>
       <UForm :state="state" :schema="schema" class="space-y-5" @submit="onSubmit">
         <UFormField label="Nome:" name="name">
-          <UInput v-model="state.name" class="w-full" required />
+          <UInput v-model="state.name" class="w-full" />
         </UFormField>
         <UFormField label="Observações:" name="description">
           <UTextarea v-model="state.description" class="w-full" />

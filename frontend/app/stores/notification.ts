@@ -2,6 +2,7 @@ import {defineStore} from "pinia";
 import type {Notification} from "~/types";
 import {useApiStore} from "~/stores/api";
 import {useAuthStore} from "~/stores/auth";
+import {checkServerAccess} from "~/utils";
 
 export const useNotificationStore = defineStore('notification', () => {
   const {$echo} = useNuxtApp();
@@ -10,24 +11,27 @@ export const useNotificationStore = defineStore('notification', () => {
   const toast = useToast();
   const notifications = ref<Notification[]>([]);
 
-  const connect = () => {
+  const connect = async () => {
 
     console.debug("Called websocket connect function.")
 
+    // @ts-ignore
     $echo.options.auth.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 
-    apiStore.getNotifications()
-      .then(r => {
-        notifications.value = r.data.data;
-      })
-      .catch(e => {
-        console.debug(e);
-        toast.add({
-          title: "Erro",
-          description: "Ocorreu um erro ao carregar notificações",
-          color: "error"
-        });
-      })
+    if (await checkServerAccess()) {
+      apiStore.getNotifications()
+        .then(r => {
+          notifications.value = r.data.data;
+        })
+        .catch(e => {
+          console.debug(e);
+          toast.add({
+            title: "Erro",
+            description: "Ocorreu um erro ao carregar notificações",
+            color: "error"
+          });
+        })
+    }
 
     $echo.private(`App.Models.User.${authStore.currentUserID}`)
       // Isto tem de ser ".NotificationEvent" porque se não tiver o ponto ele pensa que é "App.Events.NotificationEvent"
@@ -46,12 +50,15 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   const read = (uuid: string) => {
-    if(notifications.value.find(notif => notif.uuid === uuid)?.read === true)
+    if (notifications.value.find(notif => notif.uuid === uuid)?.read === true)
       return;
 
     apiStore.readNotification(uuid)
       .then(r => {
-        notifications.value = notifications.value.map(notification => notification.uuid === uuid ? { ...notification, read: true } : notification)
+        notifications.value = notifications.value.map(notification => notification.uuid === uuid ? {
+          ...notification,
+          read: true
+        } : notification)
       })
       .catch(e => {
         console.debug(e);
@@ -64,12 +71,12 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   const readAll = () => {
-    if(!notifications.value.some(notification => notification.read === true))
+    if (!notifications.value.some(notification => notification.read === true))
       return;
 
     apiStore.readAllNotifications()
       .then(r => {
-        notifications.value = notifications.value.map(n => ({ ...n, read: true }))
+        notifications.value = notifications.value.map(n => ({...n, read: true}))
       })
       .catch(e => {
         console.debug(e);

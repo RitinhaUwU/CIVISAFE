@@ -1,0 +1,38 @@
+info:
+  name: Editar Ocorrência
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/incidents/82"
+  body:
+    type: json
+    data: |-
+      {
+        "identifier": "2026/2026",
+        "start_datetime": "2026-05-18 10:00:00",
+        "coordinates": "-21.779066, -49.139885",
+        "common_place": "vero dicta",
+        "address": "Tv. São. Sofia",
+        "parish": "Ílhavo",
+        "municipality": "Marco de Canaveses",
+        "district": "Guarda",
+        "command_post": "aliquam",
+        "is_major": false,
+        "alert_source_relationship": "Empresa",
+        "alert_source_name": "Igor Borges Carneiro",
+        "alert_source_contact": "968544849",
+        "obs": "At repellendus eum dolorem cumque similique deleniti ullam. Voluptatum asperiores laboriosam eius minima qui. Ea molestiae occaecati vel aut.",
+        "user_id": 1,
+        "incident_type_id": 2,
+        "incident_priority_id": 1,
+        "incident_state_id": 1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

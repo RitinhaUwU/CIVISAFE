@@ -7,6 +7,7 @@ use App\Http\Resources\IncidentResource;
 use App\Models\Incident;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -27,7 +28,10 @@ class IncidentController extends Controller
                 'incidentType',
                 'incidentState',
                 'incidentPriority',
+                'parties',
                 'parentIncident',
+                'childrenIncidents',
+                'user',
             ])
             ->allowedFilters(
                 AllowedFilter::callback('search', function (Builder $query, $value) {
@@ -40,8 +44,13 @@ class IncidentController extends Controller
                 AllowedFilter::callback('priority', function (Builder $query, $value) {
                     if ($value === 'all' || !$value) return;
                     $query->where('incident_priority_id', $value);
-                })
+                }),
+                AllowedFilter::callback('is_major', function (Builder $query, $value) {
+                    if ($value === 'all' || $value === null) return;
+                    $query->where('is_major', $value);
+                }),
             )
+            ->orderBy('id', 'asc')
             ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 
@@ -50,7 +59,31 @@ class IncidentController extends Controller
 
     public function store(IncidentRequest $request)
     {
-        return new IncidentResource(Incident::create($request->validated()));
+        return DB::transaction(function () use ($request) {
+
+            $data = $request->validated();
+            $children = $data['children_incidents'] ?? [];
+
+            unset($data['children_incidents']);
+
+            $incident = Incident::create($data);
+
+            if ($incident->is_major && !empty($children)) {
+                Incident::whereIn('id', $children)->update(['incident_id' => $incident->id]);
+            }
+
+            return new IncidentResource(
+                $incident->fresh([
+                    'incidentType',
+                    'incidentState',
+                    'incidentPriority',
+                    'parties',
+                    'parentIncident',
+                    'childrenIncidents',
+                    'user',
+                ])
+            )->response()->setStatusCode(201);
+        });
     }
 
     public function show(Incident $incident)
@@ -59,17 +92,42 @@ class IncidentController extends Controller
             'incidentType',
             'incidentState',
             'incidentPriority',
-            'resources',
+            'parties',
             'parentIncident',
+            'childrenIncidents',
             'user',
         ]));
     }
 
     public function update(IncidentRequest $request, Incident $incident)
     {
-        $incident->update($request->validated());
+        return DB::transaction(function () use ($request, $incident) {
 
-        return new IncidentResource($incident);
+            $data = $request->validated();
+            $children = $data['children_incidents'] ?? [];
+
+            unset($data['children_incidents']);
+
+            $incident->update($data);
+
+            Incident::where('incident_id', $incident->id)->update(['incident_id' => null]);
+
+            if ($incident->is_major && !empty($children)) {
+                Incident::whereIn('id', $children)->update(['incident_id' => $incident->id]);
+            }
+
+            return new IncidentResource(
+                $incident->fresh([
+                    'incidentType',
+                    'incidentState',
+                    'incidentPriority',
+                    'parties',
+                    'parentIncident',
+                    'childrenIncidents',
+                    'user',
+                ])
+            );
+        });
     }
 
     public function destroy(Incident $incident)

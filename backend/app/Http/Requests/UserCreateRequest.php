@@ -10,7 +10,7 @@ class UserCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'required', 'string'],
+            'name' => ['sometimes', 'required', 'string', 'min:1'],
             'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
             'mobile' => ['sometimes', 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],

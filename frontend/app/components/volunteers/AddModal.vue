@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '@/stores/api'
+import { useApiStore } from '../../stores/api'
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const open = ref(false)
+
 const emit = defineEmits(['created'])
 
-const incidents = ref<{ label: string; value: number }[]>([])
-
 const toast = useToast()
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -26,10 +31,24 @@ const schema = z.object({
   meal_location: z.string().nullable().optional(),
   start_datetime: z.string(),
   end_datetime: z.string(),
-  incident_id: z.number().nullable().optional(),
+  incident_id: selectOptionSchema.nullable().optional(),
 })
 
 type Schema = z.output<typeof schema>
+
+const incidentsMenu = useTemplateRef('incidentsMenu')
+
+const incidents = usePaginatedSelect({
+  fetcher: api.getIncidents,
+  menuRef: incidentsMenu,
+  filters: () => ({
+    is_major: false
+  }),
+  map: (i: any) => ({
+    id: i.id,
+    name: i.identifier
+  })
+})
 
 const state = reactive<Partial<Schema>>({
   name: '',
@@ -46,12 +65,15 @@ const state = reactive<Partial<Schema>>({
   meal_location: '',
   start_datetime: '',
   end_datetime: '',
-  incident_id: null,
+  incident_id: null as any,
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await apiStore.createVolunteer(event.data)
+    await api.createVolunteer({
+      ...event.data,
+      incident_id: event.data.incident_id?.id ?? null
+    })
 
     emit('created')
     open.value = false
@@ -88,17 +110,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-const fetchIncidents = async () => {
-  const res = await apiStore.getIncidents()
-
-  incidents.value = res.data.data.map((i: any) => ({
-    label: i.identifier,
-    value: i.id
-  }))
-}
-
-onMounted(() => {
-  fetchIncidents()
+onMounted(async() => {
+  await incidents.fetchItems()
 })
 </script>
 
@@ -106,7 +119,8 @@ onMounted(() => {
   <UModal
     v-model:open="open"
     title="Novo Voluntário"
-    description="Criar Voluntário":ui="{
+    description="Criar Voluntário"
+    :ui="{
       content: 'max-h-[90vh] overflow-y-auto w-full max-w-3xl'
     }"
   >
@@ -152,10 +166,15 @@ onMounted(() => {
           <UTextarea v-model="state.mission" class="w-full" />
         </UFormField>
         <UFormField label="Ocorrência" name="incident_id">
-          <USelect
+          <USelectMenu
+            ref="incidentsMenu"
             v-model="state.incident_id"
+            v-model:search-term="incidents.search.value"
+            :items="incidents.items.value"
+            :loading="incidents.loading.value"
+            label-key="name"
+            ignore-filter
             class="w-full"
-            :items="incidents"
             placeholder="Selecionar ocorrência"
           />
         </UFormField>

@@ -1,251 +1,393 @@
 <script setup lang="ts">
-import SearchableSelect from './SearchableSelect.vue'
 import Map from '../Map.vue'
+import * as z from "zod"
+import type { FormSubmitEvent } from "@nuxt/ui"
+import { useApiStore } from "~/stores/api"
+import { useAuthStore } from "~/stores/auth"
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const props = defineProps<{
   modelValue: boolean
   coords: { lat: number, lng: number }
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const api = useApiStore()
+const authStore = useAuthStore()
 
-const options = ref([
-  { id: 1, label: 'Exemplo1' },
-  { id: 2, label: 'Exemplo2' },
-  { id: 3, label: 'Exemplo3' }
+const emit = defineEmits([
+  'update:modelValue',
+  'created'
 ])
 
-const form = reactive({
-  geral: {
-    is_major: false,
-    identifier: '',
-    data_inicio: '',
-    hora_inicio: '',
-    status_id: '',
-    priority_id: null,
-    category_id: null,
-    incident_id: null,
-    alert_source_relationship: '',
-    alert_source_name: '',
-    alert_source_contact: '',
-    coordinates: '',
-    address: '',
-    district: '',
-    municipality: '',
-    parish: '',
-    common_place: '',
-    obs: ''
-  },
-
-  posto: {
-    coordenadas: '',
-    data_montagem: '',
-    hora_montagem: '',
-    resp_logistica: '',
-    resp_operacoes: '',
-    resp_posto: '',
-    resp_planeamento: ''
-  }
-})
-
-const tabItems = [
+const tabs = [
   {
     label: 'Geral',
-    icon: 'i-lucide-users',
-    slot: 'geral'
+    slot: 'geral',
+    icon: 'i-lucide-users'
   },
   {
     label: 'Posto de Comando',
+    slot: 'posto',
     icon: 'i-lucide-satellite-dish',
-    slot: 'posto'
   }
 ]
 
+const toast = useToast()
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
+
+const schema = z.object({
+  is_major: z.boolean(),
+  identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
+  start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
+  end_datetime: z.string().optional().nullable(),
+  incident_state_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
+  incident_priority_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
+  incident_type_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
+  incident_id: z.any().optional().nullable(),
+  alert_source_relationship: z.string().optional().nullable(),
+  alert_source_name: z.string().optional().nullable(),
+  alert_source_contact: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  coordinates: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  district: z.string().optional().nullable(),
+  municipality: z.string().optional().nullable(),
+  parish: z.string().optional().nullable(),
+  common_place: z.string().optional().nullable(),
+  obs: z.string().optional().nullable(),
+  coordinates_pco: z.string().optional().nullable(),
+  name_pco: z.string().optional().nullable(),
+})
+
+type Schema = z.output<typeof schema>
+
+const state = reactive<any>({
+  is_major: false,
+  identifier: '',
+  start_datetime: '',
+  end_datetime: '',
+  incident_state_id: null,
+  incident_priority_id: null,
+  incident_type_id: null,
+  user_id: authStore.currentUserID,
+  incident_id: null,
+  alert_source_relationship: '',
+  alert_source_name: '',
+  alert_source_contact: '',
+  coordinates: '',
+  address: '',
+  district: '',
+  municipality: '',
+  parish: '',
+  common_place: '',
+  obs: '',
+  coordinates_pco: '',
+  name_pco: ''
+})
+
+const typeMenu = useTemplateRef('typeMenu')
+const stateMenu = useTemplateRef('stateMenu')
+const priorityMenu = useTemplateRef('priorityMenu')
+const incidentsMenu = useTemplateRef('incidentsMenu')
+
+const types = usePaginatedSelect({
+  fetcher: api.getIncidentTypes,
+  menuRef: typeMenu,
+  map: (t: any) => ({
+    id: t.id,
+    name: `${t.code} - ${t.species}`
+  })
+})
+const states = usePaginatedSelect({
+  fetcher: api.getIncidentStates,
+  menuRef: stateMenu,
+  map: (s: any) => ({
+    id: s.id,
+    name: s.name
+  })
+})
+const priorities = usePaginatedSelect({
+  fetcher: api.getIncidentPriorities,
+  menuRef: priorityMenu,
+  map: (p: any) => ({
+    id: p.id,
+    name: `${p.name} - ${p.description}`
+  })
+})
+const incidents = usePaginatedSelect({
+  fetcher: api.getIncidents,
+  menuRef: incidentsMenu,
+  filters: () => ({
+    is_major: !state.is_major
+  }),
+  map: (i: any) => ({
+    id: i.id,
+    name: i.identifier
+  })
+})
+
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  try {
+    const payload = {
+      ...event.data,
+      user_id: authStore.currentUserID,
+      incident_state_id: event.data.incident_state_id?.id,
+      incident_priority_id: event.data.incident_priority_id?.id,
+      incident_type_id: event.data.incident_type_id?.id,
+      is_major: state.is_major,
+      incident_id: state.is_major ? state.incident_id?.map((i: any) => i.id) : state.incident_id?.id ?? null,
+      children_incidents: state.is_major ? (state.incident_id ?? []).map((i: any) => i.id) : []
+    }
+
+    await api.createIncident(payload)
+
+    emit('created')
+    emit('update:modelValue', false)
+
+    toast.add({
+      title: 'Sucesso',
+      description: 'Ocorrência criada com sucesso',
+      color: 'success'
+    })
+
+    Object.assign(state, {
+      is_major: false,
+      identifier: '',
+      start_datetime: '',
+      end_datetime: '',
+      incident_state_id: null,
+      incident_priority_id: null,
+      incident_type_id: null,
+      user_id: authStore.currentUserID,
+      incident_id: null,
+      alert_source_relationship: '',
+      alert_source_name: '',
+      alert_source_contact: '',
+      coordinates: '',
+      address: '',
+      district: '',
+      municipality: '',
+      parish: '',
+      common_place: '',
+      obs: '',
+      coordinates_pco: '',
+      name_pco: ''
+    })
+  } catch (e) {
+    if (errors?.identifier?.length) {
+      toast.add({
+        title: 'Identificador duplicado',
+        description: 'O identificador já se encontra em uso',
+        color: 'error'
+      })
+      return
+    }
+
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao criar a ocorrência',
+      color: 'error'
+    })
+  }
+}
+
+watch(() => state.is_major, async (isMajor) => {
+  state.incident_id = isMajor ? [] : null
+
+  if (isMajor) {
+    state.coordinates = ''
+  } else if (props.coords) {
+    state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
+  }
+
+  await incidents.reset()
+})
+
+// Map
+function updateCoordinates(coords: { lat: number, lng: number }) {
+  state.coordinates = `${coords.lat}, ${coords.lng}`
+}
+
 watch(() => props.coords, (newCoords) => {
   if (newCoords) {
-    form.geral.coordinates = `${newCoords.lat}, ${newCoords.lng}`
+    state.coordinates = `${newCoords.lat}, ${newCoords.lng}`
   }
 }, { immediate: true })
 
-//TODO: Criar função no Mapa que permita receber coordenadas para criar um ponto e remover o anterior
-
+onMounted(async() => {
+  await Promise.all([
+    states.fetchItems(),
+    priorities.fetchItems(),
+    types.fetchItems(),
+    incidents.fetchItems()
+  ])
+})
 </script>
 
 <template>
   <UModal
     :open="props.modelValue"
-    :ui="{
-      content: 'max-h-[90vh] overflow-y-auto w-full max-w-5xl'
-    }"
+    title="Registo Ocorrência"
+    description="Criar Ocorrência"
+    :ui="{ content: 'max-h-[90vh] overflow-y-auto w-full max-w-5xl' }"
     @update:open="emit('update:modelValue', $event)"
   >
-    <template #content>
-      <div class="flex flex-col h-[90vh]">
+    <template #body>
+      <UForm
+        :state="state"
+        :schema="schema"
+        @submit="onSubmit"
+      >
         <div class="p-4 space-y-4 overflow-y-auto flex-1">
-          <h2 class="text-lg font-semibold">
-            Registo de Ocorrências
-          </h2>
-          <UTabs :items="tabItems">
+          <UTabs :items="tabs" class="w-full">
             <template #geral>
               <div class="mt-4 space-y-6">
-                <UCheckbox
-                  v-model="form.geral.is_major"
-                  label="Ocorrência Major"
-                />
-                <UForm class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
+                <UCheckbox v-model="state.is_major" label="Ocorrência Major"/>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
                   <div class="space-y-5">
-                    <UFormField label="Nº Ocorrência:" name="num_ocorrencia">
-                      <UInput v-model="form.geral.identifier" class="w-full" />
+                    <UFormField label="Nº Ocorrência:" name="identifier">
+                      <UInput v-model="state.identifier" class="w-full" />
                     </UFormField>
-                    <UFormField label="Estado:" name="estado">
-                      <SearchableSelect
-                        v-model="form.geral.status_id"
-                        :items="options"
-                        placeholder="Selecionar Estado"
-                        create-title="Novo Estado"
-                        create-description="Adicione um novo estado ao sistema"
-                        create-label="Criar Novo Estado"
+                    <UFormField label="Estado:" name="incident_state_id">
+                      <USelectMenu
+                        ref="stateMenu"
+                        v-model="state.incident_state_id"
+                        v-model:search-term="states.search.value"
+                        :items="states.items.value"
+                        :loading="states.loading.value"
+                        label-key="name"
+                        class="w-full"
+                        ignore-filter
+                        placeholder="Selecionar estado"
                       />
                     </UFormField>
-                    <UFormField label="Prioridade:" name="prioridade">
-                      <SearchableSelect
-                        v-model="form.geral.priority_id"
-                        :items="options"
-                        placeholder="Selecionar Prioridade"
-                        create-title="Novo estado de prioridade"
-                        create-description="Adicione um novo estado de prioridade ao sistema"
-                        create-label="Criar Novo Estado de Prioridade"
+                    <UFormField label="Prioridade:" name="incident_priority_id">
+                      <USelectMenu
+                        ref="priorityMenu"
+                        v-model="state.incident_priority_id"
+                        v-model:search-term="priorities.search.value"
+                        :items="priorities.items.value"
+                        :loading="priorities.loading.value"
+                        label-key="name"
+                        class="w-full"
+                        ignore-filter
+                        placeholder="Selecionar prioridade"
                       />
                     </UFormField>
-                    <UFormField label="Tipo de Ocorrência:" name="tipo_ocorrencia">
-                      <SearchableSelect
-                        v-model="form.geral.category_id"
-                        :items="options"
-                        placeholder="Selecionar Tipo de Ocorrência"
-                        create-title="Novo Tipo de Ocorrência"
-                        create-description="Adicione um novo tipo de ocorrência ao sistema"
-                        create-label="Criar Novo Tipo de Ocorrência"
+                    <UFormField label="Tipo de Ocorrência:" name="incident_type_id">
+                      <USelectMenu
+                        ref="typeMenu"
+                        v-model="state.incident_type_id"
+                        v-model:search-term="types.search.value"
+                        :items="types.items.value"
+                        :loading="types.loading.value"
+                        label-key="name"
+                        class="w-full"
+                        ignore-filter
+                        placeholder="Selecionar tipo"
                       />
                     </UFormField>
-                    <UFormField
-                      v-if="!form.geral.is_major"
-                      label="Associar Evento:"
-                      name="associar_evento"
-                    >
-                      <SearchableSelect
-                        v-model="form.geral.incident_id"
-                        :items="options"
-                        placeholder="Associar Evento"
-                        create-title="Novo Evento"
-                        create-description="Adicione um novo evento ao sistema"
-                        create-label="Criar Novo Evento"
+                    <UFormField label="Associar Evento:" name="incident_id">
+                      <USelectMenu
+                        ref="incidentsMenu"
+                        v-model="state.incident_id"
+                        v-model:search-term="incidents.search.value"
+                        :items="incidents.items.value"
+                        :loading="incidents.loading.value"
+                        label-key="name"
+                        :multiple="state.is_major"
+                        class="w-full"
+                        ignore-filter
+                        :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
                       />
                     </UFormField>
-                    <UFormField label="Descrição:" name="descricao">
-                      <UTextarea
-                        v-model="form.geral.obs"
-                        class="w-full resize-none overflow-y-auto"
-                      />
+                    <UFormField label="Descrição:" name="obs">
+                      <UTextarea v-model="state.obs" class="w-full resize-none overflow-y-auto"/>
                     </UFormField>
                   </div>
                   <div class="space-y-5">
-                    <div class="grid grid-cols-2 gap-4 items-end">
-                      <UFormField label="Data Alerta:" name="data_inicio">
-                        <UInputDate v-model="form.geral.data_inicio" class="w-full" />
-                      </UFormField>
-                      <UFormField label="Hora Alerta:" name="hora_inicio">
-                        <UInputTime v-model="form.geral.hora_inicio" class="w-full" />
-                      </UFormField>
-                    </div>
-                    <UFormField label="Fonte de Alerta:" name="fonte_alerta">
-                      <UInput v-model="form.geral.alert_source_relationship" class="w-full" />
+                    <UFormField label="Data Alerta:" name="start_datetime">
+                      <UInput type="datetime-local" v-model="state.start_datetime" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Nome do Contacto:" name="nome_contacto">
-                      <UInput v-model="form.geral.alert_source_name" class="w-full" />
+                    <UFormField label="Data Fim:" name="end_datetime">
+                      <UInput type="datetime-local" v-model="state.end_datetime" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Tlf. Contacto:" name="tel_contacto">
-                      <UInput v-model="form.geral.alert_source_contact" class="w-full" />
+                    <UFormField label="Fonte de Alerta:" name="alert_source_relationship">
+                      <UInput v-model="state.alert_source_relationship" class="w-full"/>
+                    </UFormField>
+                    <UFormField label="Nome do Contacto:" name="alert_source_name">
+                      <UInput v-model="state.alert_source_name" class="w-full"/>
+                    </UFormField>
+                    <UFormField label="Tlf. Contacto:" name="alert_source_contact">
+                      <UInput v-model="state.alert_source_contact" class="w-full"/>
                     </UFormField>
                   </div>
                   <div class="space-y-5">
-                    <UFormField label="Coordenadas:" name="coordenadas">
-                      <UInput v-model="form.geral.coordinates" class="w-full" />
+                    <UFormField label="Coordenadas:" name="coordinates">
+                      <UInput v-model="state.coordinates" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Localidade:" name="localidade">
-                      <UInput v-model="form.geral.address" class="w-full" />
+                    <UFormField label="Distrito:" name="district">
+                      <UInput v-model="state.district" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Distrito:" name="distrito">
-                      <UInput v-model="form.geral.district" class="w-full" />
+                    <UFormField label="Concelho:" name="municipality">
+                      <UInput v-model="state.municipality" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Concelho:" name="concelho">
-                      <UInput v-model="form.geral.municipality" class="w-full" />
+                    <UFormField label="Freguesia:" name="parish">
+                      <UInput v-model="state.parish" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Freguesia:" name="freguesia">
-                      <UInput v-model="form.geral.parish" class="w-full" />
+                    <UFormField label="Localidade:" name="address">
+                      <UInput v-model="state.address" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Ponto de Referência:" name="ponto_referencia">
-                      <UInput v-model="form.geral.common_place" class="w-full" />
+                    <UFormField label="Ponto de Referência:" name="common_place">
+                      <UInput v-model="state.common_place" class="w-full"/>
                     </UFormField>
                   </div>
-                </UForm>
+                </div>
               </div>
             </template>
             <template #posto>
               <div class="mt-4 space-y-6">
-                <UForm class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div class="space-y-5">
-                    <UFormField label="Coordenadas:" name="coordenadas">
-                      <UInput v-model="form.posto.coordenadas" class="w-full" />
-                    </UFormField>
-                    <div class="grid grid-cols-2 gap-4 items-end">
-                      <UFormField label="Data Montagem:" name="data_montagem">
-                        <UInputDate v-model="form.posto.data_montagem" class="w-full" />
-                      </UFormField>
-                      <UFormField label="Hora Montagem:" name="hora_montagem">
-                        <UInputTime v-model="form.posto.hora_montagem" class="w-full" />
-                      </UFormField>
-                    </div>
-                  </div>
-                  <div class="space-y-5">
-                    <UFormField label="Resp. Posto de Comando:" name="posto_comando">
-                      <UInputMenu v-model="form.posto.resp_posto" :items="options" class="w-full" />
-                    </UFormField>
-                    <UFormField label="Resp. Célula de Logística:" name="celula_logistica">
-                      <UInputMenu v-model="form.posto.resp_logistica" :items="options" class="w-full" />
+                    <UFormField label="Nome:" name="name_pco">
+                      <UInput v-model="state.name_pco" class="w-full"/>
                     </UFormField>
                   </div>
                   <div class="space-y-5">
-                    <UFormField label="Resp. Célula de Operações:" name="celula_operacoes">
-                      <UInputMenu v-model="form.posto.resp_operacoes" :items="options" class="w-full" />
-                    </UFormField>
-                    <UFormField label="Resp. Célula de Planeamento:" name="celula_planeamento">
-                      <UInputMenu v-model="form.posto.resp_planeamento" :items="options" class="w-full" />
+                    <UFormField label="Coordenadas:" name="coordinates_pco">
+                      <UInput v-model="state.coordinates_pco" class="w-full"/>
                     </UFormField>
                   </div>
-                </UForm>
+                </div>
               </div>
             </template>
           </UTabs>
           <Map
-            :center="[props.coords?.lat, props.coords?.lng]"
+            v-if="!state.is_major"
+            :selectedCoords="[props.coords?.lat, props.coords?.lng]"
             :zoom="13"
+            :dropMarkerOnClick="true"
             class="w-full h-[400px] rounded-lg"
-            @map-click="coordinates => props.coords"
+            @map-click="updateCoordinates"
           />
         </div>
-        <div class="flex justify-end gap-2 p-4 bg-white shrink-0">
-          <UButton color="neutral" variant="ghost" @click="emit('update:modelValue', false)">
-            Cancelar
-          </UButton>
-          <UButton color="primary">
-            Guardar
-          </UButton>
+        <div class="flex justify-end gap-2 p-4 shrink-0">
+          <UButton
+            label="Cancelar"
+            color="neutral"
+            variant="ghost"
+            @click="emit('update:modelValue', false)"
+          />
+          <UButton
+            label="Guardar"
+            type="submit"
+            color="primary"
+          />
         </div>
-      </div>
+      </UForm>
     </template>
   </UModal>
 </template>
-
-<style scoped>
-
-</style>

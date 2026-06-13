@@ -1,28 +1,21 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import {UButton} from "#components";
+import type {IncidentType} from "@/types";
 
 const toast = useToast()
 const api = useApiStore()
 
-const incidentTypes = ref<IncidentTypes[]>([])
+const incidentTypes = ref<IncidentType[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
+
 const search = ref('')
-const uploadFileModalOpen = ref(false)
 
-type IncidentTypes = {
-  id: number;
-  code: number;
-  species: string;
-  type: string;
-  description: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-const columns: TableColumn<IncidentTypes | null>[] = [
+const columns: TableColumn<IncidentType | null>[] = [
   {
     accessorKey: "code",
     header: "Código",
@@ -69,6 +62,7 @@ const columns: TableColumn<IncidentTypes | null>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-volunteer',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -81,17 +75,15 @@ const columns: TableColumn<IncidentTypes | null>[] = [
   }
 ]
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10,
-})
-
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize,
+      page: page.value,
+      per_page: 10
     }
     if (search.value) {
       params.filter = {
@@ -100,9 +92,9 @@ const fetch = async() => {
     }
     const res = await api.getIncidentTypes(params)
 
-    incidentTypes.value = res.data.data
+    incidentTypes.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -114,14 +106,37 @@ const fetch = async() => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
 watch(search, () => {
-  pagination.value.pageIndex = 0
+  page.value = 1
+  lastPage.value = Infinity
+  incidentTypes.value = []
   fetch()
 })
 
-onMounted(fetch)
+const scrollContainer = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+
+  if(!useAuthStore().hasPermission('INCIDENT_TYPES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
+  fetch()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+})
 </script>
 
 <template>
@@ -132,7 +147,7 @@ onMounted(fetch)
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesUploadModal />
+        <IncidentTypesUploadModal v-if="useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -142,17 +157,11 @@ onMounted(fetch)
           placeholder="Filtrar tipos..."
         />
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="incidentTypes"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -161,19 +170,9 @@ onMounted(fetch)
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[500px]"
+          class="w-full"
         />
       </div>
-
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
-        />
-      </div>
-
     </template>
   </UDashboardPanel>
 </template>

@@ -11,8 +11,8 @@ class EntityTypeRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'name' => [$is_patch ? 'sometimes' : 'required'],
-            'description' => [$is_patch ? 'sometimes' : 'nullable'],
+            'name' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
+            'description' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
         ];
     }
 
