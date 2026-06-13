@@ -12,12 +12,17 @@ class IncidentPartyController extends Controller
 {
     public function index($incidentId)
     {
-        return IncidentPartyResource::collection(
-            IncidentParty::with(['entity'])
-                ->where('incident_id', $incidentId)
-                ->orderBy('id', 'asc')
-                ->get()
-        );
+        $parties = IncidentParty::with(['entity'])
+            ->where('incident_id', $incidentId)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return IncidentPartyResource::collection($parties)->additional([
+            'meta' => [
+                'total_vehicles' => $parties->sum('vehicle_count'),
+                'total_humans' => $parties->sum('human_count'),
+            ]
+        ]);
     }
 
     public function store(IncidentPartyRequest $request, $incidentId)
@@ -41,15 +46,5 @@ class IncidentPartyController extends Controller
         $party->update($request->validated());
 
         return new IncidentPartyResource($party);
-    }
-
-    public function destroy($incidentId, IncidentParty $party)
-    {
-        if ($party->incident_id !== (int) $incidentId) {
-            abort(404);
-        }
-
-        $party->delete();
-        return response()->json();
     }
 }

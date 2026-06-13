@@ -91,7 +91,7 @@ onMounted(async () => {
   map = L.map(mapContainer.value).setView(props.selectedCoords ?? props.center, props.zoom)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(map)
 

@@ -1,22 +1,32 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '../../stores/api'
+import { useApiStore } from '~/stores/api'
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
 
 const toast = useToast()
 
-const entityTypeMenu = useTemplateRef('entityTypeMenu')
-const entityTypeItems = ref<any[]>([])
-const entityTypePage = ref(1)
-const entityTypeLastPage = ref(Infinity)
-const entityTypeLoading = ref(false)
-const entityTypeSearch = ref('')
+const entityTypesMenu = useTemplateRef('entityTypesMenu')
+
+const entityTypes = usePaginatedSelect({
+  fetcher: api.getEntityTypes,
+  menuRef: entityTypesMenu,
+  map: (i: any) => ({
+    id: i.id,
+    name: i.name
+  })
+})
 
 const imageFile = ref(null)
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -28,7 +38,7 @@ const schema = z.object({
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
   description: z.string().optional().nullable(),
-  entity_type_id: z.number().nullable()
+  entity_type_id: selectOptionSchema.nullable()
 })
 
 type Schema = z.output<typeof schema>
@@ -48,10 +58,16 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await apiStore.createEntity(event.data)
+    const payload = {
+      ...event.data,
+      entity_type_id: event.data.entity_type_id?.id,
+    }
+
+    await api.createEntity(payload)
 
     emit('created')
     open.value = false
+
     toast.add({
       title: 'Sucesso',
       description: 'Entidade criada com sucesso',
@@ -68,9 +84,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       poc_phone: '',
       poc_email: '',
       description: '',
-      entity_type_id: null as number,
+      entity_type_id: null,
     })
-  } catch (e: any) {
+  }
+  catch (e: any) {
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar entidade',
@@ -79,53 +96,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-const fetchEntityTypes = async (search?: string) => {
-  if (entityTypeLoading.value) return
-
-  entityTypeLoading.value = true
-  try {
-    const res = await apiStore.getEntityTypes({
-      page: entityTypePage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    entityTypeLastPage.value = res.data.meta.last_page
-    const mapped = data.map((e: any) => ({ id: e.id, name: e.name }))
-    const existingIds = new Set(entityTypeItems.value.map(i => i.id))
-    entityTypeItems.value = [...entityTypeItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
-  } finally {
-    entityTypeLoading.value = false
-  }
-}
-
-watchDebounced(entityTypeSearch, async (val) => {
-  entityTypePage.value = 1
-  entityTypeItems.value = []
-  entityTypeLastPage.value = Infinity
-  await fetchEntityTypes(val)
-}, { debounce: 300 })
-
-onMounted(() => {
-  fetchEntityTypes()
-
-  useInfiniteScroll(
-    () => entityTypeMenu.value?.viewportRef,
-    () => {
-      if (entityTypePage.value < entityTypeLastPage.value) {
-        entityTypePage.value++
-        fetchEntityTypes(entityTypeSearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !entityTypeLoading.value &&
-        entityTypePage.value < entityTypeLastPage.value
-    }
-  )
+onMounted(async () => {
+  await entityTypes.fetchItems()
 })
 </script>
 
@@ -160,12 +132,11 @@ onMounted(() => {
             <UFormField label="Tipo de Entidade:" name="entity_type_id">
               <USelectMenu
                 data-testid="entity-type-select"
-                ref="entityTypeMenu"
+                ref="entityTypesMenu"
                 v-model="state.entity_type_id"
-                v-model:search-term="entityTypeSearch"
-                :items="entityTypeItems"
-                :loading="entityTypeLoading"
-                value-key="id"
+                v-model:search-term="entityTypes.search.value"
+                :items="entityTypes.items.value"
+                :loading="entityTypes.loading.value"
                 label-key="name"
                 ignore-filter
                 placeholder="Seleciona o tipo"
@@ -195,7 +166,7 @@ onMounted(() => {
             <UFormField label="Contacto do Responsável:" name="poc_phone">
               <UInput v-model="state.poc_phone" class="w-full" />
             </UFormField>
-            <UFormField label="Observações:" name="description">
+            <UFormField label="Descrição:" name="description">
               <UTextarea v-model="state.description" class="w-full" />
             </UFormField>
           </div>

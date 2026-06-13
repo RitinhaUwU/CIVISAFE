@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import type {Facilities} from "~/types";
+import type {Facilities} from "@/types";
 import {UButton} from "#components";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {useRoute} from "nuxt/app";

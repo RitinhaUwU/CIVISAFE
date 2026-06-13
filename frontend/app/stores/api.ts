@@ -149,11 +149,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createEntity = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/entities`, {params})
+    return axios.post(`${config.public.apiBase}/entities`, params)
   }
 
   const updateEntity = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/entities/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/entities/${id}`, params)
   }
 
   const deleteEntity = async (id: number) => {
@@ -193,11 +193,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createEntityType = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/entityTypes`, {params})
+    return axios.post(`${config.public.apiBase}/entityTypes`, params)
   }
 
   const updateEntityType = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/entityTypes/${id}`, params)
   }
 
   const deleteEntityType = async (id: number) => {
@@ -237,11 +237,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createIncident = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/incidents`, {params})
+    return axios.post(`${config.public.apiBase}/incidents`, params)
   }
 
   const updateIncident = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/incidents/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/incidents/${id}`, params)
   }
 
   const deleteIncident = async (id: number) => {
@@ -263,20 +263,12 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
   }
 
-  /*const getIncidentPCO = (incidentId: number, pcoId: number) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco/${pcoId}`)
-  }*/
-
   const createIncidentPCO = (incidentId: number, params: any) => {
     return axios.post(`${config.public.apiBase}/incidents/${incidentId}/pco`, params)
   }
 
   const updateIncidentPCO = (incidentId: number, pcoId: number, params: any) => {
     return axios.put(`${config.public.apiBase}/incidents/${incidentId}/pco/${pcoId}`, params)
-  }
-
-  const deleteIncidentPCO = (incidentId: number, pcoId: number) => {
-    return axios.delete(`${config.public.apiBase}/incidents/${incidentId}/pco/${pcoId}`)
   }
 
   /*************************
@@ -290,20 +282,12 @@ export const useApiStore = defineStore('api', () => {
     return axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
   }
 
-  /*const getIncidentLogistic = (incidentId: number, logisticId: number) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties/${logisticId}`)
-  }*/
-
   const createIncidentLogistic = (incidentId: number, params: any) => {
     return axios.post(`${config.public.apiBase}/incidents/${incidentId}/parties`, params)
   }
 
   const updateIncidentLogistic = (incidentId: number, logisticId: number, params: any) => {
     return axios.put(`${config.public.apiBase}/incidents/${incidentId}/parties/${logisticId}`, params)
-  }
-
-  const deleteIncidentLogistic = (incidentId: number, logisticId: number) => {
-    return axios.delete(`${config.public.apiBase}/incidents/${incidentId}/parties/${logisticId}`)
   }
 
   /*************************
@@ -335,11 +319,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createIncidentState = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/incidentStates`, {params})
+    return axios.post(`${config.public.apiBase}/incidentStates`, params)
   }
 
   const updateIncidentState = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/incidentStates/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/incidentStates/${id}`, params)
   }
 
   const deleteIncidentState = async (id: number) => {
@@ -379,11 +363,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createIncidentPriority = async (params: any) => {
-    return axios.post(`${config.public.apiBase}/incidentPriorities`, {params})
+    return axios.post(`${config.public.apiBase}/incidentPriorities`, params)
   }
 
   const updateIncidentPriority = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/incidentPriorities/${id}`, params)
   }
 
   const deleteIncidentPriority = async (id: number) => {
@@ -423,11 +407,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createVolunteer = (params: any) => {
-    return axios.post(`${config.public.apiBase}/volunteers`, {params})
+    return axios.post(`${config.public.apiBase}/volunteers`, params)
   }
 
   const updateVolunteer = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/volunteers/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/volunteers/${id}`, params)
   }
 
   const deleteVolunteer = async (id: number) => {
@@ -485,11 +469,11 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const createFacility = (params: any) => {
-    return axios.post(`${config.public.apiBase}/facilities`, {params})
+    return axios.post(`${config.public.apiBase}/facilities`, params)
   }
 
   const updateFacility = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/facilities/${id}`, {params})
+    return axios.put(`${config.public.apiBase}/facilities/${id}`, params)
   }
 
   const deleteFacility = async (id: number) => {
@@ -634,15 +618,11 @@ export const useApiStore = defineStore('api', () => {
     createIncident,
     deleteIncident,
     getIncidentPCOs,
-    //getIncidentPCO,
     updateIncidentPCO,
     createIncidentPCO,
-    deleteIncidentPCO,
     getIncidentLogistics,
-    //getIncidentLogistic,
     updateIncidentLogistic,
     createIncidentLogistic,
-    deleteIncidentLogistic,
     getIncidentStates,
     getIncidentState,
     updateIncidentState,

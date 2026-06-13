@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
 import {UButton} from "#components";
-import type {Facilities} from "~/types";
+import type {Facilities} from "@/types";
 
 const toast = useToast()
 const api = useApiStore()

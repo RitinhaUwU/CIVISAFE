@@ -5,12 +5,19 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@vite-pwa/nuxt',
-    '@pinia/nuxt'
+    '@pinia/nuxt',
+    '@nuxtjs/color-mode'
   ],
   ssr: false,
 
   devtools: {
     enabled: true
+  },
+
+  colorMode:{
+    preference: 'light',
+    fallback: 'light',
+    classSuffix: ''
   },
 
   css: [

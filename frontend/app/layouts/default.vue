@@ -50,7 +50,7 @@ onMounted(() => {
   if(auth.hasPermission('VOLUNTEERS_LIST')){
     holder.push({
       label: 'Voluntários',
-      icon: 'i-lucide-users-round',
+      icon: 'i-lucide-users',
       to: '/volunteers',
       onSelect: () => (open.value = false)
     });
@@ -59,7 +59,7 @@ onMounted(() => {
   if(auth.hasPermission('FACILITIES_LIST')){
     holder.push({
       label: 'Instalações',
-      icon: 'i-lucide-building',
+      icon: 'i-lucide-building-2',
       to: '/facilities',
       onSelect: () => (open.value = false)
     });

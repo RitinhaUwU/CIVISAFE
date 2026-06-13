@@ -21,14 +21,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
-if(!app()->environment('production')){
+if (!app()->environment('production')) {
     Route::post('/test/reset', function (Request $request) {
         if ($request->header('TEST-TOKEN') !== 'civisafe-test') {
             abort(403);
         }
 
+        \Log::info('RESET START');
+
         Artisan::call('migrate:fresh');
+        \Log::info('MIGRATE DONE');
+
         Artisan::call('db:seed');
+        \Log::info('SEED DONE');
+
         return response()->noContent();
     });
 }
@@ -38,7 +44,7 @@ Route::prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 
     Route::get('up', function () {
-       return response()->json(['status' => 'up']);
+        return response()->json(['status' => 'up']);
     });
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -55,9 +61,9 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('notifications')->group(function () {
-           Route::get('/', [NotificationController::class, 'index']);
-           Route::delete('/', [NotificationController::class, 'readAll']);
-           Route::delete('/{notification}', [NotificationController::class, 'read']);
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::delete('/', [NotificationController::class, 'readAll']);
+            Route::delete('/{notification}', [NotificationController::class, 'read']);
         });
 
         Route::apiResource('/volunteers', VolunteerController::class);
@@ -68,19 +74,16 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);
         Route::apiResource('/incidents', IncidentController::class);
         Route::prefix('incidents/{incident}')->group(function () {
+            // PCO
             Route::get('/pco', [IncidentPCOController::class, 'index']);
             Route::post('/pco', [IncidentPCOController::class, 'store']);
-            //Route::get('/pco/{incidentPCO}', [IncidentPCOController::class, 'show']);
-            Route::put('/pco/{incidentPCO}', [IncidentPCOController::class, 'update']);
-            Route::patch('/pco/{incidentPCO}', [IncidentPCOController::class, 'update']);
-            Route::delete('/pco/{pco}', [IncidentPCOController::class, 'destroy']);
-
+            Route::put('/pco/{pco}', [IncidentPCOController::class, 'update'])->whereNumber('pco');
+            Route::patch('/pco/{pco}', [IncidentPCOController::class, 'update'])->whereNumber('pco');
+            // LOGISTICA
             Route::get('/parties', [IncidentPartyController::class, 'index']);
             Route::post('/parties', [IncidentPartyController::class, 'store']);
-            //Route::get('/parties/{party}', [IncidentPartyController::class, 'show']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
-            Route::delete('/parties/{party}', [IncidentPartyController::class, 'destroy']);
         });
         Route::apiResource('/facilities', FacilitiesController::class);
 

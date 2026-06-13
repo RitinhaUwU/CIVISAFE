@@ -52,7 +52,7 @@ const fetchEntity = async () => {
 }
 
 const handleSave = async () => {
-  if (!useAuthStore().hasPermission('INCIDENT_STATE_UPDATE')) return
+  if (!useAuthStore().hasPermission('INCIDENT_STATES_UPDATE')) return
 
   if (!await checkServerAccess()) {
     toast.add({
@@ -128,7 +128,7 @@ onMounted(fetchEntity)
               color="primary"
               :loading="saving"
               @click="handleSave"
-              :disabled="!useAuthStore().hasPermission('INCIDENT_STATE_UPDATE')"
+              :disabled="!useAuthStore().hasPermission('INCIDENT_STATES_UPDATE')"
             />
           </div>
         </div>

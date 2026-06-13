@@ -2,19 +2,19 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '../../stores/api'
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const open = ref(false)
+
 const emit = defineEmits(['created'])
 
-const incidentMenu = useTemplateRef('incidentMenu')
-const incidentItems = ref<any[]>([])
-const incidentPage = ref(1)
-const incidentLastPage = ref(Infinity)
-const incidentLoading = ref(false)
-const incidentSearch = ref('')
-
 const toast = useToast()
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -31,10 +31,24 @@ const schema = z.object({
   meal_location: z.string().nullable().optional(),
   start_datetime: z.string(),
   end_datetime: z.string(),
-  incident_id: z.number().nullable().optional(),
+  incident_id: selectOptionSchema.nullable().optional(),
 })
 
 type Schema = z.output<typeof schema>
+
+const incidentsMenu = useTemplateRef('incidentsMenu')
+
+const incidents = usePaginatedSelect({
+  fetcher: api.getIncidents,
+  menuRef: incidentsMenu,
+  filters: () => ({
+    is_major: false
+  }),
+  map: (i: any) => ({
+    id: i.id,
+    name: i.identifier
+  })
+})
 
 const state = reactive<Partial<Schema>>({
   name: '',
@@ -51,12 +65,15 @@ const state = reactive<Partial<Schema>>({
   meal_location: '',
   start_datetime: '',
   end_datetime: '',
-  incident_id: null,
+  incident_id: null as any,
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await apiStore.createVolunteer(event.data)
+    await api.createVolunteer({
+      ...event.data,
+      incident_id: event.data.incident_id?.id ?? null
+    })
 
     emit('created')
     open.value = false
@@ -93,53 +110,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
-const fetchIncidents = async (search?: string) => {
-  if (incidentLoading.value) return
-
-  incidentLoading.value = true
-  try {
-    const res = await apiStore.getIncidents({
-      page: incidentPage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    incidentLastPage.value = res.data.meta.last_page
-    const mapped = data.map((t: any) => ({ id: t.id, name: t.identifier }))
-    const existingIds = new Set(incidentItems.value.map(i => i.id))
-    incidentItems.value = [...incidentItems.value, ...mapped.filter(i => !existingIds.has(i.id))]
-  } finally {
-    incidentLoading.value = false
-  }
-}
-
-watchDebounced(incidentSearch, async (val) => {
-  incidentPage.value = 1
-  incidentItems.value = []
-  incidentLastPage.value = Infinity
-  await fetchIncidents(val)
-}, { debounce: 300 })
-
-onMounted(() => {
-  fetchIncidents()
-
-  useInfiniteScroll(
-    () => incidentMenu.value?.viewportRef,
-    () => {
-      if (incidentPage.value < incidentLastPage.value) {
-        incidentPage.value++
-        fetchIncidents(incidentSearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () =>
-        !incidentLoading.value &&
-        incidentPage.value < incidentLastPage.value
-    }
-  )
+onMounted(async() => {
+  await incidents.fetchItems()
 })
 </script>
 
@@ -195,12 +167,11 @@ onMounted(() => {
         </UFormField>
         <UFormField label="Ocorrência" name="incident_id">
           <USelectMenu
-            ref="incidentMenu"
+            ref="incidentsMenu"
             v-model="state.incident_id"
-            v-model:search-term="incidentSearch"
-            :items="incidentItems"
-            :loading="incidentLoading"
-            value-key="id"
+            v-model:search-term="incidents.search.value"
+            :items="incidents.items.value"
+            :loading="incidents.loading.value"
             label-key="name"
             ignore-filter
             class="w-full"

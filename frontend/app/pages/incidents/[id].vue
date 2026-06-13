@@ -5,12 +5,14 @@ import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {useApiStore} from '@/stores/api'
 import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';
-import Map from '../../components/Map.vue'
+import Map from '@/components/Map.vue'
 import {computed} from 'vue'
-import DeletePCOModal from "../../components/incidents/DeletePCOModal.vue";
-import AddLogisticModal from "../../components/incidents/AddLogisticModal.vue";
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import LogisticFormModal from "@/components/incidents/LogisticFormModal.vue";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import PCOFormModal from "@/components/incidents/PCOFormModal.vue";
+import ConflictPCOModal from "@/components/incidents/ConflictPCOModal.vue";
 
+const router = useRouter()
 const route = useRoute()
 const api = useApiStore()
 const toast = useToast()
@@ -92,16 +94,21 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   is_major: z.boolean(),
   identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
+  user_id: z.number(),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
-  incident_state_id: z.number({required_error: 'O estado é obrigatório'}).nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
-  incident_priority_id: z.number({required_error: 'A prioridade é obrigatória'}).nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
-  incident_type_id: z.number({required_error: 'O tipo de ocorrência é obrigatório'}).nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
-  incident_id: z.union([z.number(), z.array(z.number()), z.null()]).optional(),
+  incident_state_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
+  incident_priority_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'A prioridade é obrigatória'}),
+  incident_type_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O tipo de ocorrência é obrigatório'}),
+  incident_id: z.union([selectOptionSchema, z.array(selectOptionSchema), z.null()]).optional(),
   children_incidents: z.array(z.any()).optional(),
   alert_source_relationship: z.string().optional().nullable(),
   alert_source_name: z.string().optional().nullable(),
@@ -117,38 +124,13 @@ const schema = z.object({
   name_pco: z.string().nullable().optional(),
 })
 
-const pcoSchema = z.object({
-  function_pco: z.string().min(1, 'Selecione uma função'),
-  resp_pco: z.string().min(2, 'Nome demasiado curto'),
-  category_pco: z.string().min(1, 'Categoria obrigatória'),
-  contact1_pco: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000'),
-  contact2_pco: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  localization_pco: z.string().optional().nullable(),
-  rob_pco: z.string().optional().nullable(),
-  srp_pco: z.string().optional().nullable(),
-  activation_pco_datetime: z.string().optional().nullable(),
-  start_pco_datetime: z.string().min(1, 'A data de início é obrigatória'),
-  end_pco_datetime: z.string().optional().nullable(),
-})
-
-const logisticSchema = z.object({
-  human_count: z.coerce.number({
-    required_error: 'O nº de humanos é obrigatório',
-    invalid_type_error: 'Tem de ser um número'
-  }).min(0, 'Valor inválido').int('O valor tem de ser inteiro').nonnegative('O valor não pode ser negativo'),
-  vehicle_count: z.coerce.number({
-    required_error: 'O nº de veículos é obrigatório',
-    invalid_type_error: 'Tem de ser um número'
-  }).min(0, 'Valor inválido').int('O valor tem de ser inteiro').nonnegative('O valor não pode ser negativo'),
-  entity_id: z.number({required_error: 'A entidade é obrigatória'}).nullable().refine(val => val !== null, {message: 'A entidade é obrigatória'}),
-})
-
 type Schema = z.output<typeof schema>
 const state = reactive<Partial<Schema>>({
   identifier: '',
-  incident_type_id: null as number,
-  incident_state_id: null as number,
-  incident_priority_id: null as number,
+  incident_type_id: null as any,
+  incident_state_id: null as any,
+  incident_priority_id: null as any,
+  incident_id: null as any,
   user_id: null as number,
   user: null as any,
   start_datetime: '',
@@ -164,41 +146,10 @@ const state = reactive<Partial<Schema>>({
   alert_source_name: '',
   alert_source_contact: '',
   obs: '',
-  incident_id: null as number | number[] | null,
   children_incidents: [] as any[],
   coordinates_pco: '',
   name_pco: '',
 })
-
-type PcoSchema = z.output<typeof pcoSchema>
-const pco = reactive<Partial<PcoSchema>>({
-  function_pco: '',
-  resp_pco: '',
-  category_pco: '',
-  contact1_pco: '',
-  contact2_pco: '',
-  localization_pco: '',
-  rob_pco: '',
-  srp_pco: '',
-  activation_pco_datetime: '',
-  start_pco_datetime: '',
-  end_pco_datetime: '',
-})
-
-type LogisticSchema = z.output<typeof logisticSchema>
-const logistic = reactive<Partial<LogisticSchema>>({
-  human_count: '',
-  vehicle_count: '',
-  entity_id: null as number,
-})
-
-//https://stackoverflow.com/questions/30166338/setting-value-of-datetime-local-from-date
-// Converte o ISO que vem da API para um objeto Date.
-const toDatetimeLocal = (value?: string | null) => {
-  if (!value) return ''
-
-  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
-}
 
 // Map
 const mapCenter = computed(() => {
@@ -220,6 +171,16 @@ function updateCoordinates(coords: { lat: number, lng: number }) {
 }
 
 // Geral
+const loadingIncident = ref(true)
+
+//https://stackoverflow.com/questions/30166338/setting-value-of-datetime-local-from-date
+// Converte o ISO que vem da API para um objeto Date.
+const toDatetimeLocal = (value?: string | null) => {
+  if (!value) return ''
+
+  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
+}
+
 const handleSaveGeral = async () => {
   const result = schema.safeParse(state)
 
@@ -231,30 +192,53 @@ const handleSaveGeral = async () => {
         color: 'error'
       })
     })
+
     return
   }
 
   saving.value = true
+
   try {
     const payload = {
-      ...state,
-      incident_id: state.is_major ? undefined : state.incident_id,
-      children_incidents: state.is_major ? (state.incident_id as number[]) ?? [] : []
+      user_id: state.user_id,
+      identifier: state.identifier,
+      start_datetime: toDatetimeLocal(state.start_datetime),
+      end_datetime: toDatetimeLocal(state.end_datetime),
+      coordinates: state.coordinates,
+      common_place: state.common_place,
+      address: state.address,
+      parish: state.parish,
+      municipality: state.municipality,
+      district: state.district,
+      is_major: state.is_major,
+      alert_source_relationship: state.alert_source_relationship,
+      alert_source_name: state.alert_source_name,
+      alert_source_contact: state.alert_source_contact,
+      obs: state.obs,
+      incident_type_id: state.incident_type_id?.id,
+      incident_priority_id: state.incident_priority_id?.id,
+      incident_state_id: state.incident_state_id?.id,
+      incident_id: state.is_major ? (state.incident_id as any[])?.map(i => i.id) : (state.incident_id as any)?.id ?? null,
+      children_incidents: state.is_major ? (state.incident_id as any[])?.map(i => i.id) : [],
+      coordinates_pco: state.coordinates_pco,
+      name_pco: state.name_pco,
     }
 
-    await api.updateIncident(parseInt(<string>route.params.id), payload)
+    await api.updateIncident(Number(route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
-      description: 'Ocorrrência atualizada',
+      description: 'Ocorrência atualizada',
       color: 'success'
     })
-  } catch (e) {
+
+  } catch (e: any) {
     toast.add({
       title: 'Erro',
-      description: 'Erro ao atualizar',
+      description: e.response?.data?.message ?? 'Erro ao atualizar',
       color: 'error'
     })
+
   } finally {
     saving.value = false
   }
@@ -262,29 +246,35 @@ const handleSaveGeral = async () => {
 
 const fetchIncident = async () => {
   const routeID = route.params.id;
+
   if (typeof routeID !== 'string') {
-    useToast().add({
+    toast.add({
       title: 'Ocorrência inválida',
       description: 'O Caminho que o trouxe aqui aponta para uma Ocorrência inválida',
       color: 'error'
     });
-    await useRouter().push('/incidents');
+
+    await router.push('/incidents');
     return;
   }
 
   const data = (await api.getIncident(parseInt(routeID))).data.data
 
-  Object.assign(state, {
-    ...data,
-    user_id: data.user?.id,
-    user: data.user,
-    incident_type_id: data.incidentType?.id,
-    incident_state_id: data.incidentState?.id,
-    incident_priority_id: data.incidentPriority?.id,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => i.id) : data.parentIncident?.id ?? null,
-    start_datetime: toDatetimeLocal(data.start_datetime),
-    end_datetime: toDatetimeLocal(data.end_datetime),
-  })
+  state.is_major = data.is_major
+  await incidents.fetchItems()
+
+  if (data.is_major && data.children_incidents?.length) {
+    incidents.prependSelected(data.children_incidents.map((i: any) => ({
+      id: i.id,
+      name: i.identifier
+    })))
+  }
+  else if (!data.is_major && data.parentIncident) {
+    incidents.prependSelected([{
+      id: data.parentIncident.id,
+      name: data.parentIncident.identifier
+    }])
+  }
 
   if (data.is_major) {
     state.coordinates = ''
@@ -311,25 +301,34 @@ const fetchIncident = async () => {
     }])
   }
 
-  if (data.is_major && data.children_incidents?.length) {
-    incidents.prependSelected(data.children_incidents.map((i: any) => ({
-      id: i.id,
-      name: i.identifier
-    })))
-  } else if (!data.is_major && data.parentIncident) {
-    incidents.prependSelected([{
-      id: data.parentIncident.id,
-      name: data.parentIncident.identifier
-    }])
-  }
+  await nextTick()
+
+  Object.assign(state, {
+    ...data,
+    user_id: data.user?.id,
+    user: data.user,
+    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.species}`} : null,
+    incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
+    incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: i.identifier})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
+    start_datetime: toDatetimeLocal(data.start_datetime),
+    end_datetime: toDatetimeLocal(data.end_datetime),
+    coordinates: data.is_major ? '' : data.coordinates,
+  })
+
+  loadingIncident.value = false
 }
 
 // Posto
 const pcoList = ref<any[]>([])
-const editingPCOId = ref<number | null>(null)
+const pcoModalOpen = ref(false)
+const editingPCO = ref<any | null>(null)
 const savingPCO = ref(false)
-const deleteModalOpen = ref(false)
-const selectedPCO = ref<any | null>(null)
+const conflictModalOpen = ref(false)
+const conflictingPCO = ref<any | null>(null)
+const pendingPCOPayload = ref<any | null>(null)
+
+const isPCOActive = (item: any) => !item.end_pco_datetime
 
 const fetchPCOList = async () => {
   const incidentId = Number(route.params.id)
@@ -338,62 +337,103 @@ const fetchPCOList = async () => {
   pcoList.value = res?.data?.data ?? []
 }
 
-const submitPCO = async () => {
-  const result = pcoSchema.safeParse(pco)
+const openCreatePCO = () => {
+  editingPCO.value = null
+  pcoModalOpen.value = true
+}
 
-  if (!result.success) {
-    result.error.issues.forEach((err) => {
-      toast.add({
-        title: 'Erro ao guardar função do PCO',
-        description: err.message,
-        color: 'error'
-      })
-    })
+const openEditPCO = (item: any) => {
+  editingPCO.value = item
+  pcoModalOpen.value = true
+}
 
+const findActiveConflict = (payload: any) => {
+  return pcoList.value.find(p => p.function_pco === payload.function_pco && !p.end_pco_datetime && p.id !== editingPCO.value?.id)
+}
+
+const savePCOFromModal = (payload: any) => {
+  const conflict = findActiveConflict(payload)
+
+  if (conflict) {
+    conflictingPCO.value = conflict
+    pendingPCOPayload.value = payload
+    conflictModalOpen.value = true
     return
   }
 
+  persistPCO(payload)
+}
+
+const confirmPCOConflict = async () => {
+  if (!pendingPCOPayload.value || !conflictingPCO.value) return
+
+  const incidentId = Number(route.params.id)
+
+  try {
+    await api.updateIncidentPCO(incidentId, conflictingPCO.value.id, {
+      ...conflictingPCO.value,
+      end_pco_datetime: pendingPCOPayload.value.start_pco_datetime
+    })
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: e.response?.data?.message ?? 'Erro ao encerrar função ativa',
+      color: 'error'
+    })
+    conflictModalOpen.value = false
+    conflictingPCO.value = null
+    pendingPCOPayload.value = null
+    return
+  }
+
+  await persistPCO(pendingPCOPayload.value)
+
+  conflictModalOpen.value = false
+  conflictingPCO.value = null
+  pendingPCOPayload.value = null
+}
+
+const persistPCO = async (payload: any) => {
   savingPCO.value = true
 
   try {
-    if (editingPCOId.value) {
-
-      await api.updateIncidentPCO(
-          Number(route.params.id),
-          editingPCOId.value,
-          result.data
-      )
-
-      toast.add({
-        title: 'Sucesso',
-        description: 'Função atualizada',
-        color: 'success'
-      })
-
+    if (editingPCO.value?.id) {
+      await api.updateIncidentPCO(Number(route.params.id), editingPCO.value.id, payload)
     } else {
-
-      await api.createIncidentPCO(
-          Number(route.params.id),
-          result.data
-      )
-
-      toast.add({
-        title: 'Sucesso',
-        description: 'Função adicionada ao PCO',
-        color: 'success'
-      })
+      await api.createIncidentPCO(Number(route.params.id), payload)
     }
 
+    toast.add({
+      title: 'Sucesso',
+      description: editingPCO.value?.id ? 'Função atualizada' : 'Função adicionada',
+      color: 'success'
+    })
+
     await fetchPCOList()
+    pcoModalOpen.value = false
 
-    resetPCOForm()
+  } catch (e: any) {
+    if (e.response?.status === 422) {
+      const data = e.response.data
 
-  } catch (e) {
-    console.log(e.response?.data)
+      if (data?.type === 'overlap') {
+        toast.add({
+          title: 'Sobreposição temporal',
+          description: `A função ${data.function_pco} já tem um registo que cobre este período. Ajuste as datas antes de guardar.`,
+          color: 'warning'
+        })
+        return
+      }
+
+      conflictingPCO.value = e.response.data
+      pendingPCOPayload.value = payload
+      conflictModalOpen.value = true
+      return
+    }
 
     toast.add({
       title: 'Erro',
-      description: 'Erro ao guardar função PCO',
+      description: e.response?.data?.message ?? 'Erro ao guardar função PCO',
       color: 'error'
     })
 
@@ -402,59 +442,12 @@ const submitPCO = async () => {
   }
 }
 
-const editPCO = (item: any) => {
-  editingPCOId.value = item.id
-
-  Object.assign(pco, {
-    function_pco: item.function_pco,
-    resp_pco: item.resp_pco,
-    category_pco: item.category_pco,
-    contact1_pco: item.contact1_pco,
-    contact2_pco: item.contact2_pco,
-    localization_pco: item.localization_pco,
-    rob_pco: item.rob_pco,
-    srp_pco: item.srp_pco,
-    activation_pco_datetime: toDatetimeLocal(item.activation_pco_datetime),
-    start_pco_datetime: toDatetimeLocal(item.start_pco_datetime),
-    end_pco_datetime: toDatetimeLocal(item.end_pco_datetime),
-  })
-}
-
-const resetPCOForm = () => {
-  editingPCOId.value = null
-
-  Object.assign(pco, {
-    function_pco: '',
-    resp_pco: '',
-    category_pco: '',
-    contact1_pco: '',
-    contact2_pco: '',
-    localization_pco: '',
-    rob_pco: '',
-    srp_pco: '',
-    activation_pco_datetime: '',
-    start_pco_datetime: '',
-    end_pco_datetime: '',
-  })
-}
-
-const openDeletePCO = (item: any) => {
-  selectedPCO.value = item
-  deleteModalOpen.value = true
-}
-
-const refreshAfterDelete = async () => {
-  await fetchPCOList()
-  selectedPCO.value = null
-}
-
 // Logística
 const logisticModalOpen = ref(false)
 const editingLogistic = ref<any | null>(null)
 const logistics = ref<any[]>([])
 const deleteLogisticModalOpen = ref(false)
-const selectedLogistic = ref<any | null>(null)
-
+const logisticTotals = ref({ total_vehicles: 0, total_humans: 0 })
 
 const openCreateLogistic = () => {
   editingLogistic.value = null
@@ -484,8 +477,6 @@ const saveLogistic = async (payload: any) => {
     await fetchLogistics()
     logisticModalOpen.value = false
   } catch (e: any) {
-    console.error('Payload enviado:', payload)
-    console.error('Erro da API:', e.response?.data)
     toast.add({
       title: 'Erro',
       description: 'Erro ao guardar logística',
@@ -497,17 +488,15 @@ const saveLogistic = async (payload: any) => {
 const fetchLogistics = async () => {
   const res = await api.getIncidentLogistics(Number(route.params.id))
   logistics.value = res?.data?.data ?? []
-}
-
-const openDeleteLogistic = (item: any) => {
-  selectedLogistic.value = item
-  deleteLogisticModalOpen.value = true
+  logisticTotals.value = res?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
 }
 
 watch(() => state.is_major, async () => {
+  if (loadingIncident.value) return
+
   state.incident_id = state.is_major ? [] : null
 
-  await incidents.reset()
+  await incidents.reset(true)
 
   if (state.is_major) {
     state.coordinates = ''
@@ -515,9 +504,8 @@ watch(() => state.is_major, async () => {
 })
 
 onMounted(async () => {
-
   if (!useAuthStore().hasPermission('INCIDENTS_LIST')) {
-    await useRouter().push('/inicio');
+    await router.push('/inicio');
     return;
   }
 
@@ -525,7 +513,6 @@ onMounted(async () => {
     types.fetchItems(),
     states.fetchItems(),
     priorities.fetchItems(),
-    incidents.fetchItems(),
     entities.fetchItems(),
     fetchPCOList(),
     fetchLogistics()
@@ -570,7 +557,6 @@ onMounted(async () => {
                     v-model:search-term="types.search.value"
                     :items="types.items.value"
                     :loading="types.loading.value"
-                    value-key="id"
                     label-key="name"
                     ignore-filter
                     class="w-full"
@@ -584,7 +570,6 @@ onMounted(async () => {
                       v-model:search-term="states.search.value"
                       :items="states.items.value"
                       :loading="states.loading.value"
-                      value-key="id"
                       label-key="name"
                       ignore-filter
                       class="w-full"
@@ -597,7 +582,6 @@ onMounted(async () => {
                       v-model:search-term="priorities.search.value"
                       :items="priorities.items.value"
                       :loading="priorities.loading.value"
-                      value-key="id"
                       label-key="name"
                       ignore-filter
                       class="w-full"
@@ -610,9 +594,8 @@ onMounted(async () => {
                     v-model="state.incident_id"
                     v-model:search-term="incidents.search.value"
                     :items="incidents.items.value"
-                    :loading="incidents.loading.value"
+                    :key="state.is_major ? 'multi' : 'single'"
                     label-key="name"
-                    value-key="id"
                     ignore-filter
                     :multiple="state.is_major"
                     class="w-full"
@@ -701,147 +684,56 @@ onMounted(async () => {
         <template #posto>
           <div class="space-y-6 pt-4">
             <section class="space-y-2">
-              <UCard :ui="{ body: { base: 'space-y-8' }}">
-                <template #header>
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-semibold text-lg">{{
-                          editingPCOId ? 'Editar Função no PCO' : 'Nova Função no PCO'
-                        }}</h3>
-                      <p class="text-sm text-gray-500">{{
-                          editingPCOId ? 'Atualize os dados da função operacional' : 'Preencha os dados da nova função operacional'
-                        }}</p>
-                    </div>
-                    <div class="flex flex-row space-x-2">
-                      <UButton
-                          v-if="editingPCOId"
-                          label="Cancelar"
-                          color="neutral"
-                          variant="soft"
-                          @click="resetPCOForm"
-                      />
-                      <UButton
-                          :label="editingPCOId ? 'Guardar' : 'Nova Função'"
-                          :icon="editingPCOId ? '' : 'i-lucide-plus'"
-                          @click="submitPCO"
-                          class="flex justify-self-end"
-                      />
-                    </div>
+              <div class="flex justify-end mb-6">
+                <UButton
+                  icon="i-lucide-plus"
+                  label="Nova Função"
+                  @click="openCreatePCO"
+                />
+              </div>
+              <div v-for="item in pcoList" :key="item.id" class="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 shadow-sm transition hover:shadow-md hover:border-stone-300 dark:hover:border-stone-700">
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-row">
+                    <p class="font-semibold text-stone-900 dark:text-white">{{ item.function_pco }}</p>
+                    <UBadge class="ml-4 rounded-full" :color="isPCOActive(item) ? 'success' : 'error'" variant="soft" size="sm">
+                      {{ isPCOActive(item) ? 'Ativo' : 'Inativo' }}
+                    </UBadge>
                   </div>
-                </template>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <UFormField label="Função" name="function_pco">
-                    <USelect
-                        v-model="pco.function_pco"
-                        :items="[
-                       { label: 'COS', value: 'COS' },
-                       { label: 'Oficial Operações', value: 'Oficial Operações' },
-                       { label: 'Oficial Logística', value: 'Oficial Logística' },
-                       { label: 'Oficial Planeamento', value: 'Oficial Planeamento' },
-                       { label: 'Oficial Operações Aéreas', value: 'Oficial Operações Aéreas' },
-                       { label: 'Adjunto Segurança', value: 'Adjunto Segurança' },
-                       { label: 'Adjunto Relações Públicas', value: 'Adjunto Relações Públicas' },
-                       { label: 'Adjunto Ligação', value: 'Adjunto Ligação' }
-                     ]"
-                        class="w-full"
-                    />
-                  </UFormField>
-                  <UFormField label="Responsável" name="resp_pco">
-                    <UInput v-model="pco.resp_pco" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="Categoria" name="category_pco">
-                    <UInput v-model="pco.category_pco" class="w-full"/>
-                  </UFormField>
+                  <p class="text-sm text-stone-500 flex items-center gap-2 flex-wrap">
+                    <span>{{ item.category_pco }}</span>
+                    <span class="text-stone-300 dark:text-stone-600">•</span>
+                    <span class="font-medium text-stone-600 dark:text-stone-300">{{ item.resp_pco }}</span>
+                    <span class="text-stone-300 dark:text-stone-600">•</span>
+                    <span>{{ item.contact1_pco }}</span>
+                    <template v-if="item.contact2_pco">
+                      <span class="text-stone-300 dark:text-stone-600">•</span>
+                      <span>{{ item.contact2_pco }}</span>
+                    </template>
+                    <template v-if="item.localization_pco">
+                      <span class="text-stone-300 dark:text-stone-600">•</span>
+                      <span>{{ item.localization_pco }}</span>
+                    </template>
+                  </p>
+                  <p class="text-xs text-stone-400 flex gap-3">
+                    <span v-if="item.rob_pco">ROB: {{ item.rob_pco }}</span>
+                    <span v-if="item.srp_pco">SRP: {{ item.srp_pco }}</span>
+                  </p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <UFormField label="Contacto 1" name="contact1_pco">
-                    <UInput v-model="pco.contact1_pco" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="Contacto 2" name="contact2_pco">
-                    <UInput v-model="pco.contact2_pco" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="Localização" name="localization_pco">
-                    <UInput v-model="pco.localization_pco" class="w-full"/>
-                  </UFormField>
+                <div class="space-x-2 shrink-0">
+                  <UButton
+                    icon="i-lucide-pencil"
+                    color="warning"
+                    variant="soft"
+                    data-testid="edit-pco"
+                    class="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
+                    :ui="{ rounded: 'rounded-full' }"
+                    @click="openEditPCO(item)"
+                  />
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <UFormField label="ROB" name="rob_pco">
-                    <UInput v-model="pco.rob_pco" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="SRP" name="srp_pco">
-                    <UInput v-model="pco.srp_pco" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="Data Ativação" name="activation_pco_datetime">
-                    <UInput type="datetime-local" v-model="pco.activation_pco_datetime" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="Data Inicio" name="start_pco_datetime">
-                    <UInput type="datetime-local" v-model="pco.start_pco_datetime" class="w-full"/>
-                  </UFormField>
-                  <UFormField label="Data Fim" name="end_pco_datetime">
-                    <UInput type="datetime-local" v-model="pco.end_pco_datetime" class="w-full"/>
-                  </UFormField>
-                </div>
-              </UCard>
-              <UCard>
-                <template #header>
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="font-semibold text-lg">Funções no PCO</h3>
-                      <p class="text-sm text-stone-500">Lista de funções operacionais registadas</p>
-                    </div>
-                  </div>
-                </template>
-                <div class="space-y-3">
-                  <div class="space-y-3">
-                    <div v-for="item in pcoList" :key="item.id"
-                         class="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 shadow-sm transition hover:shadow-md hover:border-stone-300 dark:hover:border-stone-700">
-                      <div class="flex flex-col gap-1">
-                        <p class="font-semibold text-stone-900 dark:text-white">{{ item.function_pco }}</p>
-                        <p class="text-sm text-stone-500 flex items-center gap-2 flex-wrap">
-                          <span>{{ item.category_pco }}</span>
-                          <span class="text-stone-300 dark:text-stone-600">•</span>
-                          <span class="font-medium text-stone-600 dark:text-stone-300">{{ item.resp_pco }}</span>
-                          <span class="text-stone-300 dark:text-stone-600">•</span>
-                          <span>{{ item.contact1_pco }}</span>
-                          <template v-if="item.contact2_pco">
-                            <span class="text-stone-300 dark:text-stone-600">•</span>
-                            <span>{{ item.contact2_pco }}</span>
-                          </template>
-                          <template v-if="item.localization_pco">
-                            <span class="text-stone-300 dark:text-stone-600">•</span>
-                            <span>{{ item.localization_pco }}</span>
-                          </template>
-                        </p>
-                        <p class="text-xs text-stone-400 flex gap-3">
-                          <span v-if="item.rob_pco">ROB: {{ item.rob_pco }}</span>
-                          <span v-if="item.srp_pco">SRP: {{ item.srp_pco }}</span>
-                        </p>
-                      </div>
-                      <div class="space-x-2 shrink-0">
-                        <UButton
-                            icon="i-lucide-pencil"
-                            color="warning"
-                            variant="soft"
-                            class="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
-                            :ui="{ rounded: 'rounded-full' }"
-                            @click="editPCO(item)"
-                        />
-                        <UButton
-                            icon="i-lucide-trash-2"
-                            color="error"
-                            variant="soft"
-                            class="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-red-100 dark:hover:bg-red-950/40"
-                            :ui="{ rounded: 'rounded-full' }"
-                            @click="openDeletePCO(item)"
-                        />
-                      </div>
-                    </div>
-                    <div v-if="pcoList.length === 0" class="text-center py-6 text-sm text-stone-400">
-                      Sem funções registadas
-                    </div>
-                  </div>
-                </div>
-              </UCard>
+              </div>
+              <div v-if="pcoList.length === 0" class="text-center py-6 text-sm text-stone-400">
+                Sem funções registadas
+              </div>
             </section>
           </div>
         </template>
@@ -850,13 +742,13 @@ onMounted(async () => {
             <div class="flex justify-end">
               <UButton
                   icon="i-lucide-plus"
-                  label="Nova logística"
+                  label="Nova Equipa"
                   @click="openCreateLogistic"
               />
             </div>
             <UTable
-                :data="logistics"
-                :columns="[
+              :data="logistics"
+              :columns="[
                 { accessorKey: 'entity.name', header: 'Entidade' },
                 { accessorKey: 'vehicle_count', header: 'Veículos' },
                 { accessorKey: 'human_count', header: 'Humanos' },
@@ -870,19 +762,24 @@ onMounted(async () => {
                       color="warning"
                       variant="soft"
                       size="sm"
+                      data-testid="edit-logistic"
                       class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
                       :ui="{ rounded: 'rounded-full' }"
                       @click="editLogistic(row.original)"
                   />
-                  <UButton
-                      icon="i-lucide-trash-2"
-                      color="error"
-                      variant="soft"
-                      size="sm"
-                      class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-red-100 dark:hover:bg-red-950/40"
-                      :ui="{ rounded: 'rounded-full' }"
-                      @click="openDeleteLogistic(row.original)"
-                  />
+                </div>
+              </template>
+              <template #body-bottom>
+                <tr class="border-t-2 border-stone-300 dark:border-stone-600 font-semibold bg-stone-50 dark:bg-stone-800/50">
+                  <td class="px-4 py-3 text-sm text-stone-600 dark:text-stone-400">Total</td>
+                  <td class="px-4 py-3 text-sm">{{ logisticTotals.total_vehicles }}</td>
+                  <td class="px-4 py-3 text-sm">{{ logisticTotals.total_humans }}</td>
+                  <td />
+                </tr>
+              </template>
+              <template #empty>
+                <div class="flex flex-col items-center justify-center py-6 gap-2 text-stone-400">
+                  <p class="text-sm">Sem equipas registados</p>
                 </div>
               </template>
             </UTable>
@@ -891,18 +788,20 @@ onMounted(async () => {
       </UTabs>
     </div>
   </div>
-  <AddLogisticModal
-      v-model:open="logisticModalOpen"
-      :model-value="editingLogistic"
-      :entities="entities.items.value"
-      @save="saveLogistic"
+  <PCOFormModal
+    v-model:open="pcoModalOpen"
+    :model-value="editingPCO"
+    @save="savePCOFromModal"
   />
-  <DeletePCOModal
-      v-if="selectedPCO"
-      v-model:open="deleteModalOpen"
-      :incident-id="Number(route.params.id)"
-      :pco-id="selectedPCO?.id"
-      :item-name="selectedPCO?.function_pco"
-      @deleted="refreshAfterDelete"
+  <ConflictPCOModal
+    v-model:open="conflictModalOpen"
+    :conflicting="conflictingPCO"
+    @confirm="confirmPCOConflict"
+  />
+  <LogisticFormModal
+    v-model:open="logisticModalOpen"
+    :model-value="editingLogistic"
+    :entities="entities.items.value"
+    @save="saveLogistic"
   />
 </template>

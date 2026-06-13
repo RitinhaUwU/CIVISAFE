@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import type { IncidentPriority } from "~/types";
+import type { IncidentPriority } from "@/types";
 import {UBadge, UButton} from "#components";
 
 const toast = useToast()

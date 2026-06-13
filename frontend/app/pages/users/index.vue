@@ -2,7 +2,7 @@
 import type { TableColumn } from '@nuxt/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
-import type {User} from "~/types";
+import type {User} from "@/types";
 import {UBadge, UButton, UTooltip} from "#components";
 
 const api = useApiStore()
@@ -85,7 +85,8 @@ const columns: TableColumn<User>[] = [
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
-          disabled: row.original.id === auth.currentUserID ? !auth.hasPermission('USERS_VIEW_OWN') : !auth.hasPermission('USERS_VIEW_ANY'),
+          disabled: !(auth.hasPermission('USERS_VIEW_ANY') || (row.original.id === auth.currentUserID && auth.hasPermission('USERS_VIEW_OWN'))
+          ),
           onClick: () => navigateTo(`/users/${row.original.id}`)
         }),
         h(UButton, {

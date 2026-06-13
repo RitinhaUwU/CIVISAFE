@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import type {Volunteer} from "~/types";
+import type {Volunteer} from "@/types";
 import {UBadge, UButton} from "#components";
 
 const api = useApiStore()
@@ -122,7 +122,7 @@ const columns: TableColumn<Volunteer>[] = [
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
-          disabled: !useAuthStore().hasPermission('VOLUNTEER_DELETE'),
+          disabled: !useAuthStore().hasPermission('VOLUNTEERS_DELETE'),
           onClick: () => {
             selectedVolunteerById.value = row.original
             deleteModalOpen.value = true

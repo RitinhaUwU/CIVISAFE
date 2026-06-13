@@ -50,6 +50,11 @@ export default defineConfig({
         ...devices['Desktop Firefox'],
         actionTimeout: 15000,
         navigationTimeout: 30000,
+        launchOptions: {
+          firefoxUserPrefs: {
+            'permissions.default.persistent-storage': 1
+          }
+        }
       }
     },
 

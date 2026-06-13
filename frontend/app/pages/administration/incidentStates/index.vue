@@ -108,7 +108,7 @@ const columns: TableColumn<IncidentState>[] = [
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
-          disabled: !useAuthStore().hasPermission('INCIDENT_STATE_DELETE'),
+          disabled: !useAuthStore().hasPermission('INCIDENT_STATES_DELETE'),
           onClick: () => {
             selectedStateById.value = row.original
             deleteModalOpen.value = true
@@ -223,7 +223,6 @@ onMounted(() => {
               { label: 'Não', value: false }
             ]"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
             class="min-w-28"
           />
           <USelect
@@ -234,7 +233,6 @@ onMounted(() => {
               { label: 'Desativado', value: false }
             ]"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
             class="min-w-28"
           />
         </div>

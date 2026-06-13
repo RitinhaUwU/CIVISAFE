@@ -3,6 +3,7 @@ import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
 import type { Entity } from '@/types'
 import {UButton} from "#components";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 
 const toast = useToast()
 const api = useApiStore()
@@ -13,14 +14,23 @@ const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
+const allTypesOption = {
+  id: 'all',
+  name: 'Tipos'
+}
+
 const search = ref('')
-const typesFilter = ref('all')
-const typesMenu = useTemplateRef('stateMenu')
-const typesItems = ref<any[]>([])
-const typesPage = ref(1)
-const typesLastPage = ref(Infinity)
-const typesLoading = ref(false)
-const typesSearch = ref('')
+const typesFilter = ref(allTypesOption)
+const entityTypesMenu = useTemplateRef('entityTypesMenu')
+
+const entityTypes = usePaginatedSelect({
+  fetcher: api.getEntityTypes,
+  menuRef: entityTypesMenu,
+  map: (i: any) => ({
+    id: i.id,
+    name: i.name
+  })
+})
 
 const deleteModalOpen = ref(false)
 const selectedEntityById = ref<Entity | null>(null)
@@ -77,26 +87,6 @@ const columns: TableColumn<Entity>[] = [
   }
 ]
 
-const fetchTypes = async (search?: string, loadMore = false) => {
-  typesLoading.value = true
-
-  try {
-    const res = await api.getEntityTypes({
-      page: typesPage.value,
-      per_page: 10,
-      filter: {
-        ...(search ? { search } : {})
-      }
-    })
-
-    const data = res.data.data
-    typesLastPage.value = res.data.meta.last_page
-    typesItems.value = loadMore ? [...typesItems.value, ...data] : [{ id: 'all', name: 'Tipos' }, ...data]
-  } finally {
-    typesLoading.value = false
-  }
-}
-
 const fetch = async() => {
   if (loading.value) return
   if (page.value > lastPage.value) return
@@ -111,8 +101,8 @@ const fetch = async() => {
     if (search.value) {
       params.filter.search = search.value
     }
-    if (typesFilter.value !== 'all') {
-      params.filter.type = typesFilter.value
+    if (typesFilter.value?.id !== 'all') {
+      params.filter.type = typesFilter.value?.id
     }
     const res = await api.getEntities(params)
 
@@ -137,13 +127,6 @@ watchDebounced([search, typesFilter], () => {
   fetch()
 }, {debounce: 300})
 
-watchDebounced(typesSearch, async (value) => {
-  typesPage.value = 1
-  typesItems.value = []
-  typesLastPage.value = Infinity
-  await fetchTypes(value)
-}, { debounce: 300 })
-
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(() => {
@@ -155,7 +138,7 @@ onMounted(() => {
   }
 
   fetch()
-  fetchTypes()
+  entityTypes.fetchItems()
 
   // ----------
   // Filters
@@ -169,23 +152,6 @@ onMounted(() => {
     {
       distance: 200,
       canLoadMore: () => !loading.value && page.value < lastPage.value
-    }
-  )
-
-  // ----------
-  // Filters
-  // ----------
-  // Types
-  useInfiniteScroll(
-    () => typesMenu.value?.viewportRef,
-    () => {
-      if (typesPage.value < typesLastPage.value) {
-        typesPage.value++
-        fetchTypes(typesSearch.value, true)
-      }
-    },
-    {
-      canLoadMore: () => !typesLoading.value && typesPage.value < typesLastPage.value
     }
   )
 })
@@ -213,12 +179,14 @@ onMounted(() => {
         />
         <div class="flex flex-wrap items-center gap-1.5">
           <USelectMenu
-            ref="typesMenu"
+            ref="entityTypesMenu"
             v-model="typesFilter"
-            v-model:search-term="typesSearch"
-            :items="typesItems"
-            :loading="typesLoading"
-            value-key="id"
+            v-model:search-term="entityTypes.search.value"
+            :items="[
+              allTypesOption,
+              ...entityTypes.items.value
+            ]"
+            :loading="entityTypes.loading.value"
             label-key="name"
             ignore-filter
             class="w-48"

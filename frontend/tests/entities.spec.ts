@@ -62,7 +62,7 @@ test('create entity', async ({ page }) => {
   await page.getByLabel('Nome do Responsável:').fill('João Silva')
   await page.getByLabel('Email do Responsável:').fill('joao@exemplo.com')
   await page.getByLabel('Contacto do Responsável:').fill('912345679')
-  await page.getByLabel('Observações:').fill('Descrição de teste')
+  await page.getByLabel('Descrição:').fill('Descrição de teste')
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
