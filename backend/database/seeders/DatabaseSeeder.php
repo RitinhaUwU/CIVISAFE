@@ -6,6 +6,7 @@ use App\Enums\RolesEnum;
 use App\Models\Donations\DonationContent;
 use App\Models\Donations\DonationGoodsType;
 use App\Models\Donations\DonationLog;
+use App\Models\Donations\DonationStock;
 use App\Models\Entity;
 use App\Models\Facility;
 use App\Models\Incident;
@@ -15,6 +16,7 @@ use App\Models\User;
 use App\Models\Volunteer;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use function Illuminate\Support\enum_value;
 
@@ -84,8 +86,26 @@ class DatabaseSeeder extends Seeder
 
         IncidentParty::factory(500)->create();
 
-        DonationLog::factory(70)->create();
-        DonationContent::factory(150)->create();
+        DonationLog::factory(70)
+            ->has(DonationContent::factory()
+                ->afterMaking(function (DonationContent $donationContent) {
+                    DonationStock::upsert(
+                        [
+                            'donation_goods_type_id' => $donationContent->donation_goods_types_id,
+                            'stock' => $donationContent->quantity,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ],
+                        'donation_goods_type_id',
+                        [
+                            'stock' => DB::raw('"donation_stocks".stock + ' . (int)$donationContent->quantity),
+                            'updated_at' => now()
+                        ]
+                    );
+                })
+                ->count(2)
+            )
+            ->create();
 
     }
 }

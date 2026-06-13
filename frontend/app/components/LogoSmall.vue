@@ -1,21 +1,18 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:svg="http://www.w3.org/2000/svg"
-     version="1.1"
-     width="0.42in" height="0.42in"
-     viewBox="147 0 126 126">
-  <title>Logo</title>
-  <defs>
-  </defs>
-  <path id="vector0"
-        fill="currentColor"
-        stroke="currentColor"
-        opacity="1"
-        stroke-width="6"
-        stroke-linecap="butt"
-        stroke-linejoin="miter"
-        stroke-miterlimit="10"
-        d="M 214.81,83.00
+<script setup lang="ts">
+
+</script>
+
+<template>
+  <svg class="h-8 w-auto fill-current" viewBox="147 0 126 126">
+    <path id="vector0"
+          fill="currentColor"
+          stroke="currentColor"
+          opacity="1"
+          stroke-width="6"
+          stroke-linecap="butt"
+          stroke-linejoin="miter"
+          stroke-miterlimit="10"
+          d="M 214.81,83.00
            C 214.81,83.00 209.28,83.00 209.28,83.00
              209.28,83.00 206.86,33.00 206.86,33.00
              206.86,33.00 217.23,33.00 217.23,33.00
@@ -30,16 +27,21 @@
              210.31,103.00 208.88,102.49 207.72,101.47
              206.56,100.44 205.98,98.77 205.98,96.45 Z
            M 323.69,83.39" />
-  <path id="vector1"
-        fill="none"
-        stroke="currentColor"
-        opacity="1"
-        stroke-width="5.2"
-        stroke-linecap="butt"
-        stroke-linejoin="miter"
-        stroke-miterlimit="10"
-        d="M 212.13,4.91
+    <path id="vector1"
+          fill="none"
+          stroke="currentColor"
+          opacity="1"
+          stroke-width="5.2"
+          stroke-linecap="butt"
+          stroke-linejoin="miter"
+          stroke-miterlimit="10"
+          d="M 212.13,4.91
            C 212.13,4.91 154.35,112.46 154.35,112.46
              154.35,112.46 265.50,112.51 265.50,112.51
              265.50,112.51 212.13,4.91 212.13,4.91 Z" />
-</svg>
+  </svg>
+</template>
+
+<style scoped>
+
+</style>

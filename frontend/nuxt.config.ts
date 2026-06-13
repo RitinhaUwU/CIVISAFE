@@ -39,10 +39,12 @@ export default defineNuxtConfig({
         '@vue/devtools-core',
         '@vue/devtools-kit',
         'axios',
+        'chart.js',
         'idb',
         'laravel-echo',
-        'leaflet',
-        'pusher-js',
+        'leaflet', // CJS
+        'pusher-js', // CJS
+        'vue-chartjs',
       ]
     }
   },

@@ -2,7 +2,7 @@ import {defineStore} from 'pinia'
 import axios from 'axios'
 import {checkServerAccess} from "@/utils";
 import {clearTable, removeEntry, retrieveData, retrieveDataPaginated, storeData} from "@/composables/useIndexedDB";
-import type {QueryParams} from "@/types";
+import type {QueryParams, StatisticalStockMetadata} from "@/types";
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()
@@ -590,6 +590,19 @@ export const useApiStore = defineStore('api', () => {
     return res;
   }
 
+  /*************************
+   *
+   *  Donation Statistics
+   *
+   *************************/
+
+  const getStockStats = async () => {
+    if(await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/donationStatistics`);
+    }
+    throw new Error('Not Implemented');
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -663,5 +676,6 @@ export const useApiStore = defineStore('api', () => {
     createDonationLog,
     updateDonationLog,
     deleteDonationLog,
+    getStockStats
   }
 })

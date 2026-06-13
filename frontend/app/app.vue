@@ -2,13 +2,16 @@
 import {useToast} from "@nuxt/ui/composables";
 import {computed, onMounted, onUnmounted, ref, watch} from "vue";
 import {useHead} from "nuxt/app";
-import {useColorMode} from "@vueuse/core";
 import {checkServerAccess} from "@/utils";
 import {useAuthStore} from "@/stores/auth";
 import {useRegisterSW} from 'virtual:pwa-register/vue'
 
 const toast = useToast()
+
+//ATENÇÃO: Não importar o useColorMode do usevue.
 const colorMode = useColorMode()
+
+console.debug(colorMode)
 const color = computed(() => colorMode.value === 'dark' ? '#1b1718' : 'white')
 let last_connectivity_state = true;
 

@@ -115,7 +115,7 @@ const fetchUser = async () => {
     return;
   }
 
-  if(auth.currentUserID == parseInt(routeID) && !auth.hasPermission('USERS_VIEW_SELF'))
+  if(auth.currentUserID == parseInt(routeID) && !auth.hasPermission('USERS_VIEW_OWN'))
   {
     await useRouter().push('/users');
     return;

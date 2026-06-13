@@ -16,7 +16,7 @@ class DonationLogResource extends JsonResource
             'name' => $this->name,
             'contact' => $this->contact,
             'email' => $this->email,
-            'donator_type' => $this->donator_type,
+            'donor_type' => $this->donor_type,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

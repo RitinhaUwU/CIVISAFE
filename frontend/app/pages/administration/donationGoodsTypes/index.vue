@@ -65,7 +65,7 @@ const columns: TableColumn<DonationGoodType>[] = [
         return h(
           'div',
           { class: 'flex justify-center' },
-          h(UBadge, { class: 'rounded-full', variant: 'subtle'}, () => "Não Aplicável")
+          h(UBadge, { class: 'rounded-full', variant: 'subtle'}, () => "Não Configurado")
         )
       }
     }

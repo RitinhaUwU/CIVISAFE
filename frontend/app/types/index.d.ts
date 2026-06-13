@@ -155,3 +155,28 @@ export interface DonationGoodType {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface DonationLog {
+  id: number;
+  name: string;
+  contact: string;
+  email: string;
+  donor_type: string;
+  user: User;
+  created_by: Date;
+  updated_at: Date;
+}
+
+export interface StatisticalStockMetadata {
+  name: string;
+  stock: number;
+  unit: string;
+  danger_level: number;
+}
+
+export interface StockStatistics {
+  totalSock: number;
+  stockAlerts: StatisticalStockMetadata[];
+  topStock: StatisticalStockMetadata[];
+  lowestStock: StatisticalStockMetadata[];
+}

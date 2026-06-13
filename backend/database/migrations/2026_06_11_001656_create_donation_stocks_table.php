@@ -8,8 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('donation_stocks', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('donation_goods_type_id')->constrained('donation_goods_types');
+            $table->foreignId('donation_goods_type_id')->primary()->constrained('donation_goods_types');
             $table->float('stock');
             $table->timestamps();
         });

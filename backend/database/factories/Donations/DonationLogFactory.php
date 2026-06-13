@@ -14,8 +14,9 @@ class DonationLogFactory extends Factory
 
     public function definition(): array
     {
+        $type = $this->faker->randomElement(['single', 'org', 'misc']);
         return [
-            'name' => $this->faker->name(),
+            'name' => $type === 'single' ? $this->faker->name() : $this->faker->company(),
             'contact' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->safeEmail(),
             'donor_type' => $this->faker->randomElement(['single', 'org', 'misc']),

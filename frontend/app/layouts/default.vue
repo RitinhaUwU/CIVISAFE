@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {NavigationMenuItem} from '@nuxt/ui'
 import { useAuthStore } from '@/stores/auth'
+import LogoSection from "@/components/LogoSection.vue";
 
 let { isNotificationsSlideoverOpen } = useDashboard()
 
@@ -178,7 +179,7 @@ onMounted(() => {
           :ui="{ footer: 'lg:border-t lg:border-default' }"
         >
           <template #header="{ collapsed }">
-            <TeamsMenu :collapsed="collapsed"/>
+            <LogoSection :collapsed="collapsed"/>
           </template>
           <template #default="{ collapsed }">
             <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default"/>

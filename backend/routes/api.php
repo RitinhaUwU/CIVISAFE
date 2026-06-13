@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DonationGoodsTypeController;
 use App\Http\Controllers\DonationLogController;
+use App\Http\Controllers\DonationStatsController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
@@ -85,5 +86,6 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('/donationGoodsTypes', DonationGoodsTypeController::class);
         Route::apiResource('/donations', DonationLogController::class);
+        Route::get('/donationStatistics', [DonationStatsController::class, 'stats']);
     });
 });

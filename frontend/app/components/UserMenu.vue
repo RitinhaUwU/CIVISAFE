@@ -7,6 +7,8 @@ defineProps<{
 }>()
 
 const auth = useAuthStore()
+
+//ATENÇÃO: Não importar o useColorMode do usevue.
 const colorMode = useColorMode()
 
 const user = computed(() => {
