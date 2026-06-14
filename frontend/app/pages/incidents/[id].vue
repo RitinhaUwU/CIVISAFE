@@ -23,7 +23,6 @@ const typeMenu = useTemplateRef('typeMenu')
 const stateMenu = useTemplateRef('stateMenu')
 const priorityMenu = useTemplateRef('priorityMenu')
 const incidentsMenu = useTemplateRef('incidentsMenu')
-const entitiesMenu = useTemplateRef('entitiesMenu')
 
 const types = usePaginatedSelect({
   fetcher: api.getIncidentTypes,
@@ -54,14 +53,6 @@ const incidents = usePaginatedSelect({
   menuRef: incidentsMenu,
   filters: () => ({is_major: !state.is_major}),
   map: (i: any) => ({id: i.id, name: i.identifier})
-})
-const entities = usePaginatedSelect({
-  fetcher: api.getEntities,
-  menuRef: entitiesMenu,
-  map: (e: any) => ({
-    id: e.id,
-    name: e.name
-  })
 })
 
 const tabs = [
@@ -513,7 +504,6 @@ onMounted(async () => {
     types.fetchItems(),
     states.fetchItems(),
     priorities.fetchItems(),
-    entities.fetchItems(),
     fetchPCOList(),
     fetchLogistics()
   ])
@@ -801,7 +791,6 @@ onMounted(async () => {
   <LogisticFormModal
     v-model:open="logisticModalOpen"
     :model-value="editingLogistic"
-    :entities="entities.items.value"
     @save="saveLogistic"
   />
 </template>

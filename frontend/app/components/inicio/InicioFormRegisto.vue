@@ -64,14 +64,14 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<any>({
+const state = reactive<Partial<Schema>>({
   is_major: false,
   identifier: '',
   start_datetime: '',
   end_datetime: '',
-  incident_state_id: null,
-  incident_priority_id: null,
-  incident_type_id: null,
+  incident_state_id: null as any,
+  incident_priority_id: null as any,
+  incident_type_id: null as any,
   user_id: authStore.currentUserID,
   incident_id: null,
   alert_source_relationship: '',
