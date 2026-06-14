@@ -21,6 +21,17 @@ type Schema = z.output<typeof schema>
 const state = reactive<Partial<Schema>>({ file: undefined })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   //TODO: Mostrar erro no modal, fechar o modal quando termina de carregar com sucesso e limpar a input quando o modal fecha
   try {
     const formData = new FormData();

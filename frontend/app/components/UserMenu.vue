@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '@/stores/auth'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
 defineProps<{
@@ -28,27 +28,22 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   label: 'Aparência',
   icon: 'i-lucide-sun-moon',
   children: [{
-    label: 'Light',
+    label: 'Claro',
     icon: 'i-lucide-sun',
     type: 'checkbox',
-    checked: colorMode.value === 'light',
+    checked: colorMode.preference === 'light',
     onSelect(e: Event) {
       e.preventDefault()
-
       colorMode.preference = 'light'
     }
   }, {
-    label: 'Dark',
+    label: 'Escuro',
     icon: 'i-lucide-moon',
     type: 'checkbox',
-    checked: colorMode.value === 'dark',
-    onUpdateChecked(checked: boolean) {
-      if (checked) {
-        colorMode.preference = 'dark'
-      }
-    },
+    checked: colorMode.preference === 'dark',
     onSelect(e: Event) {
       e.preventDefault()
+      colorMode.preference = 'dark'
     }
   }]
 }], [{
@@ -73,7 +68,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   >
     <UButton
       v-bind="{
-        ...user.value,
+        ...user,
         label: collapsed ? undefined : user?.name,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"

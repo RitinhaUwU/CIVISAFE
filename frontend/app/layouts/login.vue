@@ -25,7 +25,7 @@ const navbarUI = computed(() => ({
     </main>
     <UFooter class="w-full">
       <div class="py-4 text-center text-sm opacity-70">
-        Copyright © 2026
+        Copyright © 2026 (Versão {{ useRuntimeConfig().public.appVersion }})
       </div>
     </UFooter>
   </div>

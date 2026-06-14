@@ -2,6 +2,8 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 
 const route = useRoute()
 const router = useRouter()
@@ -9,7 +11,21 @@ const api = useApiStore()
 const toast = useToast()
 
 const saving = ref(false)
-const incidents = ref<{ label: string; value: number }[]>([])
+
+const incidentsMenu = useTemplateRef('incidentsMenu')
+const incidents = usePaginatedSelect({
+  fetcher: api.getIncidents,
+  menuRef: incidentsMenu,
+  filters: () => ({
+    is_major: false
+  }),
+  map: (i: any) => ({id: i.id, name: i.identifier})
+})
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -26,7 +42,7 @@ const schema = z.object({
   meal_location: z.string().nullable().optional(),
   start_datetime: z.string(),
   end_datetime: z.string(),
-  incident_id: z.number().nullable().optional(),
+  incident_id: selectOptionSchema.nullable().optional(),
 })
 
 type Schema = z.output<typeof schema>
@@ -46,10 +62,21 @@ const state = reactive<Partial<Schema>>({
   meal_location: '',
   start_datetime: '',
   end_datetime: '',
-  incident_id: null as number | null
+  incident_id: null as any
 })
 
 const handleSave = async () => {
+  if (!useAuthStore().hasPermission('VOLUNTEERS_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -65,11 +92,16 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateVolunteer(route.params.id, state)
+    const payload = {
+      ...result.data,
+      incident_id: result.data.incident_id?.id ?? null
+    }
+
+    await api.updateVolunteer(parseInt(<string>route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
-      description: 'Voluntário atualizada',
+      description: 'Voluntário atualizado',
       color: 'success'
     })
   } catch (e) {
@@ -92,37 +124,33 @@ const toDatetimeLocal = (value?: string | null) => {
 }
 
 const fetchVolunteer = async () => {
-  const res = await api.getVolunteer(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Voluntário inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um Voluntário inválido',
+      color: 'error'
+    });
+    await useRouter().push('/volunteers');
+    return;
+  }
 
-  const mapVolunteer = (data: any) => ({
-    name: data.name,
-    contact: data.contact,
-    email: data.email,
-    classification: data.classification,
+  const data = (await api.getVolunteer(parseInt(routeID))).data.data
+
+  Object.assign(state, {
+    ...data,
     num_elements: Number(data.num_elements),
-    mission: data.mission,
-    team_identification: data.team_identification,
-    has_accommodation: data.has_accommodation,
-    location: data.location,
-    has_meal: data.has_meal,
-    meal_notes: data.meal_notes,
-    meal_location: data.meal_location,
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    incident_id: data.incident_id ?? data.incident?.id ?? null,
+    incident_id: data.incident ? {id: data.incident.id, name: data.incident.identifier} : null
   })
 
-  Object.assign(state, mapVolunteer(data))
-}
-
-const fetchIncidents = async () => {
-  const res = await api.getIncidents()
-
-  incidents.value = res.data.data.map((i: any) => ({
-    label: i.identifier,
-    value: i.id
-  }))
+  if (data.incident) {
+    incidents.prependSelected([{
+      id: data.incident.id,
+      name: data.incident.identifier
+    }])
+  }
 }
 
 const items = ref<BreadcrumbItem[]>([
@@ -138,8 +166,13 @@ const items = ref<BreadcrumbItem[]>([
 ])
 
 onMounted(async () => {
-  await fetchIncidents()
+  if(!useAuthStore().hasPermission('VOLUNTEERS_LIST')) {
+    await useRouter().push('/volunteers');
+    return;
+  }
+
   await fetchVolunteer()
+  await incidents.fetchItems()
 })
 </script>
 
@@ -155,7 +188,13 @@ onMounted(async () => {
             {{ state.team_identification }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!useAuthStore().hasPermission('VOLUNTEERS_UPDATE')"
+            />
           </div>
         </div>
       </div>
@@ -198,10 +237,16 @@ onMounted(async () => {
             <UInput type="number" v-model="state.num_elements" class="w-full" />
           </UFormField>
           <UFormField label="Ocorrência">
-            <USelect
+            <USelectMenu
+              ref="incidentsMenu"
               v-model="state.incident_id"
+              v-model:search-term="incidents.search.value"
+              :items="incidents.items.value"
+              :loading="incidents.loading.value"
+              label-key="name"
+              ignore-filter
               class="w-full"
-              :items="incidents"
+              placeholder="Selecionar incidente"
             />
           </UFormField>
         </div>

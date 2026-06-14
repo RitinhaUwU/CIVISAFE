@@ -16,9 +16,9 @@ class IncidentTypeRequest extends FormRequest
                 Rule::unique('incident_types', 'code')
                     ->withoutTrashed()
             ],
-            'species' => [$is_patch ? 'sometimes' : 'required'],
-            'type' => [$is_patch ? 'sometimes' : 'required'],
-            'description' => [$is_patch ? 'sometimes' : 'nullable'],
+            'species' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
+            'type' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
+            'description' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
         ];
     }
 

@@ -1,14 +1,47 @@
 <script setup lang="ts">
-import InicioStats from '../components/inicio/InicioStats.vue'
-import InicioFormRegisto from '../components/inicio/InicioFormRegisto.vue'
+import InicioStats from '@/components/inicio/InicioStats.vue'
+import InicioFormRegisto from '@/components/inicio/InicioFormRegisto.vue'
+import { useApiStore } from '@/stores/api'
+import type {Incident} from '@/types'
+import {useToast} from "@nuxt/ui/composables"
+
+const api = useApiStore()
 
 const selectedCoords = ref<{ lat: number, lng: number }>({lat: 0, lng: 0})
 const openModal = ref(false)
 
-function handleMapClick(coords: { lat: number, lng: number }) {
+const incidents = ref<Incident[]>([])
+
+async function handleMapClick(coords: { lat: number, lng: number }) {
+  if(!await checkServerAccess())
+  {
+    useToast().add({
+      title: 'Não é possível adicionar ocorrências offline',
+      color: 'error'
+    });
+    return;
+  }
+
   selectedCoords.value = coords
   openModal.value = true
 }
+
+const incidentsMap = computed(() =>
+  incidents.value.filter(incident => incident.incidentState?.name !== 'Terminada')
+)
+
+async function refreshIncidents() {
+  const res = await api.getIncidents({
+    page: 1,
+    per_page: 1000
+  })
+
+  incidents.value = res.data.data
+}
+
+onMounted(async () => {
+  await refreshIncidents()
+})
 </script>
 
 <template>
@@ -23,8 +56,8 @@ function handleMapClick(coords: { lat: number, lng: number }) {
 
     <template #body>
       <InicioStats />
-      <InicioFormRegisto v-model="openModal" :coords="selectedCoords" />
-      <Map @map-click="handleMapClick"/>
+      <InicioFormRegisto v-model="openModal" :coords="selectedCoords" @created="refreshIncidents" />
+      <Map :incidents="incidentsMap" @map-click="handleMapClick"/>
     </template>
   </UDashboardPanel>
 </template>

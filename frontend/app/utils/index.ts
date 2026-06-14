@@ -6,6 +6,21 @@ export function randomFrom<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]!
 }
 
+export async function checkServerAccess() {
+  try {
+
+    const response = await fetch(useRuntimeConfig().public.apiBase + '/up', {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(3000)
+    })
+
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 /**
  * Formatação de bytes em unidade SI human readable
  * Fonte: Documentação NuxtUI: https://ui.nuxt.com/docs/components/file-upload#examples (18/5/2026)

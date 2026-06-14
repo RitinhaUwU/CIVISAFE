@@ -11,8 +11,8 @@ class EntityUpdateRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'name' => [$is_patch ? 'sometimes' : 'required', 'string'],
-            'description' => [$is_patch ? 'sometimes' : 'nullable', 'string'],
+            'name' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
+            'description' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
             'phone_contact' => [$is_patch ? 'sometimes' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'email_contact' => [$is_patch ? 'sometimes' : 'nullable', 'email', 'max:254'],
             'address' => [$is_patch ? 'sometimes' : 'nullable', 'string'],

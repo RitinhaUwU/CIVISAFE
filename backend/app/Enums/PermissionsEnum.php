@@ -28,7 +28,10 @@ enum PermissionsEnum: string
 
     # ENTITY TYPES
     case ENTITY_TYPES_LIST = 'ENTITY_TYPES_LIST';
-    case ENTITY_TYPES_UPLOAD = 'ENTITY_TYPES_UPLOAD';
+    case ENTITY_TYPES_CREATE = 'ENTITY_TYPES_CREATE';
+    case ENTITY_TYPES_UPDATE = 'ENTITY_TYPES_UPDATE';
+    case ENTITY_TYPES_DELETE = 'ENTITY_TYPES_DELETE';
+
 
     # INCIDENTS
     case INCIDENTS_LIST = 'INCIDENTS_LIST';
@@ -52,7 +55,13 @@ enum PermissionsEnum: string
     case INCIDENT_PRIORITIES_UPDATE = 'INCIDENT_PRIORITIES_UPDATE';
     case INCIDENT_PRIORITIES_DELETE = 'INCIDENT_PRIORITIES_DELETE';
 
-
+    # INCIDENT FACILITIES
+    case FACILITIES_LIST = 'FACILITIES_LIST';
+    case FACILITIES_CREATE = 'FACILITIES_CREATE';
+    case FACILITIES_UPDATE = 'FACILITIES_UPDATE';
+    case FACILITIES_DELETE = 'FACILITIES_DELETE';
+    case FACILITIES_FILES_UPLOAD = 'FACILITIES_FILES_UPLOAD';
+    case FACILITIES_FILES_DELETE = 'FACILITIES_FILES_DELETE';
     public function label(): string
     {
         return match ($this) {
@@ -75,7 +84,9 @@ enum PermissionsEnum: string
             self::ENTITIES_DELETE => 'Eliminar Entidades',
             # ENTITY TYPES
             self::ENTITY_TYPES_LIST => 'Ver Tipos de Entidade',
-            self::ENTITY_TYPES_UPLOAD => 'Carregar Tipos de Entidade',
+            self::ENTITY_TYPES_CREATE => 'Criar Tipos de Entidade',
+            self::ENTITY_TYPES_UPDATE => 'Editar Tipos de Entidade',
+            self::ENTITY_TYPES_DELETE => 'Eliminar Tipos de Entidade',
             # INCIDENTS
             self::INCIDENTS_LIST => 'Ver Incidentes',
             self::INCIDENTS_CREATE => 'Criar Incidentes',
@@ -83,9 +94,7 @@ enum PermissionsEnum: string
             self::INCIDENTS_DELETE => 'Eliminar Incidentes',
             # INCIDENT TYPES
             self::INCIDENT_TYPES_LIST => 'Ver Tipos de Incidente',
-            self::INCIDENT_TYPES_CREATE => 'Criar Tipos de Incidente',
-            self::INCIDENT_TYPES_UPDATE => 'Editar Tipos de Incidente',
-            self::INCIDENT_TYPES_DELETE => 'Eliminar Tipos de Incidente',
+            self::INCIDENT_TYPES_UPLOAD => 'Carregar Tipos de Incidente',
             # INCIDENT STATES
             self::INCIDENT_STATES_LIST => 'Ver Estados de Incidente',
             self::INCIDENT_STATES_CREATE => 'Criar Estados de Incidente',
@@ -96,6 +105,13 @@ enum PermissionsEnum: string
             self::INCIDENT_PRIORITIES_CREATE => 'Criar Prioridades de Incidente',
             self::INCIDENT_PRIORITIES_UPDATE => 'Editar Prioridades de Incidente',
             self::INCIDENT_PRIORITIES_DELETE => 'Eliminar Prioridades de Incidente',
+            # FACILITIES
+            self::FACILITIES_LIST => 'Ver Instalações',
+            self::FACILITIES_CREATE => 'Criar Instalações',
+            self::FACILITIES_UPDATE => 'Editar Instalações',
+            self::FACILITIES_DELETE => 'Eliminar Instalações',
+            self::FACILITIES_FILES_UPLOAD => 'Carregar Ficheiros de Instalações',
+            self::FACILITIES_FILES_DELETE => 'Eliminar Ficheiros de Instalações',
         };
     }
 }

@@ -17,12 +17,25 @@ const state = reactive({
 const toast = useToast()
 
 const fetchEntity = async () => {
-  const res = await api.getIncidentType(route.params.id)
+  if(!useAuthStore().hasPermission('INCIDENT_TYPES_LIST'))
+  {
+    await useRouter().push('/inicio');
+    return;
+  }
+
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Tipo de Ocorrência inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um Tipo de Ocorrência inválido',
+      color: 'error'
+    });
+    await useRouter().push('/incidentTypes');
+    return;
+  }
+  const res = await api.getIncidentType(parseInt(routeID));
 
   Object.assign(state, res.data.data)
-}
-const handleCancel = () => {
-  router.back()
 }
 
 const items = ref<BreadcrumbItem[]>([
@@ -51,9 +64,6 @@ onMounted(fetchEntity)
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight truncate max-w-full">
             {{ state.type }}
           </h1>
-          <div class="flex items-center gap-2">
-            <UButton label="Voltar" color="neutral" variant="subtle" @click="handleCancel"/>
-          </div>
         </div>
       </div>
     </header>

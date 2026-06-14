@@ -1,32 +1,26 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import type {IncidentState} from "@/types";
+import {UBadge, UButton} from "#components";
 
 const toast = useToast()
 const api = useApiStore()
 
-const states = ref<States[]>([])
+const states = ref<IncidentState[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
-const statusFilter = ref('all')
-const terminatesFilter = ref('all')
+const statusFilter = ref<boolean|string>('all')
+const terminatesFilter = ref<boolean|string>('all')
 
 const deleteModalOpen = ref(false)
-const selectedStateById = ref<States | null>(null)
+const selectedStateById = ref<IncidentState | null>(null)
 
-type States = {
-  id: number;
-  name: string;
-  description: string;
-  hex_color: string;
-  terminates_incident: boolean;
-  is_active: boolean;
-}
-
-const columns: TableColumn<States>[] = [
+const columns: TableColumn<IncidentState>[] = [
   {
     accessorKey: "name",
     header: "Nome",
@@ -62,6 +56,7 @@ const columns: TableColumn<States>[] = [
   {
     accessorKey: "terminates_incident",
     header: () => h('div', { class: 'text-center w-full' }, 'Ocorrência Termina'),
+    //@ts-ignore
     meta: { class: 'text-center' },
     cell: ({ row }) => {
       const value = row.original.terminates_incident
@@ -99,6 +94,7 @@ const columns: TableColumn<States>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-state',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -106,10 +102,13 @@ const columns: TableColumn<States>[] = [
             navigateTo(`/administration/incidentStates/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
+          'data-testid': 'delete-state',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('INCIDENT_STATES_DELETE'),
           onClick: () => {
             selectedStateById.value = row.original
             deleteModalOpen.value = true
@@ -120,17 +119,15 @@ const columns: TableColumn<States>[] = [
   }
 ];
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10,
-})
-
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize,
+      page: page.value,
+      per_page: 10
     };
     if (search.value) {
       params.filter = {
@@ -151,9 +148,9 @@ const fetch = async() => {
     }
     const res = await api.getIncidentStates(params)
 
-    states.value = res.data.data
+    states.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -165,14 +162,36 @@ const fetch = async() => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
 watch([search, statusFilter, terminatesFilter], () => {
-  pagination.value.pageIndex = 0
+  page.value = 1
+  lastPage.value = Infinity
+  states.value = []
   fetch()
 })
 
-onMounted(fetch)
+const scrollContainer = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+
+  if(!useAuthStore().hasPermission('INCIDENT_STATES_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
+  fetch()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+})
 </script>
 
 <template>
@@ -183,7 +202,10 @@ onMounted(fetch)
           <h2 class="text-lg font-semibold">Estados de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Estado de Ocorrências.</p>
         </div>
-        <IncidentStatesAddModal @created="fetch" />
+        <IncidentStatesAddModal
+          @created="fetch"
+          v-if="useAuthStore().hasPermission('INCIDENT_STATES_CREATE')"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -201,7 +223,6 @@ onMounted(fetch)
               { label: 'Não', value: false }
             ]"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
             class="min-w-28"
           />
           <USelect
@@ -212,22 +233,15 @@ onMounted(fetch)
               { label: 'Desativado', value: false }
             ]"
             :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
             class="min-w-28"
           />
         </div>
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="states"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -236,19 +250,9 @@ onMounted(fetch)
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[500px]"
+          class="w-full"
         />
       </div>
-
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
-        />
-      </div>
-
       <IncidentStatesDeleteModal
         v-if="selectedStateById"
         v-model:open="deleteModalOpen"

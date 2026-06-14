@@ -1,48 +1,60 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
+import {useAuthStore} from "@/stores/auth";
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import type {Incident} from "@/types";
+import {UBadge, UButton} from "#components";
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import state from "pusher-js/src/core/http/state";
 
 const api = useApiStore()
+
 const incidents = ref<Incident[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
 const search = ref('')
-const statusFilter = ref('all')
-const prioritiesFilter = ref('all')
-const states = ref([])
-const priorities = ref([])
 
+const is_majorFilter = ref<boolean|string>('all')
+
+const allStatesOption = {
+  id: 'all',
+  name: 'Estados'
+}
+
+const allPrioritiesOption = {
+  id: 'all',
+  name: 'Prioridades'
+}
+
+const statusFilter = ref(allStatesOption)
+const prioritiesFilter = ref(allPrioritiesOption)
+
+const stateMenu = useTemplateRef('stateMenu')
+const priorityMenu = useTemplateRef('priorityMenu')
+
+const states = usePaginatedSelect({
+  fetcher: api.getIncidentStates,
+  menuRef: stateMenu,
+  map: (s: any) => ({
+    id: s.id,
+    name: s.name
+  })
+})
+const priorities = usePaginatedSelect({
+  fetcher: api.getIncidentPriorities,
+  menuRef: priorityMenu,
+  map: (p: any) => ({
+    id: p.id,
+    name: `${p.name} - ${p.description}`
+  })
+})
+
+const createModalOpen = ref(false)
 const deleteModalOpen = ref(false)
 const selectedIncidentById = ref<Incident | null>(null)
-
-type Incident = {
-  id: number;
-  identifier: string;
-  incident_type_id: number;
-  incident_state_id: number;
-  user_id: number;
-  incident_priority_id: number;
-  start_datetime: Date;
-  end_datetime: Date;
-  coordinates: string;
-  common_place: string;
-  address: string;
-  parish: string;
-  municipality: string;
-  district: string;
-  command_post: string;
-  is_major: boolean;
-  alert_source_relationship: string;
-  alert_source_name: string;
-  alert_source_contact: string;
-  obs: string;
-  incident_id: number;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date;
-}
 
 const columns: TableColumn<Incident>[] = [
   {
@@ -106,14 +118,15 @@ const columns: TableColumn<Incident>[] = [
             navigateTo(`/incidents/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('INCIDENTS_DELETE'),
           onClick: () => {
-            //?????????????????????????????????????????????
-            //selectedIncidentById.value = row.original
-            //deleteModalOpen.value = true
+            selectedIncidentById.value = row.original
+            deleteModalOpen.value = true
           }
         })
       )
@@ -121,43 +134,34 @@ const columns: TableColumn<Incident>[] = [
   }
 ]
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
-})
-
-const fetchFilters = async () => {
-  const [statesRes, prioritiesRes] = await Promise.all([
-    api.getIncidentStates(),
-    api.getIncidentPriorities(),
-  ])
-
-  states.value = statesRes.data.data
-  priorities.value = prioritiesRes.data.data
-}
-
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize,
+      page: page.value,
+      per_page: 10,
       filter: {}
     }
     if (search.value) {
       params.filter.search = search.value
     }
-    if (statusFilter.value !== 'all') {
-      params.filter.state = statusFilter.value
+    if (statusFilter.value?.id !== 'all') {
+      params.filter.state = statusFilter.value?.id
     }
-    if (prioritiesFilter.value !== 'all') {
-      params.filter.priority = prioritiesFilter.value
+    if (prioritiesFilter.value?.id !== 'all') {
+      params.filter.priority = prioritiesFilter.value?.id
+    }
+    if (is_majorFilter.value !== 'all') {
+      params.filter.is_major = is_majorFilter.value
     }
     const res = await api.getIncidents(params)
 
-    incidents.value = res.data.data
+    incidents.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     console.error("Erro ao carregar entidades: ", e)
   } finally {
@@ -165,16 +169,36 @@ const fetch = async() => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
-watch([search, statusFilter, prioritiesFilter], () => {
-  pagination.value.pageIndex = 0
+watch([search, statusFilter, prioritiesFilter, is_majorFilter], () => {
+  page.value = 1
+  lastPage.value = Infinity
+  incidents.value = []
   fetch()
 })
 
+const scrollContainer = ref<HTMLElement | null>(null)
+
 onMounted(() => {
+  if(!useAuthStore().hasPermission('INCIDENTS_LIST')){
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetch()
-  fetchFilters()
+  states.fetchItems()
+  priorities.fetchItems()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
 })
 </script>
 
@@ -183,7 +207,14 @@ onMounted(() => {
     <template #header>
       <UDashboardNavbar title="Ocorrências">
         <template #leading>
-          <UDashboardSidebarCollapse />
+          <UDashboardSidebarCollapse @created="fetch" />
+        </template>
+        <template #right>
+          <UButton
+            label="Nova Ocorrência"
+            icon="i-lucide-plus"
+            @click="createModalOpen = true"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -197,69 +228,72 @@ onMounted(() => {
         />
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
-            v-model="statusFilter"
-            class="w-48"
+            v-model="is_majorFilter"
             :items="[
-              { label: 'Todos', value: 'all' },
-              ...states.map(s => ({
-              label: s.name,
-              value: s.id
-              }))
+              { label: 'Ocorrência Major', value: 'all' },
+              { label: 'Sim', value: true },
+              { label: 'Não', value: false }
             ]"
+            class="min-w-48"
           />
-          <USelect
-            v-model="prioritiesFilter"
-            class="w-48"
+          <USelectMenu
+            ref="stateMenu"
+            v-model="statusFilter"
+            v-model:search-term="states.search.value"
             :items="[
-              { label: 'Todas', value: 'all' },
-              ...priorities.map(p => ({
-              label: `${p.name} - ${p.description}`,
-              value: p.id
-              }))
+              allStatesOption,
+              ...states.items.value
             ]"
+            :loading="states.loading.value"
+            label-key="name"
+            ignore-filter
+            class="w-48"
+            placeholder="Estado"
+          />
+          <USelectMenu
+            ref="priorityMenu"
+            v-model="prioritiesFilter"
+            v-model:search-term="priorities.search.value"
+            :items="[
+              allPrioritiesOption,
+              ...priorities.items.value
+            ]"
+            :loading="priorities.loading.value"
+            label-key="name"
+            ignore-filter
+            class="w-48"
+            placeholder="Prioridade"
           />
         </div>
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="incidents"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
-            base: 'table-fixed border-separate border-spacing-0',
+            base: 'table-auto border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
             tbody: '[&>tr]:last:[&>td]:border-b-0',
             th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[640px]"
+          class="w-full"
         />
       </div>
-
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
-        />
-      </div>
-
-      <!-- ????????????????????????????????????????
-      <EntitiesDeleteModal
-        v-if="selectedEntityById"
+      <IncidentsDeleteModal
+        v-if="selectedIncidentById"
         v-model:open="deleteModalOpen"
-        :id="selectedEntityById?.id"
-        :name="selectedEntityById?.name"
+        :id="selectedIncidentById?.id"
+        :identifier="selectedIncidentById?.identifier"
         @deleted="fetch"
-      />-->
+      />
+      <InicioFormRegisto
+        v-model="createModalOpen"
+        :coords="{ lat: 39.9139, lng: -8.1547 }"
+        @created="fetch"
+      />
     </template>
   </UDashboardPanel>
 </template>

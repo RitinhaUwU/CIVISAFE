@@ -3,13 +3,31 @@ import * as z from 'zod'
 import type {FormSubmitEvent} from '@nuxt/ui'
 import {useApiStore} from '~/stores/api'
 import {createBlobURL, formatBytes} from "~/utils";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
-const apiStore = useApiStore()
+const api = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
-const entityTypes = ref([])
 
 const toast = useToast()
+
+const entityTypesMenu = useTemplateRef('entityTypesMenu')
+
+const entityTypes = usePaginatedSelect({
+  fetcher: api.getEntityTypes,
+  menuRef: entityTypesMenu,
+  map: (i: any) => ({
+    id: i.id,
+    name: i.name
+  })
+})
+
+const imageFile = ref(null)
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -19,7 +37,8 @@ const schema = z.object({
   poc_name: z.string().optional().nullable(),
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
-  description: z.string().optional().nullable()
+  description: z.string().optional().nullable(),
+  entity_type_id: selectOptionSchema.nullable()
 })
 
 type Schema = z.output<typeof schema>
@@ -38,11 +57,16 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    const entity = await apiStore.createEntity(event.data)
+    const payload = {
+      ...event.data,
+      entity_type_id: event.data.entity_type_id?.id,
+    }
+
+    const entity = await api.createEntity(payload)
 
     if(fileState.image != undefined)
     {
-      const uploadUrl = await apiStore.requestEntitySignedUrl(fileState.image.name);
+      const uploadUrl = await api.requestEntitySignedUrl(fileState.image.name);
 
       const bucketResponse = await fetch(uploadUrl.data.url.url, {
         method: 'PUT',
@@ -60,11 +84,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         return;
       }
       //Atualizar a entidade com a key da imagem
-      await apiStore.updateEntityLogo(entity.data.data.id, uploadUrl.data.key);
+      await api.updateEntityLogo(entity.data.data.id, uploadUrl.data.key);
     }
 
     emit('created')
     open.value = false
+
     toast.add({
       title: 'Sucesso',
       description: 'Entidade criada com sucesso',
@@ -80,24 +105,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       poc_phone: '',
       poc_email: '',
       description: '',
-      entity_type_id: null as number,
+      entity_type_id: null,
     })
-  } catch (e: any) {
-    console.debug(e)
+  }
+  catch (e: any) {
     toast.add({
       title: 'Erro',
       description: 'Erro ao criar entidade',
       color: 'error'
     })
   }
-}
-
-const fetchEntityTypes = async () => {
-  const res = await apiStore.getEntityTypes()
-  entityTypes.value = res.data.data.map((t: any) => ({
-    label: t.name,
-    value: t.id
-  }))
 }
 
 /***
@@ -150,8 +167,8 @@ const fileState = reactive<Partial<FileSchema>>({
   image: undefined
 })
 
-onMounted(() => {
-  fetchEntityTypes()
+onMounted(async () => {
+  await entityTypes.fetchItems()
 })
 </script>
 
@@ -202,50 +219,55 @@ onMounted(() => {
       </UForm>
       <UForm
         :state="state"
+        :schema="schema"
         @submit="onSubmit"
       >
         <div class="h-px border-t border-stone-200 dark:border-stone-800 mb-5"/>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">
           <div class="space-y-5">
             <UFormField label="Tipo de Entidade:" name="entity_type_id">
-              <USelect
+              <USelectMenu
+                data-testid="entity-type-select"
+                ref="entityTypesMenu"
                 v-model="state.entity_type_id"
-                :items="entityTypes"
+                v-model:search-term="entityTypes.search.value"
+                :items="entityTypes.items.value"
+                :loading="entityTypes.loading.value"
+                label-key="name"
+                ignore-filter
                 placeholder="Seleciona o tipo"
                 class="w-full"
               />
             </UFormField>
             <UFormField label="Nome:" name="name">
-              <UInput v-model="state.name" class="w-full" required/>
+              <UInput v-model="state.name" class="w-full" />
             </UFormField>
-            <UFormField label="Email:" name="email">
-              <UInput v-model="state.email_contact" class="w-full"/>
+            <UFormField label="Email:" name="email_contact">
+              <UInput v-model="state.email_contact" class="w-full" />
             </UFormField>
             <UFormField label="Contacto:" name="phone_contact">
-              <UInput v-model="state.phone_contact" class="w-full"/>
+              <UInput v-model="state.phone_contact" class="w-full" />
             </UFormField>
             <UFormField label="Morada:" name="address">
-              <UInput v-model="state.address" class="w-full"/>
+              <UInput v-model="state.address" class="w-full" />
             </UFormField>
           </div>
           <div class="space-y-5">
             <UFormField label="Nome do Responsável:" name="poc_name">
-              <UInput v-model="state.poc_name" class="w-full"/>
+              <UInput v-model="state.poc_name" class="w-full" />
             </UFormField>
             <UFormField label="Email do Responsável:" name="poc_email">
-              <UInput v-model="state.poc_email" class="w-full"/>
+              <UInput v-model="state.poc_email" class="w-full" />
             </UFormField>
             <UFormField label="Contacto do Responsável:" name="poc_phone">
-              <UInput v-model="state.poc_phone" class="w-full"/>
+              <UInput v-model="state.poc_phone" class="w-full" />
             </UFormField>
-            <UFormField label="Observações:" name="description">
-              <UTextarea v-model="state.description" class="w-full"/>
+            <UFormField label="Descrição:" name="description">
+              <UTextarea v-model="state.description" class="w-full" />
             </UFormField>
           </div>
-
           <div class="col-span-1 lg:col-span-2 flex justify-between gap-2">
-            <UButton label="Cancelar" color="neutral" variant="subtle" class="flex-1 justify-center"
-                     @click="open = false"/>
+            <UButton label="Cancelar" color="neutral" variant="subtle" class="flex-1 justify-center" @click="open = false"/>
             <UButton label="Guardar" color="primary" type="submit" class="flex-1 justify-center"/>
           </div>
         </div>

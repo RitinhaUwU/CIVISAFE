@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import * as z from "zod";
+import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
 const router = useRouter()
@@ -24,12 +25,41 @@ const state = reactive<Partial<Schema>>({
 const toast = useToast()
 
 const fetchEntityType = async () => {
-  const res = await api.getEntityType(route.params.id)
+  if(!useAuthStore().hasPermission('ENTITY_TYPES_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Tipo de Entidade inválido',
+      description: 'O Caminho que o trouxe aqui aponta para um tipo de entidade inválido',
+      color: 'error'
+    });
+    await useRouter().push('/entityTypes');
+    return;
+  }
+
+  const res = await api.getEntityType(parseInt(routeID))
 
   Object.assign(state, res.data.data)
 }
 
 const handleSave = async () => {
+
+  if (!useAuthStore().hasPermission('ENTITY_TYPES_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -45,7 +75,7 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await api.updateEntityType(route.params.id, state)
+    await api.updateEntityType(parseInt(<string>route.params.id), state)
 
     toast.add({
       title: 'Sucesso',
@@ -90,7 +120,13 @@ onMounted(fetchEntityType)
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!useAuthStore().hasPermission('ENTITY_TYPES_UPDATE')"
+            />
           </div>
         </div>
       </div>

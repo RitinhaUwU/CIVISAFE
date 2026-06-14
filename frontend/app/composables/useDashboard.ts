@@ -1,4 +1,8 @@
 import { createSharedComposable } from '@vueuse/core'
+import {useRoute} from "nuxt/app";
+import {useRouter} from "vue-router";
+import {defineShortcuts} from "@nuxt/ui/composables";
+import {watch} from "vue";
 
 const _useDashboard = () => {
   const route = useRoute()

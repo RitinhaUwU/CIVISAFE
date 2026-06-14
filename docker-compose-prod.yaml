@@ -1,0 +1,189 @@
+services:
+  database:
+    # https://hub.docker.com/_/postgres
+    # https://hub.docker.com/r/postgis/postgis/
+    image: postgis/postgis:18-3.6-alpine
+    restart: on-failure:3
+    shm_size: 256mb
+    container_name: database
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: civisafe
+    volumes:
+      - ./docker/postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "civisafe"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: on-failure:3
+
+  minio-storage:
+    container_name: minio-storage
+    image: quay.io/minio/aistor/minio
+    env_file:
+      - .env
+    volumes:
+      - ./minio.license:/minio.license
+      - ./docker/minio-data:/data
+    command: 'server /data --console-address ":9001"'
+    restart: on-failure:3
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - ./docker/proxymanager-data:/data
+      - ./docker/proxymanager-letsencrypt:/etc/letsencrypt
+
+  backend:
+    container_name: backend
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
+    #build: ./backend
+    entrypoint: /app/docker-entrypoint.sh
+    command: frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=:80
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - REDIS_CLIENT=predis
+      - CACHE_STORE=redis
+      - BROADCAST_CONNECTION=reverb
+      - QUEUE_CONNECTION=redis
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - REVERB_SCALING_ENABLED=true
+    restart: on-failure:3
+    depends_on:
+      database:
+        condition: service_healthy
+      minio-storage:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  queue-worker-default:
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
+    #build: ./backend
+    command: php /app/artisan queue:work
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - REDIS_CLIENT=predis
+      - CACHE_STORE=redis
+      - BROADCAST_CONNECTION=reverb
+      - QUEUE_CONNECTION=redis
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - REVERB_SCALING_ENABLED=true
+    restart: on-failure:3
+    depends_on:
+      database:
+        condition: service_healthy
+      minio-storage:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  queue-worker-notifications:
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
+    #build: ./backend
+    command: php /app/artisan queue:work --queue=notifications
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - REDIS_CLIENT=predis
+      - CACHE_STORE=redis
+      - BROADCAST_CONNECTION=reverb
+      - QUEUE_CONNECTION=redis
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - REVERB_SCALING_ENABLED=true
+    restart: on-failure:3
+    depends_on:
+      database:
+        condition: service_healthy
+      reverb:
+        condition: service_started
+
+  queue-worker-imports:
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
+    #build: ./backend
+    command: php /app/artisan queue:work --queue=imports
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - REDIS_CLIENT=predis
+      - CACHE_STORE=redis
+      - BROADCAST_CONNECTION=reverb
+      - QUEUE_CONNECTION=redis
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - REVERB_SCALING_ENABLED=true
+    restart: on-failure:3
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  reverb:
+    container_name: reverb
+    image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
+    #build: ./backend
+    command: php /app/artisan reverb:start
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - REDIS_CLIENT=predis
+      - CACHE_STORE=redis
+      - BROADCAST_CONNECTION=reverb
+      - QUEUE_CONNECTION=redis
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - REVERB_SCALING_ENABLED=true
+    restart: on-failure:3
+    depends_on:
+      redis:
+        condition: service_started
+      database:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  frontend:
+    container_name: frontend
+    image: ghcr.io/ritinhauwu/civisafe-frontend:${IMAGE_VERSION}
+    #build: ./frontend
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    restart: on-failure:3
+    depends_on:
+      - backend
+      - reverb
+      - minio-storage

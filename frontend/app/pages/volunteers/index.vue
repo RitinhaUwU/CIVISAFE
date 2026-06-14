@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
+import type {Volunteer} from "@/types";
+import {UBadge, UButton} from "#components";
 
 const api = useApiStore()
 const toast = useToast()
 
 const volunteers = ref<Volunteer[]>([])
+const page = ref(1)
+const lastPage = ref<number>(Infinity)
 const loading = ref(false)
 const total = ref(0)
 
@@ -17,28 +20,6 @@ const classificationFilter = ref('all')
 
 const deleteModalOpen = ref(false)
 const selectedVolunteerById = ref<Volunteer | null>(null)
-
-type Volunteer = {
-  id: number;
-  name: string;
-  start_datetime: Date;
-  end_datetime: Date;
-  contact: string;
-  email: string;
-  num_elements: number
-  mission: string;
-  team_identification: string
-  classification: string
-  has_accommodation: boolean;
-  location: string;
-  has_meal: boolean;
-  meal_notes: string;
-  meal_location: string;
-  incident_id: number;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date;
-}
 
 const classificationMap: Record<string, string> = {
   single: 'Individual',
@@ -127,6 +108,7 @@ const columns: TableColumn<Volunteer>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          'data-testid': 'edit-volunteer',
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
@@ -134,10 +116,13 @@ const columns: TableColumn<Volunteer>[] = [
             navigateTo(`/volunteers/${row.original.id}`)
           }
         }),
+        //@ts-ignore
         h(UButton, {
+          'data-testid': 'delete-volunteer',
           icon: 'i-lucide-trash',
           color: 'error',
           variant: 'ghost',
+          disabled: !useAuthStore().hasPermission('VOLUNTEERS_DELETE'),
           onClick: () => {
             selectedVolunteerById.value = row.original
             deleteModalOpen.value = true
@@ -148,17 +133,15 @@ const columns: TableColumn<Volunteer>[] = [
   }
 ]
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
-})
-
 const fetch = async() => {
+  if (loading.value) return
+  if (page.value > lastPage.value) return
+
   loading.value = true
   try {
     const params: any = {
-      page: pagination.value.pageIndex + 1,
-      per_page: pagination.value.pageSize,
+      page: page.value,
+      per_page: 10,
       filter: {}
     }
     if (search.value) {
@@ -175,9 +158,9 @@ const fetch = async() => {
     }
     const res = await api.getVolunteers(params)
 
-    volunteers.value = res.data.data
+    volunteers.value.push(...res.data.data)
     total.value = res.data.meta.total
-    pagination.value.pageSize = res.data.meta.per_page
+    lastPage.value = res.data.meta.last_page
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -189,14 +172,37 @@ const fetch = async() => {
   }
 }
 
-watch(pagination, fetch, {deep: true})
-
 watch([search, accommodationFilter, mealFilter, classificationFilter], () => {
-  pagination.value.pageIndex = 0
+  page.value = 1
+  lastPage.value = Infinity
+  volunteers.value = []
   fetch()
 })
 
-onMounted(fetch)
+const scrollContainer = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+
+  if(!useAuthStore().hasPermission('VOLUNTEERS_LIST'))
+  {
+    useRouter().push('/inicio');
+    return;
+  }
+
+  fetch()
+
+  useInfiniteScroll(
+    scrollContainer,
+    () => {
+      page.value++
+      fetch()
+    },
+    {
+      distance: 200,
+      canLoadMore: () => !loading.value && page.value < lastPage.value
+    }
+  )
+})
 </script>
 
 <template>
@@ -207,7 +213,10 @@ onMounted(fetch)
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <VolunteersAddModal @created="fetch" />
+          <VolunteersAddModal
+            @created="fetch"
+            v-if="useAuthStore().hasPermission('VOLUNTEERS_CREATE')"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -247,17 +256,11 @@ onMounted(fetch)
           />
         </div>
       </div>
-      <div class="overflow-x-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
         <UTable
           :data="volunteers"
           :columns="columns"
           :loading="loading"
-          v-model:pagination="pagination"
-          :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel(),
-            rowCount: total,
-            manualPagination: true,
-          }"
           :ui="{
             base: 'table-fixed border-separate border-spacing-0',
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -266,15 +269,7 @@ onMounted(fetch)
             td: 'border-b border-default',
             separator: 'h-0'
           }"
-          class="w-full min-w-[640px]"
-        />
-      </div>
-      <div class="flex justify-end border-t border-default pt-4 mt-auto">
-        <UPagination
-          :page="pagination.pageIndex + 1"
-          :items-per-page="pagination.pageSize"
-          :total="total"
-          @update:page="(p) => (pagination.pageIndex = p - 1)"
+          class="w-full"
         />
       </div>
       <VolunteersDeleteModal

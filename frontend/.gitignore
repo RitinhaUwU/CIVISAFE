@@ -26,6 +26,13 @@ logs
 # VSC
 .history
 
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
 # Test
 playwright-report
 test-results

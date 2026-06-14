@@ -3,15 +3,13 @@
 namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
-use App\Models\Category;
 use App\Models\Entity;
+use App\Models\Facility;
 use App\Models\Incident;
 use App\Models\IncidentParty;
-use App\Models\IncidentPriority;
-use App\Models\IncidentState;
+use App\Models\IncidentPCO;
 use App\Models\User;
 use App\Models\Volunteer;
-use DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -47,7 +45,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Utilizador Manager',
             'email' => 'manager@example.com',
             'password' => bcrypt('password'),
-            'locked' => false,
+            'locked' => true,
         ])->assignRole(enum_value(RolesEnum::MANAGER));
 
         User::factory()->create([
@@ -57,22 +55,24 @@ class DatabaseSeeder extends Seeder
             'locked' => false,
         ])->assignRole(enum_value(RolesEnum::USER));
 
-        User::factory(10)->create()->each(function ($user) {
+        User::factory(100)->create()->each(function ($user) {
             $role = Role::inRandomOrder()->first();
             $user->assignRole($role->name);
         });
-        Entity::factory(10)->create();
-        Incident::factory(60)->create();
-        Volunteer::factory(10)->create();
+        Entity::factory(30)->create();
+        Incident::factory(600)->create();
+        Volunteer::factory(100)->create();
+        Facility::factory(30)->create();
+        IncidentPCO::factory(60)->create();
 
-        for ($i = 0; $i <= 20; $i++) {
+        for ($i = 0; $i <= 100; $i++) {
             Incident::factory()->create([
                 'is_major' => false,
                 'incident_id' => Incident::where(['is_major' => true])->inRandomOrder()->first()->id,
             ]);
         }
 
-        IncidentParty::factory(100)->create();
+        IncidentParty::factory(500)->create();
 
     }
 }

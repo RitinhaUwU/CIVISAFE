@@ -116,10 +116,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <div class="h-px border-t border-stone-200 dark:border-stone-800" />
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <UFormField label="Palavra-Passe" name="password">
-            <UInput v-model="state.password" type="password" class="w-full" />
+            <UInput v-model="state.password" type="password" data-testid="password" class="w-full" />
           </UFormField>
           <UFormField label="Confirmar Palavra-Passe" name="password_confirmation">
-            <UInput v-model="state.password_confirmation" type="password" class="w-full" />
+            <UInput v-model="state.password_confirmation" type="password" data-testid="password-confirmation" class="w-full" />
           </UFormField>
         </div>
         <div class="col-span-1 lg:col-span-2 flex justify-between gap-2">

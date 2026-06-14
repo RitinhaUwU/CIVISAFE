@@ -35,7 +35,12 @@ class EntityController extends Controller
                 AllowedFilter::callback('search', function (Builder $query, $value) {
                     $query->where('name', 'ILIKE', "%{$value}%");
                 }),
+                AllowedFilter::callback('type', function (Builder $query, $value) {
+                    if ($value === 'all' || !$value) return;
+                    $query->where('entity_type_id', $value);
+                })
             )
+            ->orderBy('id', 'asc')
             ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 

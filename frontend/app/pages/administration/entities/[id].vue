@@ -1,15 +1,32 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import { useApiStore } from '@/stores/api'
+import { useAuthStore } from '@/stores/auth'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {createBlobURL} from "~/utils";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const route = useRoute()
-const apiStore = useApiStore()
+const api = useApiStore()
 
 const saving = ref(false)
-const entityTypes = ref([])
+
+const entityTypesMenu = useTemplateRef('entityTypesMenu')
+
+const entityTypes = usePaginatedSelect({
+  fetcher: api.getEntityTypes,
+  menuRef: entityTypesMenu,
+  map: (i: any) => ({
+    id: i.id,
+    name: i.name
+  })
+})
+
+const selectOptionSchema = z.object({
+  id: z.number(),
+  name: z.string()
+})
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -19,12 +36,13 @@ const schema = z.object({
   poc_name: z.string().optional().nullable(),
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
-  description: z.string().optional().nullable()
+  description: z.string().optional().nullable(),
+  entity_type_id: selectOptionSchema.nullable()
 })
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema & { entity_type_id: number, logo: string }>>({
+const state = reactive<Partial<Schema>>({
   name: '',
   email_contact: '',
   phone_contact: '',
@@ -33,22 +51,50 @@ const state = reactive<Partial<Schema & { entity_type_id: number, logo: string }
   poc_email: '',
   poc_phone: '',
   description: '',
-  entity_type_id: null,
+  entity_type_id: null as number | null,
 })
 
 const toast = useToast()
 
 const fetchEntity = async () => {
-  const res = await apiStore.getEntity(route.params.id)
-  const data = res.data.data
+  const routeID = route.params.id;
+  if (typeof routeID !== 'string') {
+    toast.add({
+      title: 'Entidade inválida',
+      description: 'O Caminho que o trouxe aqui aponta para uma entidade inválida',
+      color: 'error'
+    });
+    await useRouter().push('/entities');
+    return;
+  }
+
+  const data = (await api.getEntity(parseInt(routeID))).data.data
 
   Object.assign(state, {
     ...data,
-    entity_type_id: data.entityType?.id,
+    entity_type_id: data.entityType ? { id: data.entityType.id, name: data.entityType.name } : null,
   })
+
+  if (data.entityType) {
+    entityTypes.prependSelected([{
+      id: data.entityType.id,
+      name: data.entityType.name
+    }])
+  }
 }
 
 const handleSave = async () => {
+  if (!useAuthStore().hasPermission('ENTITIES_UPDATE')) return
+
+  if (!await checkServerAccess()) {
+    toast.add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -92,7 +138,12 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    await apiStore.updateEntity(route.params.id, state)
+    const payload = {
+      ...result.data,
+      entity_type_id: result.data.entity_type_id?.id ?? null
+    }
+
+    await api.updateEntity(parseInt(<string>route.params.id), payload)
 
     toast.add({
       title: 'Sucesso',
@@ -110,14 +161,6 @@ const handleSave = async () => {
   }
 }
 
-const fetchEntityTypes = async () => {
-  const res = await apiStore.getEntityTypes()
-  entityTypes.value = res.data.data.map((t: any) => ({
-    label: t.name,
-    value: t.id
-  }))
-}
-
 const items = ref<BreadcrumbItem[]>([
   {
     label: 'Entidades',
@@ -125,7 +168,7 @@ const items = ref<BreadcrumbItem[]>([
     to: '/administration/entities'
   },
   {
-    label: 'Dados das Entidades',
+    label: 'Dados da Entidade',
     icon: 'i-lucide-building',
   }
 ])
@@ -192,8 +235,13 @@ const entityLogoURL = computed(() => {
 });
 
 onMounted(() => {
+  if(!useAuthStore().hasPermission('ENTITIES_LIST')) {
+    useRouter().push('/inicio');
+    return;
+  }
+
   fetchEntity()
-  fetchEntityTypes()
+  entityTypes.fetchItems()
 })
 </script>
 
@@ -209,7 +257,13 @@ onMounted(() => {
             {{ state.name }}
           </h1>
           <div class="flex items-center gap-2">
-            <UButton label="Guardar" color="primary" :loading="saving" @click="handleSave" />
+            <UButton
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              @click="handleSave"
+              :disabled="!useAuthStore().hasPermission('ENTITIES_UPDATE')"
+            />
           </div>
         </div>
       </div>
@@ -222,13 +276,19 @@ onMounted(() => {
             <h2 class="font-bold">Dados Gerais</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <UFormField label="Tipo" class="sm:col-span-2">
-                <USelect
+                <USelectMenu
+                  ref="entityTypesMenu"
                   v-model="state.entity_type_id"
-                  :items="entityTypes"
+                  v-model:search-term="entityTypes.search.value"
+                  :items="entityTypes.items.value"
+                  :loading="entityTypes.loading.value"
+                  label-key="name"
+                  ignore-filter
                   class="w-full"
+                  placeholder="Selecionar tipo"
                 />
               </UFormField>
-              <UFormField label="Nome" class="sm:col-span-2">
+              <UFormField label="Nome da Entidade" class="sm:col-span-2">
                 <UInput v-model="state.name" class="w-full" />
               </UFormField>
               <UFormField label="Email de contacto">
@@ -246,8 +306,8 @@ onMounted(() => {
           <section class="space-y-2">
             <h2 class="font-bold">Responsável</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Nome completo" class="sm:col-span-2">
-                <UInput v-model="state.poc_name" class="w-full" />
+              <UFormField label="Nome do Responsável" class="sm:col-span-2">
+                <UInput v-model="state.poc_name" data-testid="entity-name-input" class="w-full" />
               </UFormField>
               <UFormField label="Email">
                 <UInput v-model="state.poc_email" class="w-full" />
@@ -266,18 +326,9 @@ onMounted(() => {
         <div class="space-y-6">
           <section class="space-y-4">
             <h2 class="font-bold">Logotipo</h2>
-            <UFileUpload
-              v-model="fileState.image"
-              v-slot="{ open, removeFile }"
-              accept="image/png, image/jpeg, image/jpg"
-            >
+            <UFileUpload v-model="fileState.image" v-slot="{ open, removeFile }" accept="image/png, image/jpeg, image/jpg">
               <div class="flex flex-col items-center gap-4">
-                <UAvatar
-                  :src="entityLogoURL"
-                  icon="i-lucide-image"
-                  class="w-40 h-40 ring-2 ring-default"
-                />
-
+                <UAvatar :src="entityLogoURL" icon="i-lucide-image" class="w-40 h-40 ring-2 ring-default"/>
                 <div class="flex flex-col w-full gap-2">
                   <UButton
                     :label="state.logo ? 'Alterar Logotipo' : 'Carregar Logotipo'"
@@ -287,7 +338,6 @@ onMounted(() => {
                     block
                     @click="open()"
                   />
-
                   <UButton
                     v-if="fileState.image"
                     label="Restaurar"
