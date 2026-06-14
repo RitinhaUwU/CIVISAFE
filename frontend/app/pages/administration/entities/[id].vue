@@ -42,7 +42,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema>>({
+const state = reactive<Partial<Schema & {logo: string}>>({
   name: '',
   email_contact: '',
   phone_contact: '',
@@ -110,9 +110,9 @@ const handleSave = async () => {
 
   if(fileState.image !== undefined){
     //Existe uma imagem para carregar/atualizar
-    const uploadURL = await apiStore.requestEntitySignedUrl(fileState.image.name);
+    const uploadURL = await api.requestEntitySignedUrl(fileState.image.name);
 
-    const bucketResponse = await fetch(uploadUrl.data.url.url, {
+    const bucketResponse = await fetch(uploadURL.data.url.url, {
       method: 'PUT',
       headers: { 'Content-Type': fileState.image.type },
       body: fileState.image
@@ -128,7 +128,7 @@ const handleSave = async () => {
       return;
     }
 
-    await apiStore.updateEntityLogo(route.params.id, uploadURL.data.key)
+    await api.updateEntityLogo(route.params.id, uploadURL.data.key)
   }
   else
   {
