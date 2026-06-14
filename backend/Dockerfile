@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get install -y git unzip libzip-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN install-php-extensions pdo_pgsql gd intl zip opcache pcntl
+RUN install-php-extensions pdo_pgsql gd intl zip opcache pcntl sodium exif
 
 
 # Build stage
