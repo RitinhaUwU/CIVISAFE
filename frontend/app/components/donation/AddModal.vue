@@ -4,6 +4,7 @@ import type {FormSubmitEvent} from '@nuxt/ui'
 import {useApiStore} from '@/stores/api'
 import {CalendarDate} from "@internationalized/date";
 import {now} from "@vueuse/core";
+import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const apiStore = useApiStore()
 const open = ref(false)
@@ -11,19 +12,46 @@ const emit = defineEmits(['created'])
 
 const toast = useToast()
 
+const categoriesMenu = useTemplateRef('categoriesMenu')
+const goodCategories = usePaginatedSelect({
+  fetcher: apiStore.getDonationGoodTypes,
+  menuRef: categoriesMenu,
+  map: (t: any) => ({
+    id: t.id,
+    name: t.name
+  })
+})
+
 const goodsSchema = z.object({
-  category: z.number(),
+  category_id: z.number(),
   quantity: z.number().min(0.1),
 });
+
+type Good = z.output<typeof goodsSchema>
+
+const criarGood = (): Good => ({
+  category_id: undefined,
+  quantity: undefined,
+})
+
+const adicionarGood = () => {
+  state.goods.push(criarGood())
+}
+
+const removerGood = (index: number) => {
+  if (state.goods.length > 1) {
+    state.goods.splice(index, 1)
+  }
+}
 
 const schema = z.object({
   date: z.string().min(1, 'A Data é obrigatória'),
   name: z.string().min(1, 'O Nome é obrigatório'),
   contact: z.string().refine(
-      value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value),
-      'Insira apenas números ou formato +000 000000000'
+    value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value),
+    'Insira apenas números ou formato +000 000000000'
   ).optional().nullable(),
-  email: z.email().optional().nullable(),
+  email: z.string().email().optional().nullable(),
   donor_type: z.string().min(1, 'O Tipo de Doador é obrigatório'),
   goods: z.array(goodsSchema).min(1, 'Adicione pelo menos 1 Bem')
 });
@@ -66,33 +94,38 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
   }
 }
+
+onMounted(async () => {
+  adicionarGood();
+  await goodCategories.fetchItems()
+})
 </script>
 
 <template>
   <UModal
-      v-model:open="open"
-      title="Registar Doação"
-      :ui="{ content: 'max-h-[90vh] overflow-y-auto w-full max-w-5xl' }"
+    v-model:open="open"
+    title="Registar Doação"
+    :ui="{ content: 'max-h-[90vh] overflow-y-auto w-full max-w-5xl' }"
   >
     <UButton
-        icon="i-lucide-plus"
-        label="Registar Doação"
-        color="primary"
-        size="xs"
+      icon="i-lucide-plus"
+      label="Registar Doação"
+      color="primary"
+      size="xs"
     />
     <template #body>
       <UForm
-          :state="state"
-          :schema="schema"
-          class="space-y-5"
-          @submit="onSubmit"
+        :state="state"
+        :schema="schema"
+        class="space-y-5"
+        @submit="onSubmit"
       >
-        <div class="grid grid-cols-2 gap-5">
+        <div class="grid grid-cols-3 gap-5">
           <UFormField label="Data de Receção" name="date" required>
             <UInput type="date" v-model="state.date" class="w-full"/>
           </UFormField>
 
-          <UFormField label="Nome" name="name" required>
+          <UFormField label="Nome" name="name" required class="col-span-2">
             <UInput v-model="state.name" class="w-full"/>
           </UFormField>
         </div>
@@ -107,7 +140,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
 
           <UFormField label="Tipo de Doador" name="donor_type" required>
-            <USelect v-model="state.donor_type" class="w-full" :items="[
+            <USelect
+              v-model="state.donor_type"
+              class="w-full"
+              placeholder="Selecione o Tipo de Doador..."
+              :items="[
               {
                 label: 'Pessoa Singular',
                 value: 'single',
@@ -128,46 +165,56 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
           <TransitionGroup name="slide" tag="div">
 
-            <div class="grid grid-cols-2 gap-5" v-for="(item, index) in state.goods" :key="item.id">
+            <UCard class="mb-4" v-for="(item, index) in state.goods" :key="index">
 
-              <UFormField label="Categoria" name="category" required>
-                <USelect v-model="state.donor_type" class="w-full" :items="[
-                  {
-                    label: 'Categorias',
-                    value: 'single',
-                  }
-                ]"/>
-              </UFormField>
-
-              <div>
-                <UFormField label="Quantidade" name="quantity" required>
-                  <UInputNumber min="0.1" step="0.1" defaultValue="0"/>
+              <div class="grid grid-cols-2 gap-5">
+                <UFormField label="Categoria" name="category" required>
+                  <USelectMenu
+                    ref="categoriesMenu"
+                    v-model="item.category_id"
+                    v-model:search-term="goodCategories.search.value"
+                    :items="goodCategories.items.value"
+                    :loading="goodCategories.loading.value"
+                    label-key="name"
+                    class="w-full"
+                    ignore-filter
+                    placeholder="Selecione uma Categoria..."
+                  />
                 </UFormField>
-                <UButton icon="i-lucide-bin" class="w-fit"/>
+
+                <UFormField label="Quantidade" name="quantity" required>
+                  <UInputNumber
+                    v-model="item.quantity"
+                    min="0.1"
+                    step="0.1"
+                    defaultValue="0"
+                    class="w-full"/>
+                </UFormField>
+
+                <UButton v-if="index !== 0" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removerGood(index)"/>
               </div>
 
+            </UCard>
 
-              <UButton icon="i-lucide-plus" class="w-fit"/>
-
-            </div>
+            <UButton icon="i-lucide-plus" class="w-fit flex float-right mb-4" @click="adicionarGood()" :key="index"/>
 
           </TransitionGroup>
 
         </UCard>
 
-        <div class="flex justify-between gap-3 pt-2">
+        <div class="flex justify-end gap-3 pt-2">
           <UButton
-              label="Cancelar"
-              color="neutral"
-              variant="subtle"
-              class="flex-1 justify-center"
-              @click="open = false"
+            label="Cancelar"
+            color="neutral"
+            variant="subtle"
+            class="w-fit"
+            @click="open = false"
           />
           <UButton
-              label="Guardar"
-              color="primary"
-              type="submit"
-              class="flex-1 justify-center"
+            label="Guardar"
+            color="primary"
+            type="submit"
+            class="w-fit"
           />
         </div>
       </UForm>

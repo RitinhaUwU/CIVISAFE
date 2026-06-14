@@ -42,16 +42,19 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: [
+        '@internationalized/date',
         '@tanstack/table-core',
         '@vue/devtools-core',
         '@vue/devtools-kit',
         'axios',
         'chart.js',
+        'chartjs-plugin-annotation',
         'idb',
         'laravel-echo',
         'leaflet', // CJS
         'pusher-js', // CJS
         'vue-chartjs',
+        'zod',
       ]
     }
   },
