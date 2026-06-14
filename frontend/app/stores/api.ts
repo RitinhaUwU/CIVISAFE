@@ -2,7 +2,7 @@ import {defineStore} from 'pinia'
 import axios from 'axios'
 import {checkServerAccess} from "@/utils";
 import {clearTable, removeEntry, retrieveData, retrieveDataPaginated, storeData} from "@/composables/useIndexedDB";
-import type {QueryParams, StatisticalStockMetadata} from "@/types";
+import type {QueryParams} from "@/types";
 
 export const useApiStore = defineStore('api', () => {
   const config = useRuntimeConfig()

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { login, resetDB } from './helpers/auth'
+import { login } from './helpers/auth'
 
 test.describe.configure({ mode: 'serial' })
 

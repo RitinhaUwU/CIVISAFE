@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '../../stores/api'
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import { useApiStore } from '@/stores/api'
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 
 const api = useApiStore()
 const open = ref(false)
