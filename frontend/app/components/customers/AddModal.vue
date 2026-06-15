@@ -92,16 +92,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <div class="h-px border-t border-stone-200 dark:border-stone-800" />
         <h3 class="text-sm font-semibold text-muted">Dados do Utilizador</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <UFormField label="Nome" name="name">
+          <UFormField label="Nome" name="name" required>
             <UInput v-model="state.name" class="w-full" />
           </UFormField>
-          <UFormField label="Email" name="email">
+          <UFormField label="Email" name="email" required>
             <UInput v-model="state.email" class="w-full" />
           </UFormField>
-          <UFormField label="Telemóvel" name="mobile">
+          <UFormField label="Telemóvel" name="mobile" required>
             <UInput v-model="state.mobile" class="w-full" />
           </UFormField>
-          <UFormField label="Função" name="role">
+          <UFormField label="Função" name="role" required>
             <USelect
               v-model="state.role"
               :items="[
@@ -115,10 +115,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </div>
         <div class="h-px border-t border-stone-200 dark:border-stone-800" />
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <UFormField label="Palavra-Passe" name="password">
+          <UFormField label="Palavra-Passe" name="password" required>
             <UInput v-model="state.password" type="password" data-testid="password" class="w-full" />
           </UFormField>
-          <UFormField label="Confirmar Palavra-Passe" name="password_confirmation">
+          <UFormField label="Confirmar Palavra-Passe" name="password_confirmation" required>
             <UInput v-model="state.password_confirmation" type="password" data-testid="password-confirmation" class="w-full" />
           </UFormField>
         </div>

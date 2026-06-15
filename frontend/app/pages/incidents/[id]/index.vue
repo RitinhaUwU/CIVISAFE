@@ -67,7 +67,7 @@ const tabs = [
     icon: 'i-lucide-satellite-dish',
   },
   {
-    label: 'Logística',
+    label: 'Meios e Recursos',
     slot: 'logistica',
     icon: 'i-lucide-ambulance'
   }
@@ -462,7 +462,7 @@ const saveLogistic = async (payload: any) => {
 
     toast.add({
       title: 'Sucesso',
-      description: 'Logística guardada',
+      description: 'Recurso guardado',
       color: 'success'
     })
     await fetchLogistics()
@@ -470,7 +470,7 @@ const saveLogistic = async (payload: any) => {
   } catch (e: any) {
     toast.add({
       title: 'Erro',
-      description: 'Erro ao guardar logística',
+      description: 'Erro ao guardar o recurso',
       color: 'error'
     })
   }
@@ -731,9 +731,9 @@ onMounted(async () => {
           <div class="space-y-6 pt-4">
             <div class="flex justify-end">
               <UButton
-                  icon="i-lucide-plus"
-                  label="Nova Equipa"
-                  @click="openCreateLogistic"
+                icon="i-lucide-plus"
+                label="Novo Recurso"
+                @click="openCreateLogistic"
               />
             </div>
             <UTable

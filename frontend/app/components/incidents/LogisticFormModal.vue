@@ -54,11 +54,13 @@ watch(() => props.open, (open) => {
     Object.assign(state, {
       human_count: props.modelValue.human_count,
       vehicle_count: props.modelValue.vehicle_count,
-      entity_id: props.modelValue.entity
-        ? { id: Number(props.modelValue.entity.id), name: props.modelValue.entity.name }
-        : null
+      entity_id: props.modelValue.entity ? { id: Number(props.modelValue.entity.id), name: props.modelValue.entity.name } : null
     })
-  } else if (open) {
+  }
+  else if (open) {
+    Object.assign(state, defaultState())
+  }
+  else {
     Object.assign(state, defaultState())
   }
 })
@@ -87,7 +89,7 @@ onMounted(async () => {
     <template #body>
       <UForm :state="state" :schema="schema" @submit="onSubmit">
         <div class="space-y-4 p-4">
-          <UFormField label="Entidade" name="entity_id">
+          <UFormField label="Entidade" name="entity_id" required>
             <USelectMenu
               ref="entitiesMenu"
               v-model="state.entity_id"
@@ -100,10 +102,10 @@ onMounted(async () => {
             />
           </UFormField>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UFormField label="Nº de Veículos" name="vehicle_count">
+            <UFormField label="Nº de Veículos" name="vehicle_count" required>
               <UInputNumber v-model="state.vehicle_count" class="w-full" />
             </UFormField>
-            <UFormField label="Nº de Humanos" name="human_count">
+            <UFormField label="Nº de Operacionais" name="human_count" required>
               <UInputNumber v-model="state.human_count" class="w-full" />
             </UFormField>
           </div>

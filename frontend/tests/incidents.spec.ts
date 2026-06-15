@@ -284,8 +284,8 @@ test('add logistics team successfully', async ({ page }) => {
   await firstInfoButton.click()
   await page.waitForURL('**/incidents/**')
 
-  await page.getByRole('tab', { name: 'Logística' }).click()
-  await page.getByRole('button', { name: 'Nova Equipa' }).click()
+  await page.getByRole('tab', { name: 'Meios e Recursos' }).click()
+  await page.getByRole('button', { name: 'Novo Recurso' }).click()
 
   await page.locator('[placeholder="Selecionar entidade"], button:has-text("Selecionar entidade")').first().click()
   await page.waitForTimeout(500)
@@ -294,11 +294,11 @@ test('add logistics team successfully', async ({ page }) => {
   await page.waitForTimeout(300)
 
   await page.getByLabel('Nº de Veículos').fill('3')
-  await page.getByLabel('Nº de Humanos').fill('12')
+  await page.getByLabel('Nº de Operacionais').fill('12')
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
-  await expect(page.getByText('Logística guardada', { exact: true })).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText('Recurso guardada', { exact: true })).toBeVisible({ timeout: 20000 })
 })
 
 test('add logistics team fails without entity', async ({ page }) => {
@@ -309,8 +309,8 @@ test('add logistics team fails without entity', async ({ page }) => {
   await firstInfoButton.click()
   await page.waitForURL('**/incidents/**')
 
-  await page.getByRole('tab', { name: 'Logística' }).click()
-  await page.getByRole('button', { name: 'Nova Equipa' }).click()
+  await page.getByRole('tab', { name: 'Meios e Recursos' }).click()
+  await page.getByRole('button', { name: 'Novo Recurso' }).click()
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
@@ -347,7 +347,7 @@ test('edit logistics team successfully', async ({ page }) => {
   await firstInfoButton.click()
   await page.waitForURL('**/incidents/**')
 
-  await page.getByRole('tab', { name: 'Logística' }).click()
+  await page.getByRole('tab', { name: 'Meios e Recursos' }).click()
 
   await expect(page.locator('[data-testid="edit-logistic"]').first()).toBeVisible({ timeout: 10000 }).catch(() => {})
   await page.locator('[data-testid="edit-logistic"]').first().click({ force: true })
@@ -355,11 +355,11 @@ test('edit logistics team successfully', async ({ page }) => {
   await expect(page.getByText('Editar Equipa')).toBeVisible({ timeout: 10000 })
 
   await page.getByLabel('Nº de Veículos').fill('5')
-  await page.getByLabel('Nº de Humanos').fill('20')
+  await page.getByLabel('Nº de Operacionais').fill('20')
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
-  await expect(page.getByText('Logística guardada', { exact: true })).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText('Recurso guardada', { exact: true })).toBeVisible({ timeout: 20000 })
 })
 
 test('cancel delete keeps incident', async ({ page }) => {

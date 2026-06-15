@@ -248,10 +248,10 @@ onMounted(async() => {
                 <UCheckbox v-model="state.is_major" label="Ocorrência Major"/>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-5 items-start">
                   <div class="space-y-5">
-                    <UFormField label="Nº Ocorrência:" name="identifier">
+                    <UFormField label="Nº Ocorrência:" name="identifier" required>
                       <UInput v-model="state.identifier" class="w-full" />
                     </UFormField>
-                    <UFormField label="Estado:" name="incident_state_id">
+                    <UFormField label="Estado:" name="incident_state_id" required>
                       <USelectMenu
                         ref="stateMenu"
                         v-model="state.incident_state_id"
@@ -264,7 +264,7 @@ onMounted(async() => {
                         placeholder="Selecionar estado"
                       />
                     </UFormField>
-                    <UFormField label="Prioridade:" name="incident_priority_id">
+                    <UFormField label="Prioridade:" name="incident_priority_id" required>
                       <USelectMenu
                         ref="priorityMenu"
                         v-model="state.incident_priority_id"
@@ -277,7 +277,7 @@ onMounted(async() => {
                         placeholder="Selecionar prioridade"
                       />
                     </UFormField>
-                    <UFormField label="Tipo de Ocorrência:" name="incident_type_id">
+                    <UFormField label="Tipo de Ocorrência:" name="incident_type_id" required>
                       <USelectMenu
                         ref="typeMenu"
                         v-model="state.incident_type_id"
@@ -309,7 +309,7 @@ onMounted(async() => {
                     </UFormField>
                   </div>
                   <div class="space-y-5">
-                    <UFormField label="Data Alerta:" name="start_datetime">
+                    <UFormField label="Data Alerta:" name="start_datetime" required>
                       <UInput type="datetime-local" v-model="state.start_datetime" class="w-full"/>
                     </UFormField>
                     <UFormField label="Data Fim:" name="end_datetime">

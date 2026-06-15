@@ -79,7 +79,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             />
         </UFormField>
         <div class="h-px border-t border-stone-200 dark:border-stone-800 mb-5" />
-        <UFormField label="Nome" name="name">
+        <UFormField label="Nome" name="name" required>
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
         <UFormField label="Email" name="email">

@@ -239,7 +239,7 @@ onMounted(async () => {
                 class="w-full"
               />
             </UFormField>
-            <UFormField label="Nome:" name="name">
+            <UFormField label="Nome:" name="name" required>
               <UInput v-model="state.name" class="w-full" />
             </UFormField>
             <UFormField label="Email:" name="email_contact">
