@@ -87,6 +87,12 @@ Route::prefix('v1')->group(function () {
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
         });
-        Route::apiResource('/facilities', FacilitiesController::class);
+
+        Route::prefix('/facilities')->group(function () {
+            Route::apiResource('/', FacilitiesController::class)
+                ->parameter('', 'facility');
+            Route::post('/uploadUrl', [FacilitiesController::class, 'signedUrl']);
+            Route::post('/{facility}/upload', [FacilitiesController::class, 'confirmUpload']);
+        });
     });
 });

@@ -128,10 +128,9 @@ const handleSave = async () => {
       return;
     }
 
-    await api.updateEntityLogo(route.params.id, uploadURL.data.key)
+    await api.updateEntityLogo(parseInt(<string>route.params.id), uploadURL.data.key)
   }
-  else
-  {
+  else {
     //Remover o logotipo
     //if()
   }
@@ -270,7 +269,7 @@ onMounted(() => {
     </header>
     <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
       <UBreadcrumb :items="items" />
-      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
         <div class="space-y-6">
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
@@ -323,35 +322,38 @@ onMounted(() => {
             <UTextarea v-model="state.description" :rows="5" class="w-full" />
           </section>
         </div>
-        <div class="space-y-6">
-          <section class="space-y-4">
-            <h2 class="font-bold">Logotipo</h2>
-            <UFileUpload v-model="fileState.image" v-slot="{ open, removeFile }" accept="image/png, image/jpeg, image/jpg">
-              <div class="flex flex-col items-center gap-4">
-                <UAvatar :src="entityLogoURL" icon="i-lucide-image" class="w-40 h-40 ring-2 ring-default"/>
-                <div class="flex flex-col w-full gap-2">
-                  <UButton
-                    :label="state.logo ? 'Alterar Logotipo' : 'Carregar Logotipo'"
-                    icon="i-lucide-upload"
-                    color="neutral"
-                    variant="outline"
-                    block
-                    @click="open()"
-                  />
-                  <UButton
-                    v-if="fileState.image"
-                    label="Restaurar"
-                    icon="i-lucide-rotate-ccw"
-                    color="warning"
-                    variant="soft"
-                    block
-                    @click="removeFile()"
-                  />
+        <section class="space-y-6">
+          <h2 class="font-bold">Logotipo</h2>
+          <UFileUpload v-model="fileState.image" v-slot="{ open, removeFile }" accept="image/png, image/jpeg, image/jpg">
+            <div class="relative w-full aspect-square rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-700 hover:border-primary-400 dark:hover:border-primary-500 transition-colors overflow-hidden cursor-pointer bg-stone-50 dark:bg-stone-900" @click="!entityLogoURL && open()">
+              <template v-if="entityLogoURL">
+                <img
+                  :src="entityLogoURL"
+                  alt="Logotipo"
+                  class="w-full h-full object-contain p-4"
+                />
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
+                  <UButton icon="i-lucide-pencil" label="Alterar" color="neutral" variant="solid" size="sm" @click.stop="open()" />
+                  <UButton icon="i-lucide-rotate-ccw" label="Restaurar" color="primary" variant="solid" size="sm" @click.stop="removeFile()" />
                 </div>
-              </div>
-            </UFileUpload>
-          </section>
-        </div>
+              </template>
+              <template v-else>
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
+                  <div class="p-3 rounded-full bg-stone-100 dark:bg-stone-800">
+                    <UIcon name="i-lucide-image-plus" class="size-6 text-muted" />
+                  </div>
+                  <p class="text-sm font-medium text-default">Carregar logotipo</p>
+                  <p class="text-xs text-muted">JPG, JPEG, PNG · máx. 2 MB</p>
+                </div>
+              </template>
+            </div>
+            <div v-if="fileState.image" class="flex items-center gap-1.5 mt-2 px-1 text-xs text-muted">
+              <UIcon name="i-lucide-file-image" class="size-3 shrink-0" />
+              <span class="truncate">{{ fileState.image.name }}</span>
+              <span class="ml-auto shrink-0">{{ formatBytes(fileState.image.size) }}</span>
+            </div>
+          </UFileUpload>
+        </section>
       </div>
     </div>
   </div>

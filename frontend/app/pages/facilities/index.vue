@@ -44,15 +44,6 @@ const columns: TableColumn<Facilities | null>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
-          icon: 'i-lucide-files',
-          color: 'warning',
-          variant: 'ghost',
-          onClick: () => {
-            navigateTo(`/facilities/${row.original.id}/files`)
-          }
-        }),
-        //@ts-ignore
-        h(UButton, {
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',

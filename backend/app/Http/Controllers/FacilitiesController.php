@@ -7,6 +7,8 @@ use App\Http\Resources\FacilityResource;
 use App\Models\Facility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -36,6 +38,54 @@ class FacilitiesController extends Controller
 
         return FacilityResource::collection($facility);    }
 
+    public function signedUrl(Request $request){
+        $validated = $request->validate([
+            'filename' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (explode(".", $value)
+                        |> last(...)
+                        |> (fn($x) => !in_array($x, ['jpeg', 'jpg', 'png']))) {
+                    $fail("The file must be jpeg, jpg or png format.");
+                }
+            }],
+        ]);
+
+        $fileExtension = last(explode('.', $validated['filename']));
+        $fileKey = '/facilities/images/' . uuid_create() . '.' . $fileExtension;
+
+        return response()->json([
+            'key' => $fileKey,
+            'url' => Storage::disk('data_bucket')->temporaryUploadUrl($fileKey, now()->addMinutes(10))
+        ]);
+    }
+
+    public function confirmUpload(Request $request, Facility $facility)
+    {
+        try {
+            $validated = $request->validate([
+                'key' => ['required', 'string', function ($attribute, $value, $fail) {
+                    if (explode(".", $value)
+                            |> last(...)
+                            |> (fn($x) => !in_array($x, ['jpeg', 'jpg', 'png']))) {
+                        $fail("The file must be jpeg, jpg or png format.");
+                    }
+                }],
+            ]);
+
+            if($facility->image !== null) {
+                Storage::disk('data_bucket')->delete($facility->image);
+            }
+
+            $facility->image = $validated['key'];
+            $facility->saveOrFail();
+            return new FacilityResource($facility);
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function store(FacilitiesRequest $request)
     {
         return new FacilityResource(Facility::create($request->validated()));
@@ -55,6 +105,10 @@ class FacilitiesController extends Controller
 
     public function destroy(Facility $facility)
     {
+        if($facility->image !== null) {
+            Storage::disk('data_bucket')->delete($facility->logo);
+        }
+
         $facility->delete();
 
         return response()->json();

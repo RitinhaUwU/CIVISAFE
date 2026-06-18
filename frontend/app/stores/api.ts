@@ -457,6 +457,14 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/facilities/${id}`)
   }
 
+  const requestFacilitySignedUrl = (filename: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/uploadUrl`, {filename: filename});
+  }
+
+  const updateFacilityImage = (facilityId: number, key: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/upload`, {key: key})
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -517,6 +525,8 @@ export const useApiStore = defineStore('api', () => {
     getFacility,
     updateFacility,
     deleteFacility,
-    createFacility
+    createFacility,
+    requestFacilitySignedUrl,
+    updateFacilityImage
   }
 })

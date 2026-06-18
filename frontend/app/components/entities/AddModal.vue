@@ -180,40 +180,40 @@ onMounted(async () => {
       color="primary"
     />
     <template #body>
-      <UForm
-        :schema="fileSchema"
-      >
-        <UFormField name="image" label="Imagem" description="JPG, JPEG ou PNG. 2MB Max." class="mb-5">
+      <UForm :schema="fileSchema">
+        <UFormField name="image" label="Imagem" description="JPG, JPEG ou PNG · máx. 2 MB" class="mb-5">
           <UFileUpload v-slot="{ open, removeFile }" v-model="fileState.image" accept="image/PNG,image/JPG,image/JPEG">
-            <div class="flex flex-wrap items-center gap-3">
-              <UAvatar
-                :src="fileState.image ? createBlobURL(fileState.image) : undefined"
-                icon="i-lucide-image"
-                class="w-24 h-24 ring-2 ring-default"
-              />
-              <div class="flex flex-col items-start">
-                <UButton
-                  :label="fileState.image ? 'Alterar imagem' : 'Carregar imagem'"
-                  color="neutral"
-                  variant="outline"
-                  @click="open()"
+            <div class="relative mt-1 w-full rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-700 hover:border-primary-400 dark:hover:border-primary-500 transition-colors cursor-pointer overflow-hidden" @click="!fileState.image && open()">
+              <template v-if="fileState.image">
+                <img
+                  :src="createBlobURL(fileState.image)"
+                  alt="Preview"
+                  class="w-full max-h-52 object-contain bg-stone-50 dark:bg-stone-900"
                 />
-                <div v-if="fileState.image" class="flex items-center mt-1 ml-2 text-xs text-muted">
-                  <span>{{ formatBytes(fileState.image.size) }}</span>
+                <div class="absolute inset-0 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
+                  <UButton icon="i-lucide-pencil" label="Alterar" color="neutral" variant="solid" size="sm" @click.stop="open()" />
+                  <UButton icon="i-lucide-trash-2" label="Remover" color="error" variant="solid" size="sm" @click.stop="removeFile()" />
                 </div>
-              </div>
+                <div class="absolute bottom-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm text-white text-xs">
+                  <UIcon name="i-lucide-image" class="size-3 shrink-0" />
+                  <span class="truncate">{{ fileState.image.name }}</span>
+                  <span class="ml-auto shrink-0 text-white/60">{{ formatBytes(fileState.image.size) }}</span>
+                </div>
+              </template>
+              <template v-else>
+                <div class="flex flex-col items-center justify-center gap-2 py-10">
+                  <div class="p-3 rounded-full bg-stone-100 dark:bg-stone-800">
+                    <UIcon name="i-lucide-image-plus" class="size-6 text-muted" />
+                  </div>
+                  <div class="text-center">
+                    <p class="text-sm font-medium text-default">
+                      Arrasta ou <span class="text-primary-500">clica para selecionar</span>
+                    </p>
+                    <p class="text-xs text-muted mt-0.5">JPG, JPEG, PNG · máx. 2 MB</p>
+                  </div>
+                </div>
+              </template>
             </div>
-            <p v-if="fileState.image" class="flex items-center text-xs text-muted mt-1.5 ml-1.5">
-              {{ fileState.image.name }}
-              <UButton
-                icon="i-lucide-x"
-                color="error"
-                variant="ghost"
-                size="xs"
-                @click="removeFile()"
-                class="ml-1"
-              />
-            </p>
           </UFileUpload>
         </UFormField>
       </UForm>
