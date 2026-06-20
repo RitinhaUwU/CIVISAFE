@@ -26,13 +26,4 @@ class Facility extends Model implements HasMedia
     {
         $this->addMediaCollection('documents')->useDisk('facilities_documents');
     }
-
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        // Opcional: gerar thumbnail para imagens
-        $this->addMediaConversion('thumb')
-            ->width(300)
-            ->height(300)
-            ->nonQueued();
-    }
 }
