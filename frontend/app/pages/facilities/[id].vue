@@ -4,6 +4,7 @@ import { useApiStore } from '@/stores/api'
 import * as z from 'zod'
 import type {BreadcrumbItem} from '@nuxt/ui/components/Breadcrumb.vue'
 import {createBlobURL} from '@/utils'
+import AddFileModal from "~/components/facilities/AddFileModal.vue";
 
 const route = useRoute()
 const api = useApiStore()
@@ -33,12 +34,13 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema & {image: string}>>({
+const state = reactive<Partial<Schema & {image: string, id: number, documents: any[]}>>({
   name: '',
   email: '',
   contact: '',
   address: '',
-  description: ''
+  description: '',
+  documents: []
 })
 
 /***
@@ -193,6 +195,28 @@ const facilityLogoURL = computed(() => {
   return undefined
 });
 
+// Documentos
+const deleteDocument = async (mediaId: number) => {
+  await api.deleteFacilityDocument(state.id, mediaId)
+  await fetchFacility()
+
+  toast.add({
+    title: 'Sucesso',
+    description: 'Ficheiro eliminado.',
+    color: 'success'
+  })
+}
+
+const downloadDocument = async (mediaId: number, filename: string) => {
+  await api.downloadFacilityDocument(state.id, mediaId, filename)
+
+  toast.add({
+    title: 'Sucesso',
+    description: 'Download iniciado.',
+    color: 'success'
+  })
+}
+
 const items = ref<BreadcrumbItem[]>([
   {
     label: 'Instalações',
@@ -304,19 +328,37 @@ onMounted(() => {
           <div class="space-y-6 pt-4">
             <section class="space-y-2">
               <div class="flex justify-end mb-6">
-                <UButton
-                  icon="i-lucide-upload"
-                  label="Carregar Ficheiros"
-                  @click=""
-                />
+                <FacilitiesAddFileModal :facility-id="state.id ?? 0" @uploaded="fetchFacility" />
               </div>
-              <div class="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 shadow-sm transition hover:shadow-md hover:border-stone-300 dark:hover:border-stone-700">
-                <div class="flex flex-row gap-1">
-
+              <template v-if="state.documents?.length">
+                <div v-for="doc in state.documents" :key="doc.id" class="group flex items-center justify-between rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-4 py-3 shadow-sm transition hover:shadow-md hover:border-stone-300 dark:hover:border-stone-700">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <UIcon name="i-lucide-file" class="size-5 shrink-0 text-muted" />
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium truncate">{{ doc.name }}</p>
+                      <p class="text-xs text-muted">{{ formatBytes(doc.size) }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0 ml-4">
+                    <UButton
+                      icon="i-lucide-download"
+                      color="neutral"
+                      variant="ghost"
+                      size="sm"
+                      @click="downloadDocument(doc.id, doc.name)"
+                    />
+                    <UButton
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
+                      size="sm"
+                      @click="deleteDocument(doc.id)"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div class="text-center py-6 text-sm text-stone-400">
-                Sem ficheiros caregados
+              </template>
+              <div v-else class="text-center py-6 text-sm text-stone-400">
+                Sem ficheiros carregados
               </div>
             </section>
           </div>

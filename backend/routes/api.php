@@ -89,10 +89,14 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('/facilities')->group(function () {
-            Route::apiResource('/', FacilitiesController::class)
-                ->parameter('', 'facility');
+            Route::apiResource('/', FacilitiesController::class)->parameter('', 'facility');
+            // IMAGEM
             Route::post('/uploadUrl', [FacilitiesController::class, 'signedUrl']);
             Route::post('/{facility}/upload', [FacilitiesController::class, 'confirmUpload']);
+            // DOCUMENTOS
+            Route::post('/{facility}/documents', [FacilitiesController::class, 'uploadDocuments']);
+            Route::get('/{facility}/documents/{mediaId}/download', [FacilitiesController::class, 'downloadDocument']);
+            Route::delete('/{facility}/documents/{mediaId}', [FacilitiesController::class, 'deleteDocument']);
         });
     });
 });

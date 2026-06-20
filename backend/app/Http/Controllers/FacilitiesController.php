@@ -113,4 +113,59 @@ class FacilitiesController extends Controller
 
         return response()->json();
     }
+
+    /**
+     * Upload de ficheiros
+     * POST /facilities/{facility}/documents
+     */
+    public function uploadDocuments(Request $request, Facility $facility)
+    {
+        $request->validate([
+            'files'   => ['required', 'array', 'min:1'],
+            'files.*' => ['required', 'file', 'mimes:jpeg,jpg,png,pdf,docx,xlsx', 'max:20480'],
+        ]);
+
+        try {
+            foreach ($request->file('files') as $file) {
+                $facility->addMedia($file)->toMediaCollection('documents');
+            }
+
+            return new FacilityResource($facility->fresh());
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Download de um ficheiro
+     * GET /facilities/{facility}/documents/{mediaId}/download
+     */
+    public function downloadDocument(Facility $facility, int $mediaId)
+    {
+        $media = $facility->getMedia('documents')->firstWhere('id', $mediaId);
+
+        if (! $media) {
+            return response()->json(['message' => 'Document not found.'], 404);
+        }
+
+        return $media->toResponse(request());
+    }
+
+    /**
+     * Eliminar um ficheiro
+     * DELETE /facilities/{facility}/documents/{mediaId}
+     */
+    public function deleteDocument(Facility $facility, int $mediaId)
+    {
+        $media = $facility->getMedia('documents')->firstWhere('id', $mediaId);
+
+        if (! $media) {
+            return response()->json(['message' => 'Document not found.'], 404);
+        }
+
+        $media->delete();
+
+        return response()->json();
+    }
 }
