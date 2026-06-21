@@ -341,6 +341,7 @@ onMounted(() => {
                   </div>
                   <div class="flex items-center gap-1 shrink-0 ml-4">
                     <UButton
+                      data-testid="download-document"
                       icon="i-lucide-download"
                       color="neutral"
                       variant="ghost"
@@ -348,6 +349,7 @@ onMounted(() => {
                       @click="downloadDocument(doc.id, doc.name)"
                     />
                     <UButton
+                      data-testid="delete-document"
                       icon="i-lucide-trash-2"
                       color="error"
                       variant="ghost"

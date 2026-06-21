@@ -403,6 +403,7 @@ it('deletes old logo when confirming new upload', function () {
 });
 
 it('fails confirm upload with invalid file extension', function () {
+    
     $user = User::factory()->create(['locked' => false]);
 
     $user->givePermissionTo('ENTITIES_UPDATE');
