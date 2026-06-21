@@ -106,7 +106,7 @@ class FacilitiesController extends Controller
     public function destroy(Facility $facility)
     {
         if($facility->image !== null) {
-            Storage::disk('data_bucket')->delete($facility->logo);
+            Storage::disk('data_bucket')->delete($facility->image);
         }
 
         $facility->delete();
