@@ -7,7 +7,7 @@ use App\Models\incidentPCO;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
-class incidentPCOFactory extends Factory
+class IncidentPCOFactory extends Factory
 {
     protected $model = incidentPCO::class;
 

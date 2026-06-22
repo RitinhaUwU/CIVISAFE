@@ -309,28 +309,164 @@ it('updates an entity', function () {
     ]);
 });
 
-it('fails updating entity without permission', function () {
+it('generates a signed url for image upload', function () {
+    $user = User::factory()->create(['locked' => false,]);
 
-    $user = User::factory()->create([
-        'locked' => false,
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    Storage::fake('data_bucket');
+
+    $response = $this->postJson('/api/v1/entities/uploadUrl', ['filename' => 'logo.jpg',]);
+
+    $response->assertStatus(200)->assertJsonStructure(['key', 'url']);
+});
+
+it('fails signed url with invalid file extension', function () {
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/v1/entities/uploadUrl', ['filename' => 'logo.pdf']);
+
+    $response->assertStatus(422)->assertJsonValidationErrors(['filename']);
+});
+
+it('fails signed url when filename is missing', function () {
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/v1/entities/uploadUrl', []);
+
+    $response->assertStatus(422)->assertJsonValidationErrors(['filename']);
+});
+
+it('confirms image upload for entity', function () {
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    Storage::fake('data_bucket');
+
+    $entity = Entity::factory()->create();
+
+    $key = '/entities/test-uuid.jpg';
+
+    Storage::disk('data_bucket')->put($key, 'fake-image-content');
+
+    $response = $this->postJson("/api/v1/entities/{$entity->id}/upload", ['key' => $key]);
+
+    $response->assertStatus(200)->assertJsonFragment(['id' => $entity->id]);
+
+    $this->assertDatabaseHas('entities', [
+        'id' => $entity->id,
+        'logo' => $key
     ]);
+});
+
+it('deletes old logo when confirming new upload', function () {
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    Storage::fake('data_bucket');
+
+    $oldKey = '/entities/old-uuid.png';
+    $newKey = '/entities/new-uuid.jpg';
+
+    Storage::disk('data_bucket')->put($oldKey, 'old-image');
+    Storage::disk('data_bucket')->put($newKey, 'new-image');
+
+    $entity = Entity::factory()->create(['logo' => $oldKey,]);
+
+    $response = $this->postJson("/api/v1/entities/{$entity->id}/upload", ['key' => $newKey]);
+
+    $response->assertStatus(200);
+
+    Storage::disk('data_bucket')->assertMissing($oldKey);
+    Storage::disk('data_bucket')->assertExists($newKey);
+
+    $this->assertDatabaseHas('entities', [
+        'id' => $entity->id,
+        'logo' => $newKey
+    ]);
+});
+
+it('fails confirm upload with invalid file extension', function () {
+
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    $entity = Entity::factory()->create();
+
+    $response = $this->postJson("/api/v1/entities/{$entity->id}/upload", ['key' => '/entities/test-uuid.pdf']);
+
+    $response->assertStatus(500);
+});
+
+it('fails confirm upload when key is missing', function () {
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_UPDATE');
+
+    Sanctum::actingAs($user);
+
+    $entity = Entity::factory()->create();
+
+    $response = $this->postJson("/api/v1/entities/{$entity->id}/upload", []);
+
+    $response->assertStatus(500);
+});
+
+it('deletes logo when entity is deleted', function () {
+    $user = User::factory()->create(['locked' => false]);
+
+    $user->givePermissionTo('ENTITIES_DELETE');
+
+    Sanctum::actingAs($user);
+
+    Storage::fake('data_bucket');
+
+    $key = '/entities/logo-to-delete.jpg';
+    Storage::disk('data_bucket')->put($key, 'image-content');
+
+    $entity = Entity::factory()->create(['logo' => $key,]);
+
+    $response = $this->deleteJson("/api/v1/entities/{$entity->id}");
+
+    $response->assertStatus(200);
+
+    Storage::disk('data_bucket')->assertMissing($key);
+    $this->assertSoftDeleted('entities', ['id' => $entity->id]);
+});
+
+it('fails updating entity without permission', function () {
+    $user = User::factory()->create(['locked' => false]);
 
     $entity = Entity::factory()->create();
 
     Sanctum::actingAs($user);
 
-    $response = $this->patchJson("/api/v1/entities/{$entity->id}", [
-        'name' => 'Hacked Entity',
-    ]);
+    $response = $this->patchJson("/api/v1/entities/{$entity->id}", ['name' => 'Hacked Entity',]);
 
     $response->assertStatus(403);
 });
 
 it('fails update validation when email is invalid', function () {
-
-    $user = User::factory()->create([
-        'locked' => false,
-    ]);
+    $user = User::factory()->create(['locked' => false]);
 
     $user->givePermissionTo('ENTITIES_UPDATE');
 
@@ -338,20 +474,13 @@ it('fails update validation when email is invalid', function () {
 
     $entity = Entity::factory()->create();
 
-    $response = $this->patchJson("/api/v1/entities/{$entity->id}", [
-        'email_contact' => 'invalid-email',
-    ]);
+    $response = $this->patchJson("/api/v1/entities/{$entity->id}", ['email_contact' => 'invalid-email',]);
 
-    $response
-        ->assertStatus(422)
-        ->assertJsonValidationErrors(['email_contact']);
+    $response->assertStatus(422)->assertJsonValidationErrors(['email_contact']);
 });
 
 it('fails update validation when phone is invalid', function () {
-
-    $user = User::factory()->create([
-        'locked' => false,
-    ]);
+    $user = User::factory()->create(['locked' => false]);
 
     $user->givePermissionTo('ENTITIES_UPDATE');
 
@@ -359,20 +488,13 @@ it('fails update validation when phone is invalid', function () {
 
     $entity = Entity::factory()->create();
 
-    $response = $this->patchJson("/api/v1/entities/{$entity->id}", [
-        'phone_contact' => 'abc123',
-    ]);
+    $response = $this->patchJson("/api/v1/entities/{$entity->id}", ['phone_contact' => 'abc123',]);
 
-    $response
-        ->assertStatus(422)
-        ->assertJsonValidationErrors(['phone_contact']);
+    $response->assertStatus(422)->assertJsonValidationErrors(['phone_contact']);
 });
 
 it('deletes an entity', function () {
-
-    $user = User::factory()->create([
-        'locked' => false,
-    ]);
+    $user = User::factory()->create(['locked' => false]);
 
     $user->givePermissionTo('ENTITIES_DELETE');
 
@@ -388,10 +510,7 @@ it('deletes an entity', function () {
 });
 
 it('fails deleting entity without permission', function () {
-
-    $user = User::factory()->create([
-        'locked' => false,
-    ]);
+    $user = User::factory()->create(['locked' => false]);
 
     $entity = Entity::factory()->create();
 

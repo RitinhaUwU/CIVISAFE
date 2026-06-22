@@ -119,13 +119,13 @@ const submit = () => {
     :description="modelValue?.id ? 'Atualize os dados da função operacional' : 'Preencha os dados da nova função operacional'"
     @update:open="emit('update:open', $event)"
     :ui="{
-      content: 'sm:max-w-4xl'
+      content: 'sm:max-w-6xl'
     }"
   >
     <template #body>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UFormField label="Função" name="function_pco">
+          <UFormField label="Função" name="function_pco" required>
             <USelect
               v-model="form.function_pco"
               :items="[
@@ -141,15 +141,15 @@ const submit = () => {
               class="w-full"
             />
           </UFormField>
-          <UFormField label="Responsável" name="resp_pco">
+          <UFormField label="Responsável" name="resp_pco" required>
             <UInput v-model="form.resp_pco" class="w-full" />
           </UFormField>
-          <UFormField label="Categoria" name="category_pco">
+          <UFormField label="Categoria" name="category_pco" required>
             <UInput v-model="form.category_pco" class="w-full" />
           </UFormField>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UFormField label="Contacto 1" name="contact1_pco">
+          <UFormField label="Contacto 1" name="contact1_pco" required>
             <UInput v-model="form.contact1_pco" class="w-full" />
           </UFormField>
           <UFormField label="Contacto 2" name="contact2_pco">
@@ -169,7 +169,7 @@ const submit = () => {
           <UFormField label="Data Ativação" name="activation_pco_datetime">
             <UInput type="datetime-local" v-model="form.activation_pco_datetime" class="w-full" />
           </UFormField>
-          <UFormField label="Data Início" name="start_pco_datetime">
+          <UFormField label="Data Início" name="start_pco_datetime" required>
             <UInput type="datetime-local" v-model="form.start_pco_datetime" class="w-full" />
           </UFormField>
           <UFormField label="Data Fim" name="end_pco_datetime">

@@ -155,6 +155,14 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/entities/${id}`)
   }
 
+  const requestEntitySignedUrl = (filename: string) => {
+    return axios.post(`${config.public.apiBase}/entities/uploadUrl`, {filename: filename});
+  }
+
+  const updateEntityLogo = (entityId: number, key: string) => {
+    return axios.post(`${config.public.apiBase}/entities/${entityId}/upload`, {key: key})
+  }
+
   /*************************
    *
    *  EntityTypes
@@ -449,6 +457,36 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/facilities/${id}`)
   }
 
+  // Facilities - Images
+  const requestFacilitySignedUrl = (filename: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/uploadUrl`, {filename: filename});
+  }
+
+  const updateFacilityImage = (facilityId: number, key: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/upload`, {key: key})
+  }
+
+  // Facilities - Documentos
+  const uploadFacilityDocuments = (facilityId: number, files: File[]) => {
+    const form = new FormData()
+    files.forEach(file => form.append('files[]', file))
+    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/documents`, form)
+  }
+
+  const downloadFacilityDocument = async (facilityId: number, mediaId: number, filename: string) => {
+    const response = await axios.get(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}/download`, { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const deleteFacilityDocument = (facilityId: number, mediaId: number) => {
+    return axios.delete(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}`)
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -469,6 +507,8 @@ export const useApiStore = defineStore('api', () => {
     updateEntity,
     deleteEntity,
     createEntity,
+    requestEntitySignedUrl,
+    updateEntityLogo,
     getEntityTypes,
     getEntityType,
     updateEntityType,
@@ -507,6 +547,11 @@ export const useApiStore = defineStore('api', () => {
     getFacility,
     updateFacility,
     deleteFacility,
-    createFacility
+    createFacility,
+    requestFacilitySignedUrl,
+    updateFacilityImage,
+    uploadFacilityDocuments,
+    downloadFacilityDocument,
+    deleteFacilityDocument
   }
 })

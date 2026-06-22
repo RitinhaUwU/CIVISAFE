@@ -84,7 +84,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         class="space-y-5"
         @submit="onSubmit"
       >
-        <UFormField label="Nome" name="name">
+        <UFormField label="Nome" name="name" required>
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
         <UFormField label="Observações" name="description">

@@ -52,7 +52,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     <UButton icon="i-lucide-plus" label="Novo Tipo de Entidade" color="primary" @click="open = true"/>
     <template #body>
       <UForm :state="state" :schema="schema" class="space-y-5" @submit="onSubmit">
-        <UFormField label="Nome:" name="name">
+        <UFormField label="Nome:" name="name" required>
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
         <UFormField label="Observações:" name="description">

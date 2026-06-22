@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Entity;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Storage;
 
 /** @mixin Entity */
 class EntityResource extends JsonResource
@@ -18,7 +19,7 @@ class EntityResource extends JsonResource
             'phone_contact' => $this->phone_contact,
             'email_contact' => $this->email_contact,
             'address' => $this->address,
-            'logo' => $this->logo,
+            'logo' => $this->logo !== null ? Storage::disk('data_bucket')->temporaryUrl($this->logo, now()->addMinutes(10)) : null,
             'poc_name' => $this->poc_name,
             'poc_phone' => $this->poc_phone,
             'poc_email' => $this->poc_email,

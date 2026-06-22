@@ -4,6 +4,7 @@ import { useApiStore } from '@/stores/api'
 import { useAuthStore } from '@/stores/auth'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {createBlobURL} from "~/utils";
 import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
 
 const route = useRoute()
@@ -32,7 +33,6 @@ const schema = z.object({
   phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   email_contact: z.string().email('Email inválido').optional().nullable(),
   address: z.string().optional().nullable(),
-  logo: z.string().optional().nullable(),
   poc_name: z.string().optional().nullable(),
   poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
   poc_email: z.string().email('Email inválido').optional().nullable(),
@@ -42,7 +42,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema>>({
+const state = reactive<Partial<Schema & {logo: string}>>({
   name: '',
   email_contact: '',
   phone_contact: '',
@@ -108,6 +108,33 @@ const handleSave = async () => {
     return
   }
 
+  if(fileState.image !== undefined){
+    //Existe uma imagem para carregar/atualizar
+    const uploadURL = await api.requestEntitySignedUrl(fileState.image.name);
+
+    const bucketResponse = await fetch(uploadURL.data.url.url, {
+      method: 'PUT',
+      headers: { 'Content-Type': fileState.image.type },
+      body: fileState.image
+    })
+
+    if(!bucketResponse.ok)
+    {
+      toast.add({
+        title: 'Erro ao carregar imagem',
+        description: 'Ocorreu um erro ao carregar imagem.',
+        color: 'error'
+      })
+      return;
+    }
+
+    await api.updateEntityLogo(parseInt(<string>route.params.id), uploadURL.data.key)
+  }
+  else {
+    //Remover o logotipo
+    //if()
+  }
+
   saving.value = true
   try {
     const payload = {
@@ -145,6 +172,67 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
+/***
+ Upload do logotipo
+ ***/
+const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+const MIN_DIMENSIONS = { width: 200, height: 200 }
+const MAX_DIMENSIONS = { width: 4096, height: 4096 }
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
+
+const fileSchema = z.object({
+  image: z
+    .instanceof(File, {
+      message: 'Please select an image file.'
+    })
+    .refine((file) => file.size <= MAX_FILE_SIZE, {
+      message: `The image is too large. Please choose an image smaller than ${formatBytes(MAX_FILE_SIZE)}.`
+    })
+    .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), {
+      message: 'Please upload a valid image file (JPEG, JPG ou PNG).'
+    })
+    .refine(
+      (file) =>
+        new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            const img = new Image()
+            img.onload = () => {
+              const meetsDimensions =
+                img.width >= MIN_DIMENSIONS.width &&
+                img.height >= MIN_DIMENSIONS.height &&
+                img.width <= MAX_DIMENSIONS.width &&
+                img.height <= MAX_DIMENSIONS.height
+              resolve(meetsDimensions)
+            }
+            img.src = e.target?.result as string
+          }
+          reader.readAsDataURL(file)
+        }),
+      {
+        message: `The image dimensions are invalid. Please upload an image between ${MIN_DIMENSIONS.width}x${MIN_DIMENSIONS.height} and ${MAX_DIMENSIONS.width}x${MAX_DIMENSIONS.height} pixels.`
+      }
+    )
+})
+
+type FileSchema = z.output<typeof fileSchema>
+
+const fileState = reactive<Partial<FileSchema>>({
+  image: undefined
+})
+
+const entityLogoURL = computed(() => {
+  if(fileState.image !== undefined && fileState.image !== null) {
+    return createBlobURL(fileState.image)
+  }
+
+  if(state.logo !== undefined && state.logo !== null) {
+    return state.logo
+  }
+
+  return undefined
+});
+
 onMounted(() => {
   if(!useAuthStore().hasPermission('ENTITIES_LIST')) {
     useRouter().push('/inicio');
@@ -181,7 +269,7 @@ onMounted(() => {
     </header>
     <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-8 space-y-8">
       <UBreadcrumb :items="items" />
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
         <div class="space-y-6">
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
@@ -234,13 +322,38 @@ onMounted(() => {
             <UTextarea v-model="state.description" :rows="5" class="w-full" />
           </section>
         </div>
-        <div class="hidden lg:flex flex-col items-center justify-start gap-6 pt-1">
-          <div class="sticky top-8 flex flex-col items-center gap-5 w-full text-center">
-            <div class="relative flex items-center justify-center w-32 h-32">
-              <img src="" class="h-10 w-auto object-contain" alt="Logo" />
+        <section class="space-y-6">
+          <h2 class="font-bold">Logotipo</h2>
+          <UFileUpload v-model="fileState.image" v-slot="{ open, removeFile }" accept="image/png, image/jpeg, image/jpg">
+            <div class="relative w-full aspect-square rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-700 hover:border-primary-400 dark:hover:border-primary-500 transition-colors overflow-hidden cursor-pointer bg-stone-50 dark:bg-stone-900" @click="!entityLogoURL && open()">
+              <template v-if="entityLogoURL">
+                <img
+                  :src="entityLogoURL"
+                  alt="Logotipo"
+                  class="w-full h-full object-contain p-4"
+                />
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
+                  <UButton icon="i-lucide-pencil" label="Alterar" color="neutral" variant="solid" size="sm" @click.stop="open()" />
+                  <UButton icon="i-lucide-rotate-ccw" label="Restaurar" color="primary" variant="solid" size="sm" @click.stop="removeFile()" />
+                </div>
+              </template>
+              <template v-else>
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
+                  <div class="p-3 rounded-full bg-stone-100 dark:bg-stone-800">
+                    <UIcon name="i-lucide-image-plus" class="size-6 text-muted" />
+                  </div>
+                  <p class="text-sm font-medium text-default">Carregar logotipo</p>
+                  <p class="text-xs text-muted">JPG, JPEG, PNG · máx. 2 MB</p>
+                </div>
+              </template>
             </div>
-          </div>
-        </div>
+            <div v-if="fileState.image" class="flex items-center gap-1.5 mt-2 px-1 text-xs text-muted">
+              <UIcon name="i-lucide-file-image" class="size-3 shrink-0" />
+              <span class="truncate">{{ fileState.image.name }}</span>
+              <span class="ml-auto shrink-0">{{ formatBytes(fileState.image.size) }}</span>
+            </div>
+          </UFileUpload>
+        </section>
       </div>
     </div>
   </div>

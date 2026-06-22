@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import InicioStats from '@/components/inicio/InicioStats.vue'
 import InicioFormRegisto from '@/components/inicio/InicioFormRegisto.vue'
 import { useApiStore } from '@/stores/api'
 import type {Incident} from '@/types'
@@ -27,7 +26,7 @@ async function handleMapClick(coords: { lat: number, lng: number }) {
 }
 
 const incidentsMap = computed(() =>
-  incidents.value.filter(incident => incident.incidentState?.name !== 'Terminada')
+  incidents.value.filter(incident => incident.incidentState?.name !== 'Terminada' && incident.incidentState?.name !== 'Transitou Para Outra Divisão')
 )
 
 async function refreshIncidents() {
@@ -55,9 +54,10 @@ onMounted(async () => {
     </template>
 
     <template #body>
-      <InicioStats />
-      <InicioFormRegisto v-model="openModal" :coords="selectedCoords" @created="refreshIncidents" />
-      <Map :incidents="incidentsMap" @map-click="handleMapClick"/>
+      <div class="flex-1 h-full">
+        <InicioFormRegisto v-model="openModal" :coords="selectedCoords" @created="refreshIncidents" />
+        <Map class="w-full h-full" :incidents="incidentsMap" @map-click="handleMapClick"/>
+      </div>
     </template>
   </UDashboardPanel>
 </template>
