@@ -73,7 +73,7 @@ function renderMarkers(L: any) {
           <b>Identificador: </b><span>${incident.identifier}</span><br>
           <b>Tipo: </b><span>${incident.incidentType?.code} - ${incident.incidentType?.species} - ${incident.incidentType?.type}</span><br>
           <b>Estado: </b><span>${incident.incidentState?.name}</span><br>
-          <a href="/incidents/${incident.id}">Ver ocorrência</a>
+          <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
         </div>
       `)
 
@@ -166,7 +166,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .map-container {
   width: 100%;
-  height: 600px;
+  height: calc(100vh - 80px);
   border-radius: 12px;
   overflow: hidden;
 }

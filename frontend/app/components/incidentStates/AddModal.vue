@@ -83,7 +83,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
            unchecked-icon="i-lucide-x"
            checked-icon="i-lucide-check"
         />
-        <UFormField label="Nome" name="name">
+        <UFormField label="Nome" name="name" required>
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
         <UFormField label="Observações" name="description">

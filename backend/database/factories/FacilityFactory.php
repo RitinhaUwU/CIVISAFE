@@ -17,7 +17,7 @@ class FacilityFactory extends Factory
             'address' => $this->faker->address(),
             'email' => $this->faker->unique()->safeEmail(),
             'contact' => $this->faker->phoneNumber(),
-            'image' => $this->faker->word(),
+            'image' => null,
             'description' => $this->faker->text(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

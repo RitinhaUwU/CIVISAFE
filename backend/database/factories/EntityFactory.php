@@ -19,7 +19,7 @@ class EntityFactory extends Factory
             'phone_contact' => $this->faker->phoneNumber(),
             'email_contact' => $this->faker->unique()->safeEmail(),
             'address' => $this->faker->address(),
-            'logo' => $this->faker->word(),
+            'logo' => null,
             'poc_name' => $this->faker->name(),
             'poc_phone' => $this->faker->phoneNumber(),
             'poc_email' => $this->faker->unique()->safeEmail(),

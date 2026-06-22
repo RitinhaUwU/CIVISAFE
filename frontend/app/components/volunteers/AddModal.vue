@@ -129,13 +129,13 @@ onMounted(async() => {
       <UForm :state="state" :schema="schema" class="space-y-4" @submit="onSubmit">
         <h3 class="text-sm font-semibold text-muted">Dados do responsável</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <UFormField label="Nome" name="name">
+          <UFormField label="Nome" name="name" required>
             <UInput v-model="state.name" class="w-full" />
           </UFormField>
-          <UFormField label="Contacto" name="contact">
+          <UFormField label="Contacto" name="contact" required>
             <UInput v-model="state.contact" class="w-full" />
           </UFormField>
-          <UFormField label="Email" name="email">
+          <UFormField label="Email" name="email" required>
             <UInput v-model="state.email" class="w-full" />
           </UFormField>
         </div>
@@ -145,7 +145,7 @@ onMounted(async() => {
           <UFormField label="Identificação" name="team_identification">
             <UInput v-model="state.team_identification" class="w-full" />
           </UFormField>
-          <UFormField label="Classificação" name="classification">
+          <UFormField label="Classificação" name="classification" required>
             <USelect
               v-model="state.classification"
               class="w-full"

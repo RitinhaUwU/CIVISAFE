@@ -67,7 +67,14 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::apiResource('/volunteers', VolunteerController::class);
-        Route::apiResource('/entities', EntityController::class);
+
+        Route::prefix('/entities')->group(function () {
+            Route::apiResource('/', EntityController::class)
+            ->parameter('', 'entity');
+            Route::post('/uploadUrl', [EntityController::class, 'signedUrl']);
+            Route::post('/{entity}/upload', [EntityController::class, 'confirmUpload']);
+        });
+
         Route::apiResource('/entityTypes', EntityTypesController::class);
         Route::apiResource('/incidentTypes', IncidentTypeController::class)->only(['index', 'store', 'show']);
         Route::apiResource('/incidentStates', IncidentStateController::class);
@@ -85,7 +92,17 @@ Route::prefix('v1')->group(function () {
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
         });
-        Route::apiResource('/facilities', FacilitiesController::class);
+
+        Route::prefix('/facilities')->group(function () {
+            Route::apiResource('/', FacilitiesController::class)->parameter('', 'facility');
+            // IMAGEM
+            Route::post('/uploadUrl', [FacilitiesController::class, 'signedUrl']);
+            Route::post('/{facility}/upload', [FacilitiesController::class, 'confirmUpload']);
+            // DOCUMENTOS
+            Route::post('/{facility}/documents', [FacilitiesController::class, 'uploadDocuments']);
+            Route::get('/{facility}/documents/{mediaId}/download', [FacilitiesController::class, 'downloadDocument']);
+            Route::delete('/{facility}/documents/{mediaId}', [FacilitiesController::class, 'deleteDocument']);
+        });
 
         Route::apiResource('/donationGoodsTypes', DonationGoodsTypeController::class);
         Route::apiResource('/donations', DonationLogController::class);
