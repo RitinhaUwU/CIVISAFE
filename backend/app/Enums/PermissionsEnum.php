@@ -73,7 +73,7 @@ enum PermissionsEnum: string
     case DONATION_LOG_LIST = 'DONATION_LOG_LIST';
     case DONATION_LOG_CREATE = 'DONATION_LOG_CREATE';
     case DONATION_LOG_UPDATE = 'DONATION_LOG_UPDATE';
-    case DONATION_LOG_DELETE = 'DONATION_LOG_DELETE';
+//    case DONATION_LOG_DELETE = 'DONATION_LOG_DELETE';
 
     public function label(): string
     {
@@ -134,7 +134,7 @@ enum PermissionsEnum: string
             self::DONATION_LOG_LIST => 'Ver Lista de Doações',
             self::DONATION_LOG_CREATE => 'Registar uma nova Doação',
             self::DONATION_LOG_UPDATE => 'Editar uma Doação',
-            self::DONATION_LOG_DELETE => 'Remover uma Doação'
+//            self::DONATION_LOG_DELETE => 'Remover uma Doação'
         };
     }
 }

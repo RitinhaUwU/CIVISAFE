@@ -56,7 +56,24 @@ class UserController extends Controller
             'locked' => $data['locked'],
         ]);
 
-        $user->assignRole($data['role']);
+        $roles = [$data['role']];
+
+        if($data['module_incidents'])
+        {
+            $roles[] = 'module_incidents';
+        }
+
+        if($data['module_volunteers'])
+        {
+            $roles[] = 'module_volunteers';
+        }
+
+        if($data['module_donations'])
+        {
+            $roles[] = 'module_donations';
+        }
+
+        $user->assignRole($roles);
 
         return new UserResource($user);
     }

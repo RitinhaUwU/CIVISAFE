@@ -13,6 +13,9 @@ const openModal = ref(false)
 const incidents = ref<Incident[]>([])
 
 async function handleMapClick(coords: { lat: number, lng: number }) {
+  if(!useAuthStore().hasPermission('INCIDENTS_CREATE'))
+    return;
+
   if(!await checkServerAccess())
   {
     useToast().add({
@@ -40,7 +43,10 @@ async function refreshIncidents() {
 }
 
 onMounted(async () => {
-  await refreshIncidents()
+  if(useAuthStore().hasPermission('INCIDENTS_LIST'))
+  {
+    await refreshIncidents()
+  }
 })
 </script>
 

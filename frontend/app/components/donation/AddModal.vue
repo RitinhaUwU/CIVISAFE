@@ -75,21 +75,24 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     open.value = false
     toast.add({
       title: 'Sucesso',
-      description: 'Tipo de Bem criado com sucesso',
+      description: 'Doação registada com sucesso',
       color: 'success'
     })
 
     Object.assign(state, {
+      date: new Date().toISOString().split('T')[0],
       name: '',
-      is_type_countable: false,
-      unit: '',
-      danger_level: null,
+      contact: '',
+      email: '',
+      donor_type: '',
+      goods: []
     })
 
   } catch (e: any) {
+    console.debug(e)
     toast.add({
       title: 'Erro',
-      description: 'Erro ao criar Tipo de Bem',
+      description: 'Erro ao registar Doação',
       color: 'error'
     })
   }

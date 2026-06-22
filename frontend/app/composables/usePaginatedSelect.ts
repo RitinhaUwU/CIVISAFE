@@ -92,6 +92,24 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
     { canLoadMore: () => !loading.value && page.value < lastPage.value }
   )
 
+  watch(
+    () => menuRef.value?.[0]?.viewportRef,
+    (viewport) => {
+      if (!viewport) return
+
+      useInfiniteScroll(
+        viewport,
+        async () => {
+          if (loading.value) return
+          if (page.value >= lastPage.value) return
+          page.value++
+          await fetchItems(true)
+        }
+      )
+    },
+    { immediate: true }
+  )
+
   return {
     items,
     page,

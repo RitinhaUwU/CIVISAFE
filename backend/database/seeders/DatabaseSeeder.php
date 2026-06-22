@@ -45,32 +45,32 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'locked' => false,
-        ])->assignRole(enum_value(RolesEnum::ADMIN));
-
-        User::factory()->create([
-            'name' => 'Utilizador Doações',
-            'email' => 'doacoes@example.com',
-            'locked' => false,
-        ])->assignRole(enum_value(RolesEnum::DONATION_MANAGER));
-
-        User::factory()->create([
-            'name' => 'Utilizador Manager',
-            'email' => 'manager@example.com',
-            'password' => bcrypt('password'),
-            'locked' => true,
-        ])->assignRole(enum_value(RolesEnum::MANAGER));
+        ])->assignRole(RolesEnum::ADMIN->name);
 
         User::factory()->create([
             'name' => 'Utilizador User',
             'email' => 'user@example.com',
             'password' => bcrypt('password'),
             'locked' => false,
-        ])->assignRole(enum_value(RolesEnum::USER));
+        ])->assignRole(RolesEnum::USER->name);
 
         User::factory(100)->create()->each(function ($user) {
-            $role = Role::inRandomOrder()->first();
-            $user->assignRole($role->name);
+            $roles = Role::all();
+
+            $userRoles  = $roles->filter(fn($role) => !str_starts_with($role->name, 'module_'))->values();
+            $moduleAccess = $roles->filter(fn($role) => str_starts_with($role->name, 'module_'))->values();
+
+            $userRole = $userRoles->random()->name;
+            $user->assignRole($userRole);
+
+            if(RolesEnum::from($userRole) === RolesEnum::USER)
+            {
+                $temp = $moduleAccess->random(random_int(1, 2));
+                $user->assignRole($temp->pluck('name')->toArray());
+            }
+
         });
+
         Entity::factory(30)->create();
         Incident::factory(600)->create();
         Volunteer::factory(100)->create();

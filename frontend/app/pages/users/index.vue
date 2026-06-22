@@ -21,9 +21,26 @@ const deleteModalOpen = ref(false)
 const selectedUserById = ref<User | null>(null)
 
 const roleLabels = {
-  admin: 'Administrador',
-  manager: 'Gestor',
-  user: 'Utilizador',
+  admin: {
+    label: 'Administrador',
+    color: 'error'
+  },
+  user: {
+    label: 'Utilizador',
+    color: 'warning'
+  },
+  module_donations: {
+    label: 'Acesso: Doações',
+    color: 'success'
+  },
+  module_incidents: {
+    label: 'Acesso: Ocorrências',
+    color: 'success'
+  },
+  module_volunteers: {
+    label: 'Acesso: Voluntários',
+    color: 'success'
+  }
 }
 
 const columns: TableColumn<User>[] = [
@@ -52,13 +69,9 @@ const columns: TableColumn<User>[] = [
       const roles = row.original.roles || []
       return h('div', { class: 'flex gap-2 justify-center' },
         roles.map(role => {
-          const label = roleLabels[role] || role
-          let color = 'neutral'
-          if (role === 'admin') color = 'error'
-          if (role === 'manager') color = 'warning'
-          if (role === 'user') color = 'success'
+          const label = roleLabels[role] || {label: role, color: 'neutral'}
 
-          return h(UBadge, {class: 'capitalize rounded-full', variant: 'subtle', color}, () => label)
+          return h(UBadge, {class: 'capitalize rounded-full', variant: 'subtle', color: label.color}, () => label.label)
         })
       )
     }
@@ -211,7 +224,7 @@ onMounted(() => {
           <UDashboardSidebarCollapse @created="fetch" />
         </template>
         <template #right>
-          <CustomersAddModal @created="fetch" v-if="auth.hasPermission('USERS_CREATE')" />
+          <UsersAddModal @created="fetch" v-if="auth.hasPermission('USERS_CREATE')" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -240,7 +253,7 @@ onMounted(() => {
           class="w-full"
         />
       </div>
-      <CustomersDeleteModal
+      <UsersDeleteModal
         v-if="auth.hasPermission('USERS_DELETE') && selectedUserById"
         v-model:open="deleteModalOpen"
         :id="selectedUserById?.id"

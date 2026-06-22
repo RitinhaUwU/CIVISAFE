@@ -15,7 +15,22 @@ class UserCreateRequest extends FormRequest
             'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
             'mobile' => ['sometimes', 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'locked' => ['sometimes', 'required', 'boolean'],
-            'role' => ['sometimes', 'required', 'string', 'exists:roles,name'],
+            'role' => ['sometimes', 'required', 'string', 'in:admin,user'],
+            'module_incidents' => [
+                'sometimes',
+                'required_if:role,user',
+                'boolean'
+            ],
+            'module_volunteers'=> [
+                'sometimes',
+                'required_if:role,user',
+                'boolean'
+            ],
+            'module_donations' => [
+                'sometimes',
+                'required_if:role,user',
+                'boolean'
+            ],
         ];
     }
 
