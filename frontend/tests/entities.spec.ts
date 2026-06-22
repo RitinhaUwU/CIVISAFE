@@ -134,7 +134,7 @@ test('create entity with image', async ({ page }) => {
   await page.getByLabel('Descrição:').fill('Descrição de teste')
 
   const fileInput = page.locator('input[type="file"]').first()
-  await fileInput.setInputFiles(path.resolve('tests/e2e/fixtures/test-image.png'))
+  await fileInput.setInputFiles(path.resolve('tests/e2e/fixtures/test-image.jpg'))
 
   await expect(page.locator('img[alt="Preview"]')).toBeVisible({ timeout: 10000 })
 

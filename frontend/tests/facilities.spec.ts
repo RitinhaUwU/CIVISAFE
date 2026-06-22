@@ -66,7 +66,7 @@ test('create facility with image', async ({ page }) => {
   await page.getByLabel('Sede').fill('Rua da Instalação, 1')
 
   const fileInput = page.locator('input[type="file"]').first()
-  await fileInput.setInputFiles(path.resolve('tests/e2e/fixtures/test-image.png'))
+  await fileInput.setInputFiles(path.resolve('tests/e2e/fixtures/test-image.jpg'))
   await expect(page.locator('img[alt="Preview"]')).toBeVisible({ timeout: 10000 })
 
   await page.getByRole('button', { name: 'Guardar' }).click()
@@ -169,7 +169,7 @@ test('update facility image', async ({ page }) => {
   await expect(page.getByLabel('Nome')).not.toHaveValue('', { timeout: 10000 })
 
   const fileInput = page.locator('input[type="file"]').first()
-  await fileInput.setInputFiles(path.resolve('tests/e2e/fixtures/test-image.png'))
+  await fileInput.setInputFiles(path.resolve('tests/e2e/fixtures/test-image.jpg'))
   await expect(page.locator('img[alt="Logotipo"]')).toBeVisible({ timeout: 10000 })
 
   await page.locator('button.fixed.bottom-6.right-6').click()
