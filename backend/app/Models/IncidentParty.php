@@ -34,11 +34,11 @@ class IncidentParty extends Model
     {
         return LogOptions::defaults()
             ->logOnly([
-                'incident_id',
                 'entity_id',
                 'vehicle_count',
                 'human_count',
             ])
+            ->logOnlyDirty()
             ->useLogName('parties')
             ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
                 'created' => 'registou uma equipa',

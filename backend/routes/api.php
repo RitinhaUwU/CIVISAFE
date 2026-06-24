@@ -14,9 +14,14 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
 use App\Http\Resources\UserResource;
+use App\Models\Entity;
 use App\Models\Incident;
 use App\Models\IncidentParty;
 use App\Models\IncidentPCO;
+use App\Models\IncidentPriority;
+use App\Models\IncidentState;
+use App\Models\IncidentType;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
@@ -90,6 +95,43 @@ Route::prefix('v1')->group(function () {
             Route::post('/parties', [IncidentPartyController::class, 'store']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
+
+            function transformActivityValues(array $values): array{
+                foreach ($values as $field => &$value) {
+                    if ($value === null) {
+                        continue;
+                    }
+
+                    $dateFields = [
+                        'start_datetime',
+                        'end_datetime',
+                        'activation_pco_datetime',
+                        'start_pco_datetime',
+                        'end_pco_datetime',
+                    ];
+
+                    if (in_array($field, $dateFields) && !empty($value)) {
+                        $value = Carbon::parse($value)->format('d/m/Y H:i');
+                    }
+
+                    switch ($field) {
+                        case 'incident_type_id':
+                            $value = IncidentType::withTrashed()->find($value)?->code ?? $value;
+                            break;
+                        case 'incident_state_id':
+                            $value = IncidentState::find($value)?->name ?? $value;
+                            break;
+                        case 'incident_priority_id':
+                            $value = IncidentPriority::find($value)?->description ?? $value;
+                            break;
+                        case 'entity_id':
+                            $value = Entity::find($value)?->name ?? $value;
+                            break;
+                    }
+                }
+                return $values;
+            }
+
             // TIMELINE
             Route::get('/timeline', function ($incidentId) {
                 $activities = Activity::query()
@@ -114,8 +156,8 @@ Route::prefix('v1')->group(function () {
                         'module'       => $a->log_name,
                         'event'        => $a->description,
                         'user'         => $a->causer?->name ?? 'Sistema',
-                        'changes'      => $a->attribute_changes['attributes'] ?? [],
-                        'old_values'   => $a->attribute_changes['old'] ?? [],
+                        'changes' => transformActivityValues($a->attribute_changes['attributes'] ?? []),
+                        'old_values' => transformActivityValues($a->attribute_changes['old'] ?? []),
                         'subject_type' => class_basename($a->subject_type),
                         'date'         => $a->created_at->toISOString(),
                     ]);

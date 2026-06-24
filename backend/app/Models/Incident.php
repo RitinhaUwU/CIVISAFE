@@ -101,12 +101,20 @@ class Incident extends Model
                 'start_datetime',
                 'end_datetime',
                 'coordinates',
+                'common_place',
                 'address',
+                'parish',
                 'municipality',
                 'district',
                 'is_major',
+                'alert_source_relationship',
+                'alert_source_name',
+                'alert_source_contact',
                 'obs',
+                'coordinates_pco',
+                'name_pco',
             ])
+            ->logOnlyDirty()
             ->useLogName('incidents')
             ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
                 'created' => 'criou uma ocorrência',

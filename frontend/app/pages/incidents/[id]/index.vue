@@ -176,7 +176,15 @@ const loadingIncident = ref(true)
 const toDatetimeLocal = (value?: string | null) => {
   if (!value) return ''
 
-  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
+  const date = new Date(value)
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 const handleSaveGeral = async () => {
@@ -230,6 +238,7 @@ const handleSaveGeral = async () => {
       color: 'success'
     })
 
+    await fetchTimeline()
   } catch (e: any) {
     toast.add({
       title: 'Erro',
@@ -408,6 +417,7 @@ const persistPCO = async (payload: any) => {
     })
 
     await fetchPCOList()
+    await fetchTimeline()
     pcoModalOpen.value = false
 
   } catch (e: any) {
@@ -473,6 +483,7 @@ const saveLogistic = async (payload: any) => {
       color: 'success'
     })
     await fetchLogistics()
+    await fetchTimeline()
     logisticModalOpen.value = false
   } catch (e: any) {
     toast.add({
@@ -493,13 +504,75 @@ const fetchLogistics = async () => {
 const timeline = ref<TimelineItem[]>([])
 const loadingTimeline = ref(false)
 
+const dateFields = [
+  'start_datetime',
+  'end_datetime',
+  'activation_pco_datetime',
+  'start_pco_datetime',
+  'end_pco_datetime',
+]
+
+const formatValue = (key: string, value: any) => {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 'Sim' : 'Não'
+  }
+
+  return value
+}
+
 const timeAgo = (date: Date) => formatTimeAgoIntl(new Date(date), { locale: 'pt-PT' })
+
+const fieldLabels: Record<string, string> = {
+  identifier: 'Identificador',
+  incident_type_id: 'Tipo',
+  incident_state_id: 'Estado',
+  incident_priority_id: 'Prioridade',
+  start_datetime: 'Data Início',
+  end_datetime: 'Data Fim',
+  coodinates: 'Coordenadas',
+  common_place: 'Ponto de Referência',
+  address: 'Morada',
+  parish: 'Freguesia',
+  municipality: 'Municipio',
+  district: 'Distrito',
+  is_major: 'Ocorrência Major',
+  alert_source_relationship: 'Fonte de Alerta',
+  alert_source_name: 'Nome do Contacto',
+  alert_source_contact: 'Tlf. Contacto',
+  obs: 'Observações',
+  coordinates_pco: 'Coordenadas do Posto de Comando',
+  name_pco: 'Nome do Posto de Comando',
+
+  entity_id: 'Entidade',
+  vehicle_count: 'N.º Veículos',
+  human_count: 'N.º Operacionais',
+
+  function_pco: 'Função',
+  resp_pco: 'Responsável',
+  category_pco: 'Categoria',
+  contact1_pco: 'Contacto 1',
+  contact2_pco: 'Contacto 2',
+  localization_pco: 'Localização',
+  rob_pco: 'ROB',
+  srp_pco: 'SRP',
+  activation_pco_datetime: 'Data Ativação',
+  start_pco_datetime: 'Data Início',
+  end_pco_datetime: 'Data Fim',
+}
+
+const fieldLabel = (key: string) => {
+  return fieldLabels[key] ?? key
+}
 
 const moduleIcon = (module: string) => {
   const icons: Record<string, string> = {
-    'incidents': 'i-lucide-flame',
+    'incidents': 'i-lucide-users',
     'pcos':      'i-lucide-satellite-dish',
-    'parties':   'i-lucide-users'
+    'parties':   'i-lucide-ambulance'
   }
   return icons[module] ?? 'i-lucide-clock'
 }
@@ -675,6 +748,9 @@ onMounted(async () => {
                   <UInput v-model="state.district" class="w-full"/>
                 </UFormField>
               </div>
+              <UFormField label="Ponto de Referência" name="common_place">
+                <UInput v-model="state.common_place" class="w-full"/>
+              </UFormField>
               <Map
                   v-if="!state.is_major"
                   :center="mapCenter"
@@ -824,7 +900,7 @@ onMounted(async () => {
             <div v-else-if="timeline.length === 0" class="text-center py-10 text-sm text-stone-400">
               Sem registos na linha de tempo
             </div>
-            <UTimeline v-else :items="timeline" size="xs" :ui="{ date: 'float-end ms-1' }">
+            <UTimeline v-else :items="timeline" size="xl" :ui="{ date: 'float-end ms-1' }">
               <template #title="{ item }">
                 <div class="flex flex-col gap-2">
                   <div>
@@ -833,10 +909,14 @@ onMounted(async () => {
                   </div>
                   <div v-if="Object.keys((item as any).changes ?? {}).length" class="space-y-1 text-xs px-3 py-2 ring ring-default rounded-md">
                     <div v-for="(value, key) in (item as any).changes" :key="key" class="flex gap-2 flex-wrap">
-                      <span class="text-stone-400 shrink-0">{{ key }}:</span>
-                      <span class="line-through text-red-400">{{ (item as any).old_values?.[key] ?? '—' }}</span>
-                      <span>→</span>
-                      <span class="text-green-500">{{ value }}</span>
+                      <span class="text-stone-400 shrink-0"> {{ fieldLabel(key) }}:</span>
+                      <template v-if="key in ((item as any).old_values ?? {})">
+                        <span class="line-through text-red-400">
+                          {{ formatValue(key, (item as any).old_values?.[key]) }}
+                        </span>
+                        <span>→</span>
+                      </template>
+                      <span class="text-green-500"> {{ formatValue(key, value) }}</span>
                     </div>
                   </div>
                 </div>

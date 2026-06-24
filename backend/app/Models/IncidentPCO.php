@@ -55,12 +55,16 @@ class IncidentPCO extends Model
                 'function_pco',
                 'resp_pco',
                 'category_pco',
+                'contact1_pco',
+                'contact2_pco',
                 'localization_pco',
+                'rob_pco',
+                'srp_pco',
                 'activation_pco_datetime',
                 'start_pco_datetime',
                 'end_pco_datetime',
-                'incident_id',
             ])
+            ->logOnlyDirty()
             ->useLogName('pcos')
             ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
                 'created' => 'registou uma função no posto de comando',
