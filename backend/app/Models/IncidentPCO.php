@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class IncidentPCO extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'incident_pcos';
 
@@ -44,5 +46,27 @@ class IncidentPCO extends Model
             'start_pco_datetime' => 'datetime',
             'end_pco_datetime' => 'datetime',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'function_pco',
+                'resp_pco',
+                'category_pco',
+                'localization_pco',
+                'activation_pco_datetime',
+                'start_pco_datetime',
+                'end_pco_datetime',
+                'incident_id',
+            ])
+            ->useLogName('pcos')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'registou uma função no posto de comando',
+                'updated' => 'atualizou uma função no posto de comando',
+                'deleted' => 'eliminou uma função no posto de comando',
+                default   => $eventName,
+            });
     }
 }

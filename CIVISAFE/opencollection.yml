@@ -20,7 +20,7 @@ request:
       value: application/json
   auth:
     type: bearer
-    token: 4|TC0UF46ZUUB2LRdN4kANzgrc6Xt69wDanE92LUOY9783b314
+    token: 3|XDfE4JkA5HTP9TxkGWHHjaiOVMoxbH4pyGHGEJI683400072
 bundled: false
 extensions:
   bruno:

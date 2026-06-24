@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Incident extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     public function incidentType(): BelongsTo
     {
@@ -87,4 +89,30 @@ class Incident extends Model
         'coordinates_pco',
         'name_pco'
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'identifier',
+                'incident_type_id',
+                'incident_state_id',
+                'incident_priority_id',
+                'start_datetime',
+                'end_datetime',
+                'coordinates',
+                'address',
+                'municipality',
+                'district',
+                'is_major',
+                'obs',
+            ])
+            ->useLogName('incidents')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'criou uma ocorrência',
+                'updated' => 'atualizou uma ocorrência',
+                'deleted' => 'eliminou uma ocorrência',
+                default   => $eventName,
+            });
+    }
 }

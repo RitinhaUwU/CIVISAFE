@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class IncidentParty extends Model
 {
-    use SoftDeletes, HasFactory;
+    use SoftDeletes, HasFactory, LogsActivity;
 
     public function incident(): BelongsTo
     {
@@ -27,4 +29,22 @@ class IncidentParty extends Model
         'vehicle_count',
         'human_count',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'incident_id',
+                'entity_id',
+                'vehicle_count',
+                'human_count',
+            ])
+            ->useLogName('parties')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'registou uma equipa',
+                'updated' => 'atualizou uma equipa',
+                'deleted' => 'eliminou uma equipa',
+                default   => $eventName,
+            });
+    }
 }

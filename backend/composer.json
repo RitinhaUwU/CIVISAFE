@@ -20,7 +20,7 @@
         "league/flysystem-path-prefixing": "^3.31",
         "maatwebsite/excel": "4.x-dev",
         "predis/predis": "^3.4",
-        "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-permission": "^7.2",
         "spatie/laravel-query-builder": "^7.0"

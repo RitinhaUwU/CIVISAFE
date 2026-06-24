@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import {useRoute, useRouter} from 'vue-router'
-import {useToast} from "@nuxt/ui/composables";
-import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {useToast} from '@nuxt/ui/composables'
+import type {BreadcrumbItem} from '@nuxt/ui/components/Breadcrumb.vue'
+import type { TimelineItem } from '@nuxt/ui'
+import {formatTimeAgoIntl, useTimeAgo} from '@vueuse/core'
 import {useApiStore} from '@/stores/api'
 import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';
 import Map from '@/components/Map.vue'
 import {computed} from 'vue'
-import LogisticFormModal from "@/components/incidents/LogisticFormModal.vue";
-import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
-import PCOFormModal from "@/components/incidents/PCOFormModal.vue";
-import ConflictPCOModal from "@/components/incidents/ConflictPCOModal.vue";
+import LogisticFormModal from '@/components/incidents/LogisticFormModal.vue'
+import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
+import PCOFormModal from '@/components/incidents/PCOFormModal.vue'
+import ConflictPCOModal from '@/components/incidents/ConflictPCOModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -70,6 +72,11 @@ const tabs = [
     label: 'Meios e Recursos',
     slot: 'logistica',
     icon: 'i-lucide-ambulance'
+  },
+  {
+    label: 'Linha de Tempo',
+    slot: 'timeline',
+    icon: 'i-lucide-history'
   }
 ]
 
@@ -482,6 +489,40 @@ const fetchLogistics = async () => {
   logisticTotals.value = res?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
 }
 
+// Linha de Tempo
+const timeline = ref<TimelineItem[]>([])
+const loadingTimeline = ref(false)
+
+const timeAgo = (date: Date) => formatTimeAgoIntl(new Date(date), { locale: 'pt-PT' })
+
+const moduleIcon = (module: string) => {
+  const icons: Record<string, string> = {
+    'incidents': 'i-lucide-flame',
+    'pcos':      'i-lucide-satellite-dish',
+    'parties':   'i-lucide-users'
+  }
+  return icons[module] ?? 'i-lucide-clock'
+}
+
+const fetchTimeline = async () => {
+  loadingTimeline.value = true
+  try {
+    const res = await api.getIncidentTimeline(Number(route.params.id))
+    timeline.value = res.data.map((entry: any) => ({
+      date:        entry.date,
+      username:    entry.user,
+      action:      entry.event,
+      module:      entry.module,
+      changes:     entry.changes,
+      old_values:  entry.old_values,
+      icon:        moduleIcon(entry.module),
+      description: ' ',
+    }))
+  } finally {
+    loadingTimeline.value = false
+  }
+}
+
 watch(() => state.is_major, async () => {
   if (loadingIncident.value) return
 
@@ -505,9 +546,9 @@ onMounted(async () => {
     states.fetchItems(),
     priorities.fetchItems(),
     fetchPCOList(),
-    fetchLogistics()
+    fetchLogistics(),
+    fetchTimeline()
   ])
-
   await fetchIncident()
 })
 </script>
@@ -773,6 +814,37 @@ onMounted(async () => {
                 </div>
               </template>
             </UTable>
+          </div>
+        </template>
+        <template #timeline>
+          <div class="space-y-6 pt-4">
+            <div v-if="loadingTimeline" class="flex justify-center py-10">
+              <UIcon name="i-lucide-loader-circle" class="animate-spin text-stone-400 size-6" />
+            </div>
+            <div v-else-if="timeline.length === 0" class="text-center py-10 text-sm text-stone-400">
+              Sem registos na linha de tempo
+            </div>
+            <UTimeline v-else :items="timeline" size="xs" :ui="{ date: 'float-end ms-1' }">
+              <template #title="{ item }">
+                <div class="flex flex-col gap-2">
+                  <div>
+                    <span class="font-semibold">{{ (item as any).username }}</span>
+                    <span class="font-normal text-muted">&nbsp;{{ (item as any).action }}</span>
+                  </div>
+                  <div v-if="Object.keys((item as any).changes ?? {}).length" class="space-y-1 text-xs px-3 py-2 ring ring-default rounded-md">
+                    <div v-for="(value, key) in (item as any).changes" :key="key" class="flex gap-2 flex-wrap">
+                      <span class="text-stone-400 shrink-0">{{ key }}:</span>
+                      <span class="line-through text-red-400">{{ (item as any).old_values?.[key] ?? '—' }}</span>
+                      <span>→</span>
+                      <span class="text-green-500">{{ value }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <template #date="{ item }">
+                {{ timeAgo(new Date((item as any).date)) }}
+              </template>
+            </UTimeline>
           </div>
         </template>
       </UTabs>

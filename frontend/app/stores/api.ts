@@ -487,6 +487,16 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}`)
   }
 
+  /*************************
+   *
+   *  Timeline
+   *
+   *************************/
+
+  const getIncidentTimeline = (incidentId: number) => {
+    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`)
+  }
+
   return {
     setBearerToken,
     removeBearerToken,
@@ -552,6 +562,7 @@ export const useApiStore = defineStore('api', () => {
     updateFacilityImage,
     uploadFacilityDocuments,
     downloadFacilityDocument,
-    deleteFacilityDocument
+    deleteFacilityDocument,
+    getIncidentTimeline
   }
 })

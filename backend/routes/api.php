@@ -14,9 +14,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
 use App\Http\Resources\UserResource;
+use App\Models\Incident;
+use App\Models\IncidentParty;
+use App\Models\IncidentPCO;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Spatie\Activitylog\Models\Activity;
 
 Route::post('/test/reset', function (Request $request) {
     if ($request->header('TEST-TOKEN') !== 'civisafe-test') {
@@ -86,6 +90,37 @@ Route::prefix('v1')->group(function () {
             Route::post('/parties', [IncidentPartyController::class, 'store']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
+            // TIMELINE
+            Route::get('/timeline', function ($incidentId) {
+                $activities = Activity::query()
+                    ->where(function ($q) use ($incidentId) {
+                        // Logs da própria ocorrência
+                        $q->where('subject_type', Incident::class)->where('subject_id', $incidentId);
+                    })
+                    ->orWhere(function ($q) use ($incidentId) {
+                        // Logs dos PCOs desta ocorrência
+                        $q->where('subject_type', IncidentPCO::class)->whereIn('subject_id', function ($sub) use ($incidentId) {
+                            $sub->select('id')->from('incident_pcos')->where('incident_id', $incidentId);
+                        });
+                    })
+                    ->orWhere(function ($q) use ($incidentId) {
+                        // Logs das equipas desta ocorrência
+                        $q->where('subject_type', IncidentParty::class)->whereIn('subject_id', function ($sub) use ($incidentId) {
+                            $sub->select('id')->from('incident_parties')->where('incident_id', $incidentId);
+                        });
+                    })
+                    ->with('causer')->latest()->get()->map(fn($a) => [
+                        'id'           => $a->id,
+                        'module'       => $a->log_name,
+                        'event'        => $a->description,
+                        'user'         => $a->causer?->name ?? 'Sistema',
+                        'changes'      => $a->attribute_changes['attributes'] ?? [],
+                        'old_values'   => $a->attribute_changes['old'] ?? [],
+                        'subject_type' => class_basename($a->subject_type),
+                        'date'         => $a->created_at->toISOString(),
+                    ]);
+                return response()->json($activities);
+            });
         });
 
         Route::prefix('/facilities')->group(function () {
