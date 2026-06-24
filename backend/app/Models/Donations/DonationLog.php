@@ -19,6 +19,7 @@ class DonationLog extends Model
         'contact',
         'email',
         'donor_type',
+        'user_id',
     ];
 
     public function user(): BelongsTo

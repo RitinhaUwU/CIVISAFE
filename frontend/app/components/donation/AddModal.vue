@@ -18,27 +18,29 @@ const goodCategories = usePaginatedSelect({
   menuRef: categoriesMenu,
   map: (t: any) => ({
     id: t.id,
-    name: t.name
+    name: t.name,
+    unit: t.unit
   })
 })
 
 const goodsSchema = z.object({
-  category_id: z.number(),
-  quantity: z.number().min(0.1),
+  category_id: z.number({required_error: 'Selecione a categoria'}).nullable()
+    .refine(v => v !== null, 'Selecione a categoria'),
+  quantity: z.number().min(0.1, "A quantidade miníma é 0,1"),
 });
 
 type Good = z.output<typeof goodsSchema>
 
-const criarGood = (): Good => ({
-  category_id: undefined,
-  quantity: undefined,
+const createGood = (): Good => ({
+  category_id: null,
+  quantity: 0,
 })
 
-const adicionarGood = () => {
-  state.goods.push(criarGood())
+const addGood = () => {
+  state.goods.push(createGood())
 }
 
-const removerGood = (index: number) => {
+const removeGood = (index: number) => {
   if (state.goods.length > 1) {
     state.goods.splice(index, 1)
   }
@@ -47,11 +49,11 @@ const removerGood = (index: number) => {
 const schema = z.object({
   date: z.string().min(1, 'A Data é obrigatória'),
   name: z.string().min(1, 'O Nome é obrigatório'),
-  contact: z.string().refine(
-    value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value),
+  contact: z.string().min(1, "O Contacto é obrigatório").refine(
+    value => /^\+?[0-9]+(?: [0-9]+)*$/.test(value),
     'Insira apenas números ou formato +000 000000000'
-  ).optional().nullable(),
-  email: z.string().email().optional().nullable(),
+  ),
+  email: z.string().email().optional().or(z.literal('')).nullable(),
   donor_type: z.string().min(1, 'O Tipo de Doador é obrigatório'),
   goods: z.array(goodsSchema).min(1, 'Adicione pelo menos 1 Bem')
 });
@@ -69,7 +71,7 @@ const state = reactive<Partial<Schema>>({
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    await apiStore.createDonationGoodType(event.data)
+    await apiStore.createDonationLog(event.data)
 
     emit('created')
     open.value = false
@@ -85,7 +87,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       contact: '',
       email: '',
       donor_type: '',
-      goods: []
+      goods: [{
+        category_id: null,
+        quantity: 0,
+      }]
     })
 
   } catch (e: any) {
@@ -98,8 +103,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
+const suffixForQuantityBox = (index: number) => {
+  const category = goodCategories.items.value.find(x => x.id == state.goods[index].category_id);
+
+  if(!category || !category.unit)
+    return '';
+
+  return `(em ${convertedMeasurementUnit(category.unit)})`;
+}
+
 onMounted(async () => {
-  adicionarGood();
+  addGood();
   await goodCategories.fetchItems()
 })
 </script>
@@ -134,7 +148,7 @@ onMounted(async () => {
         </div>
 
         <div class="grid grid-cols-3 gap-5">
-          <UFormField label="Contacto Telefónico" name="contact">
+          <UFormField label="Contacto Telefónico" name="contact" required>
             <UInput v-model="state.contact" class="w-full"/>
           </UFormField>
 
@@ -153,11 +167,15 @@ onMounted(async () => {
                 value: 'single',
               },
               {
-                label: 'Organização',
+                label: 'Empresa',
+                value: 'company',
+              },
+              {
+                label: 'Organização Não-Governamental',
                 value: 'org'
               },
               {
-                label: 'Diversos',
+                label: 'Outro',
                 value: 'misc'
               }
             ]"/>
@@ -171,7 +189,7 @@ onMounted(async () => {
             <UCard class="mb-4" v-for="(item, index) in state.goods" :key="index">
 
               <div class="grid grid-cols-2 gap-5">
-                <UFormField label="Categoria" name="category" required>
+                <UFormField label="Categoria" :name="`goods.${index}.category_id`" required>
                   <USelectMenu
                     ref="categoriesMenu"
                     v-model="item.category_id"
@@ -179,27 +197,28 @@ onMounted(async () => {
                     :items="goodCategories.items.value"
                     :loading="goodCategories.loading.value"
                     label-key="name"
+                    value-key="id"
                     class="w-full"
                     ignore-filter
                     placeholder="Selecione uma Categoria..."
                   />
                 </UFormField>
 
-                <UFormField label="Quantidade" name="quantity" required>
+                <UFormField :label="`Quantidade ${suffixForQuantityBox(index)}`" :name="`goods.${index}.quantity`" required>
                   <UInputNumber
                     v-model="item.quantity"
-                    min="0.1"
-                    step="0.1"
-                    defaultValue="0"
+                    :min="0.1"
+                    :step="0.1"
+                    :defaultValue="0"
                     class="w-full"/>
                 </UFormField>
 
-                <UButton v-if="index !== 0" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removerGood(index)"/>
+                <UButton v-if="index !== 0" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removeGood(index)"/>
               </div>
 
             </UCard>
 
-            <UButton icon="i-lucide-plus" class="w-fit flex float-right mb-4" @click="adicionarGood()" :key="index"/>
+            <UButton icon="i-lucide-plus" class="w-fit flex float-right mb-4" @click="addGood()" key="add-btn"/>
 
           </TransitionGroup>
 

@@ -16,6 +16,7 @@ class DonationContent extends Model
         'donation_log_id',
         'donation_goods_types_id',
         'quantity',
+        'good_id',
     ];
 
     public function donationLog(): BelongsTo

@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Donations\DonationLogRequest;
 use App\Http\Resources\Donations\DonationLogResource;
+use App\Models\Donations\DonationContent;
 use App\Models\Donations\DonationLog;
+use App\Models\Donations\DonationStock;
+use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -41,7 +44,49 @@ class DonationLogController extends Controller
 
     public function store(DonationLogRequest $request)
     {
-        return new DonationLogResource(DonationLog::create($request->validated()));
+        try
+        {
+            $donation = DB::transaction(function () use ($request) {
+                $donation = DonationLog::create([
+                    'date' => $request->validated('date'),
+                    'name' => $request->validated('name'),
+                    'contact' => $request->validated('contact'),
+                    'email' => $request->validated('email'),
+                    'donor_type' => $request->validated('donor_type'),
+                    'user_id' => $request->user()->id
+                ]);
+
+                $goods = collect($request->validated('goods'))
+                    ->groupBy('category_id')
+                    ->map(fn ($group, $categoryId) => [
+                        'category_id' => $categoryId,
+                        'quantity' => $group->sum('quantity')
+                    ])
+                    ->values()->all();
+
+                foreach ($goods as $good) {
+                    DonationContent::create([
+                        'donation_log_id' => $donation->id,
+                        'donation_goods_types_id' => $good['category_id'],
+                        'quantity' => $good['quantity'],
+                    ]);
+
+                    DonationStock::where(['donation_goods_type_id' => $good['category_id']])
+                        ->increment('stock', $good['quantity']);
+                }
+
+                return $donation;
+            });
+
+            DB::commit();
+            return new DonationLogResource($donation);
+        }
+        catch (\Throwable $e)
+        {
+            DB::rollBack();
+
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
     public function show(DonationLog $donationLog)

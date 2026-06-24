@@ -11,7 +11,6 @@ const toast = useToast()
 //ATENÇÃO: Não importar o useColorMode do usevue.
 const colorMode = useColorMode()
 
-console.debug(colorMode)
 const color = computed(() => colorMode.value === 'dark' ? '#1b1718' : 'white')
 let last_connectivity_state = true;
 

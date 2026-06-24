@@ -39,11 +39,14 @@ const columns: TableColumn<DonationLog>[] = [
         case "single":
           return h('div', {class: 'flex flex-col'}, "Pessoa Singular")
 
+        case "company":
+          return h('div', {class: 'flex flex-col'}, "Empresa")
+
         case "org":
-          return h('div', {class: 'flex flex-col'}, "Organização")
+          return h('div', {class: 'flex flex-col'}, "ONG")
 
         case "misc":
-          return h('div', {class: 'flex flex-col'}, "Diversos")
+          return h('div', {class: 'flex flex-col'}, "Outro")
 
         default:
           return h('div', {class: 'flex flex-col'}, row.original.donor_type)
@@ -60,21 +63,13 @@ const columns: TableColumn<DonationLog>[] = [
       return h(
         'div',
         {class: 'text-right'},
-        h(UButton, {
-          icon: 'i-lucide-files',
-          color: 'warning',
-          variant: 'ghost',
-          onClick: () => {
-            navigateTo(`/facilities/${row.original.id}/files`)
-          }
-        }),
         //@ts-ignore
         h(UButton, {
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',
           onClick: () => {
-            navigateTo(`/facilities/${row.original.id}`)
+            navigateTo(`/donations/${row.original.id}`)
           }
         })
       )

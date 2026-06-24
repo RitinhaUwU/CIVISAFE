@@ -46,15 +46,18 @@ const chartOptions = computed(() => ({
       }
     },
     annotation: {
-      annotations: dangerLevels.value.map((val, i) => ({
-        type: 'line',
-        xMin: i - 0.4,
-        xMax: i + 0.4,
-        yMin: val,
-        yMax: val,
-        borderColor: '#e74c3c',
-        borderWidth: 2
-      }))
+      annotations: dangerLevels.value.flatMap((val, i) => {
+        if (val == null) return []
+        return [{
+          type: 'line',
+          xMin: i - 0.4,
+          xMax: i + 0.4,
+          yMin: val,
+          yMax: val,
+          borderColor: '#e74c3c',
+          borderWidth: 2
+        }]
+      })
     }
   },
   scales: {

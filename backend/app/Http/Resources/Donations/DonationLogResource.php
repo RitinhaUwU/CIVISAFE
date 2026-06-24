@@ -13,12 +13,18 @@ class DonationLogResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'date' => $this->date,
             'name' => $this->name,
             'contact' => $this->contact,
             'email' => $this->email,
             'donor_type' => $this->donor_type,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'user_id' => $this->user_id,
+            'user' => $this->user,
+
+            'content' => $this->donationContent
         ];
     }
 }

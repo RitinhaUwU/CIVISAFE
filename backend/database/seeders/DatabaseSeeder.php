@@ -45,14 +45,14 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'locked' => false,
-        ])->assignRole(RolesEnum::ADMIN->name);
+        ])->assignRole(RolesEnum::ADMIN->value);
 
         User::factory()->create([
             'name' => 'Utilizador User',
             'email' => 'user@example.com',
             'password' => bcrypt('password'),
             'locked' => false,
-        ])->assignRole(RolesEnum::USER->name);
+        ])->assignRole(RolesEnum::USER->value);
 
         User::factory(100)->create()->each(function ($user) {
             $roles = Role::all();
