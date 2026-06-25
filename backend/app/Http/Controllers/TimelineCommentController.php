@@ -14,7 +14,8 @@ class TimelineCommentController extends Controller
     {
         $comment = $incident->comments()->create([
             'user_id' => $request->user()->id,
-            'body' => $request->body
+            'body' => $request->body,
+            'created_at' => $request->created_at ?? now()
         ]);
 
         return new TimelineCommentResource($comment->load('user'));
@@ -24,7 +25,10 @@ class TimelineCommentController extends Controller
     {
         abort_if($comment->incident_id !== $incident->id, Response::HTTP_NOT_FOUND);
 
-        $comment->update(['body' => $request->body]);
+        $comment->update([
+            'body' => $request->body,
+            'created_at' => $request->created_at
+        ]);
 
         return new TimelineCommentResource($comment->load('user'));
     }

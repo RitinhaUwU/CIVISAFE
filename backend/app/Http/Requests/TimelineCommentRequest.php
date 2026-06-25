@@ -11,8 +11,9 @@ class TimelineCommentRequest extends FormRequest
         $is_patch = $this->isMethod('PATCH');
 
         return [
-            'body' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
-            'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users,id']
+            'body' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
+            'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users,id'],
+            'created_at' => [$is_patch ? 'sometimes' : 'nullable', 'nullable', 'date']
         ];
     }
 

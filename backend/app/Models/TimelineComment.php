@@ -24,5 +24,6 @@ class TimelineComment extends Model
         'body',
         'incident_id',
         'user_id',
+        'created_at',
     ];
 }

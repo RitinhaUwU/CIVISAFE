@@ -75,7 +75,7 @@ const tabs = [
     icon: 'i-lucide-ambulance'
   },
   {
-    label: 'Linha de Tempo',
+    label: 'Fita de Tempo',
     slot: 'timeline',
     icon: 'i-lucide-history'
   }
@@ -506,8 +506,6 @@ const timeline = ref<TimelineItem[]>([])
 const loadingTimeline = ref(false)
 const newComment = ref('')
 const savingComment = ref(false)
-const editingCommentId = ref<number | null>(null)
-const editingCommentBody = ref('')
 
 const commentSchema = z.object({
   incident_id: z.number({ required_error: 'Ocorrência inválida' }),
@@ -522,6 +520,10 @@ const stateTimeline = reactive<Partial<TimelineCommentSchema>>({
   incident_id: null,
   body: ''
 })
+
+const commentDateTime = ref(
+  toDatetimeLocal(new Date().toISOString())
+)
 
 const dateFields = [
   'start_datetime',
@@ -621,9 +623,14 @@ const fetchTimeline = async () => {
   }
 }
 
+const editingCommentId = ref<number | null>(null)
+const editingCommentBody = ref('')
+const editingCommentDate = ref('')
+
 const startEditComment = (item: any) => {
   editingCommentId.value = item.comment_id
   editingCommentBody.value = item.body
+  editingCommentDate.value = toDatetimeLocal(item.date)
 }
 
 const cancelEditComment = () => {
@@ -640,14 +647,27 @@ const submitComment = async () => {
     const payload = {
       incident_id: Number(route.params.id),
       user_id: authStore.currentUserID,
-      body: newComment.value
+      body: newComment.value,
+      created_at: commentDateTime.value
     }
 
     await api.createTimelineComment(Number(route.params.id), payload)
 
+    toast.add({
+      title: 'Sucesso',
+      description: 'Entrada registada',
+      color: 'success'
+    })
+
     newComment.value = ''
     await fetchTimeline()
-  } finally {
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao registar a entrada',
+      color: 'error'
+    })
+  }finally {
     savingComment.value = false
   }
 }
@@ -657,7 +677,14 @@ const saveEditComment = async (item: any) => {
     await api.updateTimelineComment(Number(route.params.id), item.comment_id, {
       body: editingCommentBody.value,
       incident_id: Number(route.params.id),
-      user_id: authStore.currentUserID
+      user_id: authStore.currentUserID,
+      created_at: editingCommentDate.value
+    })
+
+    toast.add({
+      title: 'Sucesso',
+      description: 'Entrada atualizada',
+      color: 'success'
     })
 
     editingCommentId.value = null
@@ -942,14 +969,14 @@ onMounted(async () => {
               <template #actions-cell="{ row }">
                 <div class="flex gap-2 justify-end">
                   <UButton
-                      icon="i-lucide-pencil"
-                      color="warning"
-                      variant="soft"
-                      size="sm"
-                      data-testid="edit-logistic"
-                      class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
-                      :ui="{ rounded: 'rounded-full' }"
-                      @click="editLogistic(row.original)"
+                    icon="i-lucide-pencil"
+                    color="warning"
+                    variant="soft"
+                    size="sm"
+                    data-testid="edit-logistic"
+                    class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
+                    :ui="{ rounded: 'rounded-full' }"
+                    @click="editLogistic(row.original)"
                   />
                 </div>
               </template>
@@ -973,7 +1000,16 @@ onMounted(async () => {
           <div class="space-y-6 pt-4">
             <section class="space-y-2">
               <h2 class="font-bold">Nova entrada manual</h2>
-              <UTextarea v-model="newComment" placeholder="Escreva uma entrada..." :rows="3" class="w-full"/>
+              <UFormField label="Data da ocorrência">
+                <UInput
+                  type="datetime-local"
+                  v-model="commentDateTime"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField label="Descrição">
+                <UTextarea v-model="newComment" placeholder="Escreva uma entrada..." :rows="3" class="w-full"/>
+              </UFormField>
               <div class="flex justify-end gap-2">
                 <UButton
                   color="primary"
@@ -985,12 +1021,12 @@ onMounted(async () => {
               </div>
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
-            <h2 class="font-bold">Linha de Tempo</h2>
+            <h2 class="font-bold">Fita de Tempo</h2>
             <div v-if="loadingTimeline" class="flex justify-center py-10">
               <UIcon name="i-lucide-loader-circle" class="animate-spin text-stone-400 size-6" />
             </div>
             <div v-else-if="timeline.length === 0" class="text-center py-10 text-sm text-stone-400">
-              Sem registos na linha de tempo
+              Sem registos na fita de tempo
             </div>
             <UTimeline v-else :items="timeline" size="xl" :ui="{ date: 'float-end ms-1' }">
               <template #title="{ item }">
@@ -1014,7 +1050,16 @@ onMounted(async () => {
                       {{ (item as any).body }}
                     </div>
                     <div v-else class="space-y-2">
-                      <UTextarea v-model="editingCommentBody" :rows="3" class="w-full"/>
+                      <UFormField label="Data da ocorrência">
+                        <UInput
+                          type="datetime-local"
+                          v-model="editingCommentDate"
+                          class="w-full"
+                        />
+                      </UFormField>
+                      <UFormField label="Descrição">
+                        <UTextarea v-model="editingCommentBody" :rows="3" class="w-full"/>
+                      </UFormField>
                       <div class="flex justify-end gap-2">
                         <UButton
                           color="neutral"
