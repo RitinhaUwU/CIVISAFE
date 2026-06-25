@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
+use App\Http\Controllers\TimelineCommentController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentPartyController;
 use App\Http\Controllers\IncidentPCOController;
@@ -13,9 +14,11 @@ use App\Http\Controllers\IncidentTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
+use App\Http\Resources\TimelineCommentResource;
 use App\Http\Resources\UserResource;
 use App\Models\Entity;
 use App\Models\Incident;
+use App\Models\TimelineComment;
 use App\Models\IncidentParty;
 use App\Models\IncidentPCO;
 use App\Models\IncidentPriority;
@@ -95,7 +98,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/parties', [IncidentPartyController::class, 'store']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
-
+            // TIMELINE COMMENTS
+            Route::post('/comments', [TimelineCommentController::class, 'store']);
+            Route::put('/comments/{comment}', [TimelineCommentController::class, 'update']);
+            // TIMELINE
             function transformActivityValues(array $values): array{
                 foreach ($values as $field => &$value) {
                     if ($value === null) {
@@ -132,36 +138,57 @@ Route::prefix('v1')->group(function () {
                 return $values;
             }
 
-            // TIMELINE
-            Route::get('/timeline', function ($incidentId) {
-                $activities = Activity::query()
-                    ->where(function ($q) use ($incidentId) {
-                        // Logs da própria ocorrência
-                        $q->where('subject_type', Incident::class)->where('subject_id', $incidentId);
+            Route::get('/timeline', function (Incident $incident) {
+                $logs = Activity::query()
+                    ->where(function ($q) use ($incident) {
+                        $q->where('subject_type', Incident::class)->where('subject_id', $incident->id);
                     })
-                    ->orWhere(function ($q) use ($incidentId) {
-                        // Logs dos PCOs desta ocorrência
-                        $q->where('subject_type', IncidentPCO::class)->whereIn('subject_id', function ($sub) use ($incidentId) {
-                            $sub->select('id')->from('incident_pcos')->where('incident_id', $incidentId);
+                    ->orWhere(function ($q) use ($incident) {
+                        $q->where('subject_type', IncidentPCO::class)->whereIn('subject_id', function ($sub) use ($incident) {
+                            $sub->select('id')->from('incident_pcos')->where('incident_id', $incident->id);
                         });
                     })
-                    ->orWhere(function ($q) use ($incidentId) {
-                        // Logs das equipas desta ocorrência
-                        $q->where('subject_type', IncidentParty::class)->whereIn('subject_id', function ($sub) use ($incidentId) {
-                            $sub->select('id')->from('incident_parties')->where('incident_id', $incidentId);
+                    ->orWhere(function ($q) use ($incident) {
+                        $q->where('subject_type', IncidentParty::class)->whereIn('subject_id', function ($sub) use ($incident) {
+                            $sub->select('id')->from('incident_parties')->where('incident_id', $incident->id);
                         });
                     })
-                    ->with('causer')->latest()->get()->map(fn($a) => [
-                        'id'           => $a->id,
-                        'module'       => $a->log_name,
-                        'event'        => $a->description,
-                        'user'         => $a->causer?->name ?? 'Sistema',
-                        'changes' => transformActivityValues($a->attribute_changes['attributes'] ?? []),
-                        'old_values' => transformActivityValues($a->attribute_changes['old'] ?? []),
-                        'subject_type' => class_basename($a->subject_type),
-                        'date'         => $a->created_at->toISOString(),
-                    ]);
-                return response()->json($activities);
+                    ->with('causer')->get()
+                    ->map(function ($a) {
+                        return [
+                            'id' => $a->id,
+                            'type' => 'log',
+                            'module' => $a->log_name,
+                            'event' => $a->description,
+                            'user' => $a->causer?->name,
+                            'date' => $a->created_at->toISOString(),
+                            'changes' => transformActivityValues($a->attribute_changes['attributes'] ?? []),
+                            'old_values' => transformActivityValues($a->attribute_changes['old'] ?? []),
+                            'body' => null,
+                            'comment_id' => null,
+                        ];
+                    });
+
+                $comments = $incident->comments()
+                    ->with('user')->get()
+                    ->map(function ($comment) {
+                        return [
+                            'id' => $comment->id,
+                            'type' => 'comment',
+                            'module' => 'comments',
+                            'event' => 'acrescentou uma entrada',
+                            'user' => $comment->user?->name,
+                            'body' => $comment->body,
+                            'date' => $comment->created_at->toISOString(),
+                            'changes' => null,
+                            'old_values' => null,
+                            'comment_id' => $comment->id,
+                        ];
+                    });
+
+                $timeline = $logs->concat($comments)->sortByDesc('date')->values();
+
+                return response()->json($timeline);
             });
         });
 

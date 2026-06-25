@@ -49,12 +49,18 @@ class Incident extends Model
         return $this->hasMany(IncidentParty::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TimelineComment::class);
+    }
+
     protected $with = [
         'incidentType',
         'incidentState',
         'incidentPriority',
         'user',
         'parties',
+        'comments',
     ];
 
     protected function casts(): array

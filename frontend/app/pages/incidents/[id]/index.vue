@@ -17,6 +17,7 @@ import ConflictPCOModal from '@/components/incidents/ConflictPCOModal.vue'
 const router = useRouter()
 const route = useRoute()
 const api = useApiStore()
+const authStore = useAuthStore()
 const toast = useToast()
 
 const saving = ref(false)
@@ -129,7 +130,7 @@ const state = reactive<Partial<Schema>>({
   incident_state_id: null as any,
   incident_priority_id: null as any,
   incident_id: null as any,
-  user_id: null as number,
+  user_id: null as any,
   user: null as any,
   start_datetime: '',
   end_datetime: '',
@@ -503,6 +504,24 @@ const fetchLogistics = async () => {
 // Linha de Tempo
 const timeline = ref<TimelineItem[]>([])
 const loadingTimeline = ref(false)
+const newComment = ref('')
+const savingComment = ref(false)
+const editingCommentId = ref<number | null>(null)
+const editingCommentBody = ref('')
+
+const commentSchema = z.object({
+  incident_id: z.number({ required_error: 'Ocorrência inválida' }),
+  user_id: z.number({ required_error: 'Utilizador inválido' }),
+  body: z.string().min(1, 'O comentário não pode estar vazio').max(2000, 'Máximo de 2000 caracteres'),
+})
+
+type TimelineCommentSchema = z.output<typeof commentSchema>
+
+const stateTimeline = reactive<Partial<TimelineCommentSchema>>({
+  user_id: authStore.currentUserID,
+  incident_id: null,
+  body: ''
+})
 
 const dateFields = [
   'start_datetime',
@@ -572,15 +591,18 @@ const moduleIcon = (module: string) => {
   const icons: Record<string, string> = {
     'incidents': 'i-lucide-users',
     'pcos':      'i-lucide-satellite-dish',
-    'parties':   'i-lucide-ambulance'
+    'parties':   'i-lucide-ambulance',
+    'comments':  'i-lucide-message-circle'
   }
-  return icons[module] ?? 'i-lucide-clock'
+  return icons[module] ?? 'i-lucide-message-circle'
 }
 
 const fetchTimeline = async () => {
   loadingTimeline.value = true
+
   try {
     const res = await api.getIncidentTimeline(Number(route.params.id))
+
     timeline.value = res.data.map((entry: any) => ({
       date:        entry.date,
       username:    entry.user,
@@ -588,11 +610,66 @@ const fetchTimeline = async () => {
       module:      entry.module,
       changes:     entry.changes,
       old_values:  entry.old_values,
-      icon:        moduleIcon(entry.module),
+      type:        entry.type,
+      body:        entry.body ?? null,
+      comment_id:  entry.comment_id ?? null,
+      icon:        entry.type === 'comment' ? 'i-lucide-message-circle' : moduleIcon(entry.module),
       description: ' ',
     }))
   } finally {
     loadingTimeline.value = false
+  }
+}
+
+const startEditComment = (item: any) => {
+  editingCommentId.value = item.comment_id
+  editingCommentBody.value = item.body
+}
+
+const cancelEditComment = () => {
+  editingCommentId.value = null
+  editingCommentBody.value = ''
+}
+
+const submitComment = async () => {
+  if (!newComment.value.trim()) return
+
+  savingComment.value = true
+
+  try {
+    const payload = {
+      incident_id: Number(route.params.id),
+      user_id: authStore.currentUserID,
+      body: newComment.value
+    }
+
+    await api.createTimelineComment(Number(route.params.id), payload)
+
+    newComment.value = ''
+    await fetchTimeline()
+  } finally {
+    savingComment.value = false
+  }
+}
+
+const saveEditComment = async (item: any) => {
+  try {
+    await api.updateTimelineComment(Number(route.params.id), item.comment_id, {
+      body: editingCommentBody.value,
+      incident_id: Number(route.params.id),
+      user_id: authStore.currentUserID
+    })
+
+    editingCommentId.value = null
+    editingCommentBody.value = ''
+
+    await fetchTimeline()
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: e.response?.data?.message ?? 'Erro ao atualizar comentário',
+      color: 'error'
+    })
   }
 }
 
@@ -894,6 +971,21 @@ onMounted(async () => {
         </template>
         <template #timeline>
           <div class="space-y-6 pt-4">
+            <section class="space-y-2">
+              <h2 class="font-bold">Nova entrada manual</h2>
+              <UTextarea v-model="newComment" placeholder="Escreva uma entrada..." :rows="3" class="w-full"/>
+              <div class="flex justify-end gap-2">
+                <UButton
+                  color="primary"
+                  label="Guardar"
+                  :loading="savingComment"
+                  :disabled="!newComment.trim()"
+                  @click="submitComment"
+                />
+              </div>
+            </section>
+            <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
+            <h2 class="font-bold">Linha de Tempo</h2>
             <div v-if="loadingTimeline" class="flex justify-center py-10">
               <UIcon name="i-lucide-loader-circle" class="animate-spin text-stone-400 size-6" />
             </div>
@@ -903,27 +995,54 @@ onMounted(async () => {
             <UTimeline v-else :items="timeline" size="xl" :ui="{ date: 'float-end ms-1' }">
               <template #title="{ item }">
                 <div class="flex flex-col gap-2">
-                  <div>
-                    <span class="font-semibold">{{ (item as any).username }}</span>
-                    <span class="font-normal text-muted">&nbsp;{{ (item as any).action }}</span>
+                  <div class="flex items-center justify-between gap-2">
+                    <div>
+                      <span class="font-semibold">{{ (item as any).username }}</span>
+                      <span class="font-normal text-muted">&nbsp;{{ (item as any).action }}</span>
+                    </div>
+                    <UButton
+                      v-if="(item as any).type === 'comment'"
+                      icon="i-lucide-pencil"
+                      color="warning"
+                      variant="ghost"
+                      size="xs"
+                      @click="startEditComment(item)"
+                    />
                   </div>
-                  <div v-if="Object.keys((item as any).changes ?? {}).length" class="space-y-1 text-xs px-3 py-2 ring ring-default rounded-md">
+                  <div v-if="(item as any).type === 'comment'" class="space-y-2">
+                    <div v-if="editingCommentId !== (item as any).comment_id" class="text-sm px-3 py-2 ring ring-default rounded-md text-stone-400 shrink-0 dark:text-stone-300">
+                      {{ (item as any).body }}
+                    </div>
+                    <div v-else class="space-y-2">
+                      <UTextarea v-model="editingCommentBody" :rows="3" class="w-full"/>
+                      <div class="flex justify-end gap-2">
+                        <UButton
+                          color="neutral"
+                          variant="ghost"
+                          label="Cancelar"
+                          @click="cancelEditComment"
+                        />
+                        <UButton
+                          color="primary"
+                          label="Guardar"
+                          @click="saveEditComment(item)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else-if="Object.keys((item as any).changes ?? {}).length" class="space-y-1 text-xs px-3 py-2 ring ring-default rounded-md">
                     <div v-for="(value, key) in (item as any).changes" :key="key" class="flex gap-2 flex-wrap">
-                      <span class="text-stone-400 shrink-0"> {{ fieldLabel(key) }}:</span>
+                      <span class="text-stone-400 shrink-0">{{ fieldLabel(key) }}:</span>
                       <template v-if="key in ((item as any).old_values ?? {})">
-                        <span class="line-through text-red-400">
-                          {{ formatValue(key, (item as any).old_values?.[key]) }}
-                        </span>
-                        <span>→</span>
+                        <span class="line-through text-red-400">{{ formatValue(key, (item as any).old_values?.[key]) }}</span>
+                        <UIcon name="i-lucide-move-right" />
                       </template>
-                      <span class="text-green-500"> {{ formatValue(key, value) }}</span>
+                      <span class="text-green-500">{{ formatValue(key, value) }}</span>
                     </div>
                   </div>
                 </div>
               </template>
-              <template #date="{ item }">
-                {{ timeAgo(new Date((item as any).date)) }}
-              </template>
+              <template #date="{ item }">{{ timeAgo(new Date((item as any).date)) }}</template>
             </UTimeline>
           </div>
         </template>
