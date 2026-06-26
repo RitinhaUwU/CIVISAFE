@@ -867,7 +867,7 @@ onMounted(async () => {
             <section class="space-y-2">
               <h2 class="font-bold">Observações</h2>
               <UFormField name="obs">
-                <UTextarea v-model="state.obs" :rows="5" class="w-full"/>
+                <UTextarea id="obs" v-model="state.obs" :rows="5" class="w-full"/>
               </UFormField>
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
@@ -1039,6 +1039,7 @@ onMounted(async () => {
                     <UButton
                       v-if="(item as any).type === 'comment'"
                       icon="i-lucide-pencil"
+                      data-testid="edit-comment"
                       color="warning"
                       variant="ghost"
                       size="xs"
