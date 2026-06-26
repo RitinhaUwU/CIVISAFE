@@ -1075,15 +1075,30 @@ onMounted(async () => {
                       </div>
                     </div>
                   </div>
-                  <div v-else-if="Object.keys((item as any).changes ?? {}).length" class="space-y-1 text-xs px-3 py-2 ring ring-default rounded-md">
-                    <div v-for="(value, key) in (item as any).changes" :key="key" class="flex gap-2 flex-wrap">
-                      <span class="text-stone-400 shrink-0">{{ fieldLabel(key) }}:</span>
-                      <template v-if="key in ((item as any).old_values ?? {})">
-                        <span class="line-through text-red-400">{{ formatValue(key, (item as any).old_values?.[key]) }}</span>
-                        <UIcon name="i-lucide-move-right" />
+                  <div v-else-if="Object.keys((item as any).changes ?? {}).length">
+                    <UAccordion
+                      :items="[{
+                        label: 'Ver alterações',
+                      }]"
+                      class="text-sm text-stone-400 shrink-0 dark:text-stone-300"
+                      :ui="{
+                        trigger: 'px-3 py-2 ring ring-default rounded-md bg-default/30',
+                        content: 'px-3 py-2'
+                      }"
+                    >
+                      <template #content>
+                        <div class="space-y-1 text-xs px-3 py-2">
+                          <div v-for="(value, key) in (item as any).changes" :key="key" class="flex gap-2 flex-wrap">
+                            <span class="text-stone-400 shrink-0">{{ fieldLabel(key) }}:</span>
+                            <template v-if="key in ((item as any).old_values ?? {})">
+                              <span class="line-through text-red-400">{{ formatValue(key, (item as any).old_values?.[key]) }}</span>
+                              <UIcon name="i-lucide-move-right" />
+                            </template>
+                            <span class="text-green-500">{{ formatValue(key, value) }}</span>
+                          </div>
+                        </div>
                       </template>
-                      <span class="text-green-500">{{ formatValue(key, value) }}</span>
-                    </div>
+                    </UAccordion>
                   </div>
                 </div>
               </template>
