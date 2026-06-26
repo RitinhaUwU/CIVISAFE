@@ -13,7 +13,7 @@ class TimelineCommentController extends Controller
     public function store(TimelineCommentRequest $request, Incident $incident): TimelineCommentResource
     {
         $comment = $incident->comments()->create([
-            'user_id' => $request->user()->id,
+            'user_id' => auth()->id(),
             'body' => $request->body,
             'created_at' => $request->created_at ?? now()
         ]);

@@ -102,40 +102,43 @@ Route::prefix('v1')->group(function () {
             Route::post('/comments', [TimelineCommentController::class, 'store']);
             Route::put('/comments/{comment}', [TimelineCommentController::class, 'update']);
             // TIMELINE
-            function transformActivityValues(array $values): array{
-                foreach ($values as $field => &$value) {
-                    if ($value === null) {
-                        continue;
-                    }
+            if (! function_exists('transformActivityValues')) {
+                function transformActivityValues(array $values): array
+                {
+                    foreach ($values as $field => &$value) {
+                        if ($value === null) {
+                            continue;
+                        }
 
-                    $dateFields = [
-                        'start_datetime',
-                        'end_datetime',
-                        'activation_pco_datetime',
-                        'start_pco_datetime',
-                        'end_pco_datetime',
-                    ];
+                        $dateFields = [
+                            'start_datetime',
+                            'end_datetime',
+                            'activation_pco_datetime',
+                            'start_pco_datetime',
+                            'end_pco_datetime',
+                        ];
 
-                    if (in_array($field, $dateFields) && !empty($value)) {
-                        $value = Carbon::parse($value)->format('d/m/Y H:i');
-                    }
+                        if (in_array($field, $dateFields) && !empty($value)) {
+                            $value = Carbon::parse($value)->format('d/m/Y H:i');
+                        }
 
-                    switch ($field) {
-                        case 'incident_type_id':
-                            $value = IncidentType::withTrashed()->find($value)?->code ?? $value;
-                            break;
-                        case 'incident_state_id':
-                            $value = IncidentState::find($value)?->name ?? $value;
-                            break;
-                        case 'incident_priority_id':
-                            $value = IncidentPriority::find($value)?->description ?? $value;
-                            break;
-                        case 'entity_id':
-                            $value = Entity::find($value)?->name ?? $value;
-                            break;
+                        switch ($field) {
+                            case 'incident_type_id':
+                                $value = IncidentType::withTrashed()->find($value)?->code ?? $value;
+                                break;
+                            case 'incident_state_id':
+                                $value = IncidentState::find($value)?->name ?? $value;
+                                break;
+                            case 'incident_priority_id':
+                                $value = IncidentPriority::find($value)?->description ?? $value;
+                                break;
+                            case 'entity_id':
+                                $value = Entity::find($value)?->name ?? $value;
+                                break;
+                        }
                     }
+                    return $values;
                 }
-                return $values;
             }
 
             Route::get('/timeline', function (Incident $incident) {
