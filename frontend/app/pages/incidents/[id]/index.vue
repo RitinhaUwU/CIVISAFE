@@ -521,9 +521,7 @@ const stateTimeline = reactive<Partial<TimelineCommentSchema>>({
   body: ''
 })
 
-const commentDateTime = ref(
-  toDatetimeLocal(new Date().toISOString())
-)
+const commentDateTime = ref(toDatetimeLocal(new Date().toISOString()))
 
 const dateFields = [
   'start_datetime',
@@ -648,7 +646,7 @@ const submitComment = async () => {
       incident_id: Number(route.params.id),
       user_id: authStore.currentUserID,
       body: newComment.value,
-      created_at: commentDateTime.value
+      start_datetime: commentDateTime.value
     }
 
     await api.createTimelineComment(Number(route.params.id), payload)
@@ -678,7 +676,7 @@ const saveEditComment = async (item: any) => {
       body: editingCommentBody.value,
       incident_id: Number(route.params.id),
       user_id: authStore.currentUserID,
-      created_at: editingCommentDate.value
+      start_datetime: editingCommentDate.value
     })
 
     toast.add({

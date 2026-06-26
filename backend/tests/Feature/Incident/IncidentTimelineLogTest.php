@@ -190,9 +190,9 @@ it('returns timeline ordered by date descending', function () {
 
     $incident = Incident::factory()->create();
 
-    TimelineComment::factory()->create(['incident_id' => $incident->id, 'created_at' => now()->subHour()]);
+    TimelineComment::factory()->create(['incident_id' => $incident->id, 'start_datetime' => now()->subHour()]);
 
-    TimelineComment::factory()->create(['incident_id' => $incident->id, 'created_at' => now()]);
+    TimelineComment::factory()->create(['incident_id' => $incident->id, 'start_datetime' => now()]);
 
     $response = $this->getJson("/api/v1/incidents/{$incident->id}/timeline");
 

@@ -24,6 +24,13 @@ class TimelineComment extends Model
         'body',
         'incident_id',
         'user_id',
-        'created_at',
+        'start_datetime',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_datetime' => 'datetime'
+        ];
+    }
 }

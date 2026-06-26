@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
+use App\Http\Controllers\IncidentTimelineController;
 use App\Http\Controllers\TimelineCommentController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentPartyController;
@@ -14,21 +15,10 @@ use App\Http\Controllers\IncidentTypeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
-use App\Http\Resources\TimelineCommentResource;
 use App\Http\Resources\UserResource;
-use App\Models\Entity;
-use App\Models\Incident;
-use App\Models\TimelineComment;
-use App\Models\IncidentParty;
-use App\Models\IncidentPCO;
-use App\Models\IncidentPriority;
-use App\Models\IncidentState;
-use App\Models\IncidentType;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-use Spatie\Activitylog\Models\Activity;
 
 Route::post('/test/reset', function (Request $request) {
     if ($request->header('TEST-TOKEN') !== 'civisafe-test') {
@@ -102,97 +92,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/comments', [TimelineCommentController::class, 'store']);
             Route::put('/comments/{comment}', [TimelineCommentController::class, 'update']);
             // TIMELINE
-            if (! function_exists('transformActivityValues')) {
-                function transformActivityValues(array $values): array
-                {
-                    foreach ($values as $field => &$value) {
-                        if ($value === null) {
-                            continue;
-                        }
-
-                        $dateFields = [
-                            'start_datetime',
-                            'end_datetime',
-                            'activation_pco_datetime',
-                            'start_pco_datetime',
-                            'end_pco_datetime',
-                        ];
-
-                        if (in_array($field, $dateFields) && !empty($value)) {
-                            $value = Carbon::parse($value)->format('d/m/Y H:i');
-                        }
-
-                        switch ($field) {
-                            case 'incident_type_id':
-                                $value = IncidentType::withTrashed()->find($value)?->code ?? $value;
-                                break;
-                            case 'incident_state_id':
-                                $value = IncidentState::find($value)?->name ?? $value;
-                                break;
-                            case 'incident_priority_id':
-                                $value = IncidentPriority::find($value)?->description ?? $value;
-                                break;
-                            case 'entity_id':
-                                $value = Entity::find($value)?->name ?? $value;
-                                break;
-                        }
-                    }
-                    return $values;
-                }
-            }
-
-            Route::get('/timeline', function (Incident $incident) {
-                $logs = Activity::query()
-                    ->where(function ($q) use ($incident) {
-                        $q->where('subject_type', Incident::class)->where('subject_id', $incident->id);
-                    })
-                    ->orWhere(function ($q) use ($incident) {
-                        $q->where('subject_type', IncidentPCO::class)->whereIn('subject_id', function ($sub) use ($incident) {
-                            $sub->select('id')->from('incident_pcos')->where('incident_id', $incident->id);
-                        });
-                    })
-                    ->orWhere(function ($q) use ($incident) {
-                        $q->where('subject_type', IncidentParty::class)->whereIn('subject_id', function ($sub) use ($incident) {
-                            $sub->select('id')->from('incident_parties')->where('incident_id', $incident->id);
-                        });
-                    })
-                    ->with('causer')->get()
-                    ->map(function ($a) {
-                        return [
-                            'id' => $a->id,
-                            'type' => 'log',
-                            'module' => $a->log_name,
-                            'event' => $a->description,
-                            'user' => $a->causer?->name,
-                            'date' => $a->created_at->toISOString(),
-                            'changes' => transformActivityValues($a->attribute_changes['attributes'] ?? []),
-                            'old_values' => transformActivityValues($a->attribute_changes['old'] ?? []),
-                            'body' => null,
-                            'comment_id' => null,
-                        ];
-                    });
-
-                $comments = $incident->comments()
-                    ->with('user')->get()
-                    ->map(function ($comment) {
-                        return [
-                            'id' => $comment->id,
-                            'type' => 'comment',
-                            'module' => 'comments',
-                            'event' => 'acrescentou uma entrada',
-                            'user' => $comment->user?->name,
-                            'body' => $comment->body,
-                            'date' => $comment->created_at->toISOString(),
-                            'changes' => null,
-                            'old_values' => null,
-                            'comment_id' => $comment->id,
-                        ];
-                    });
-
-                $timeline = $logs->concat($comments)->sortByDesc('date')->values();
-
-                return response()->json($timeline);
-            });
+            Route::get('/timeline', [IncidentTimelineController::class, 'index']);
         });
 
         Route::prefix('/facilities')->group(function () {

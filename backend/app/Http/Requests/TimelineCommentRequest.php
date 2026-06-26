@@ -12,7 +12,7 @@ class TimelineCommentRequest extends FormRequest
 
         return [
             'body' => [$is_patch ? 'sometimes' : 'required', 'string', 'min:1'],
-            'created_at' => [$is_patch ? 'sometimes' : 'nullable', 'nullable', 'date']
+            'start_datetime' => [$is_patch ? 'sometimes' : 'nullable', 'date']
         ];
     }
 
