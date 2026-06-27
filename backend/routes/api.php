@@ -4,6 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
+use App\Http\Controllers\IncidentTimelineController;
+use App\Http\Controllers\TimelineCommentController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentPartyController;
 use App\Http\Controllers\IncidentPCOController;
@@ -86,6 +88,11 @@ Route::prefix('v1')->group(function () {
             Route::post('/parties', [IncidentPartyController::class, 'store']);
             Route::put('/parties/{party}', [IncidentPartyController::class, 'update']);
             Route::patch('/parties/{party}', [IncidentPartyController::class, 'update']);
+            // TIMELINE COMMENTS
+            Route::post('/comments', [TimelineCommentController::class, 'store']);
+            Route::put('/comments/{comment}', [TimelineCommentController::class, 'update']);
+            // TIMELINE
+            Route::get('/timeline', [IncidentTimelineController::class, 'index']);
         });
 
         Route::prefix('/facilities')->group(function () {

@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Incident extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     public function incidentType(): BelongsTo
     {
@@ -47,12 +49,18 @@ class Incident extends Model
         return $this->hasMany(IncidentParty::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TimelineComment::class);
+    }
+
     protected $with = [
         'incidentType',
         'incidentState',
         'incidentPriority',
         'user',
         'parties',
+        'comments',
     ];
 
     protected function casts(): array
@@ -87,4 +95,38 @@ class Incident extends Model
         'coordinates_pco',
         'name_pco'
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'identifier',
+                'incident_type_id',
+                'incident_state_id',
+                'incident_priority_id',
+                'start_datetime',
+                'end_datetime',
+                'coordinates',
+                'common_place',
+                'address',
+                'parish',
+                'municipality',
+                'district',
+                'is_major',
+                'alert_source_relationship',
+                'alert_source_name',
+                'alert_source_contact',
+                'obs',
+                'coordinates_pco',
+                'name_pco',
+            ])
+            ->logOnlyDirty()
+            ->useLogName('incidents')
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'criou uma ocorrência',
+                'updated' => 'atualizou uma ocorrência',
+                'deleted' => 'eliminou uma ocorrência',
+                default   => $eventName,
+            });
+    }
 }

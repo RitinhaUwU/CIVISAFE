@@ -74,7 +74,7 @@ const columns: TableColumn<User>[] = [
           { default: () => h(UButton, {
               icon: isLocked ? 'i-lucide-lock-keyhole-open' : 'i-lucide-lock-keyhole',
               variant: 'ghost',
-              color: 'primary',
+              color: isLocked ? 'success' : 'error',
               onClick: () => patchUser(row.original),
               disabled: row.original.id === auth.currentUserID
             })
