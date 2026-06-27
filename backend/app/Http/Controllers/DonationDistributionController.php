@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DistributionCreated;
+use App\Events\DistributionUpdated;
 use App\Events\StockUpdated;
-use App\Http\Requests\Donations\DonationLogRequest;
-use App\Http\Resources\Donations\DonationLogResource;
-use App\Models\Donations\DonationContent;
-use App\Models\Donations\DonationLog;
+use App\Http\Requests\Donations\DonationDistributionRequest;
+use App\Http\Resources\Donations\DonationDistributionResource;
+use App\Models\Donations\DistributionContent;
+use App\Models\Donations\DonationDistribution;
 use App\Models\Donations\DonationStock;
+use App\Models\User;
+use Auth;
 use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class DonationLogController extends Controller
+class DonationDistributionController extends Controller
 {
     public function __construct()
     {
@@ -26,33 +30,26 @@ class DonationLogController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'per_page' => 'sometimes|integer',
+            'per_page' => 'sometimes|integer'
         ]);
 
-        $records = QueryBuilder::for(DonationLog::class)
-            ->allowedFilters(
-                AllowedFilter::callback('search', function (Builder $query, $value) {
-                    $query->where('name', 'ILIKE', "%{$value}%");
-                })
-            )
-            ->orderBy('id', 'desc')
-            ->paginate($request->input('per_page', 15))
+        $distributions = QueryBuilder::for(DonationDistribution::class)
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->input('per_page', 10))
             ->appends($request->query());
 
-        return DonationLogResource::collection($records);
+        return DonationDistributionResource::collection($distributions);
     }
 
-    public function store(DonationLogRequest $request)
+    public function store(DonationDistributionRequest $request)
     {
         try {
-            $donation = DB::transaction(function () use ($request) {
-                $donation = DonationLog::create([
-                    'date' => $request->validated('date'),
+            $distribution = DB::transaction(function () use ($request) {
+                $distribution = DonationDistribution::create([
                     'name' => $request->validated('name'),
                     'contact' => $request->validated('contact'),
-                    'email' => $request->validated('email'),
-                    'donor_type' => $request->validated('donor_type'),
-                    'user_id' => $request->user()->id
+                    'obs' => $request->validated('obs'),
+                    'user_id' => Auth::user()->id,
                 ]);
 
                 $goods = collect($request->validated('goods'))
@@ -64,54 +61,55 @@ class DonationLogController extends Controller
                     ->values()->all();
 
                 foreach ($goods as $good) {
-                    DonationContent::create([
-                        'donation_log_id' => $donation->id,
-                        'donation_goods_types_id' => $good['category_id'],
+                    DistributionContent::create([
+                        'donation_distribution_id' => $distribution->id,
+                        'donation_goods_type_id' => $good['category_id'],
                         'quantity' => $good['quantity'],
                     ]);
 
                     DonationStock::where(['donation_goods_type_id' => $good['category_id']])
                         ->lockForUpdate()
-                        ->increment('stock', $good['quantity']);
+                        ->decrement('stock', $good['quantity']);
 
                     broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good['category_id']])->first()));
                 }
 
-                return $donation;
+                return $distribution;
             });
 
             DB::commit();
-            return new DonationLogResource($donation);
-        } catch (\Throwable $e) {
+            broadcast(new DistributionCreated($distribution));
+            return new DonationDistributionResource($distribution);
+        }
+        catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-    public function show(DonationLog $donation)
+    public function show(DonationDistribution $donationDistribution)
     {
-        return new DonationLogResource($donation);
+        return new DonationDistributionResource($donationDistribution);
     }
 
-    public function update(DonationLogRequest $request, DonationLog $donation)
+    public function update(DonationDistributionRequest $request, DonationDistribution $donationDistribution)
     {
+        /***
+         * A lógica do update da distribuição é muito semelhante à do update dos donativos, contudo, aqui a
+         * lógica de incrementar/decrementar tem de ser invertida, visto que a distribuição de bens é o
+         * inverso da recolha
+         */
+
         try {
-            DB::transaction(function () use ($request, $donation) {
+            DB::transaction(function () use ($request, $donationDistribution) {
                 $fields = collect($request->validated());
 
-                $donation->update($fields->except('goods')->toArray());
+                $donationDistribution->update($fields->except('goods')->toArray());
 
-                /**
-                 * Ver o número anterior de goods
-                 * Subtrair ou somar consoante a diferença
-                 *
-                 * Remover ou adicionar itens de novas categorias
-                 */
+                collect($fields['goods'])->each(function ($item) use ($donationDistribution) {
 
-                collect($fields['goods'])->each(function ($item) use ($donation) {
-
-                    $good = DonationContent::where(['donation_log_id' => $donation->id])
-                        ->where(['donation_goods_types_id' => $item['category_id']])
+                    $good = DistributionContent::where(['donation_distribution_id' => $donationDistribution->id])
+                        ->where(['donation_goods_type_id' => $item['category_id']])
                         ->first();
 
                     //Se o item existe tanto na db como no pedido, então vemos a diferença de unidades
@@ -125,7 +123,7 @@ class DonationLogController extends Controller
                             $good->save();
 
                             //É necessário fazer desta forma porque as respetivas funções não permitem passar valores inversos
-                            if($diff > 0)
+                            if($diff < 0)
                             {
                                 DonationStock::where(['donation_goods_type_id' => $item['category_id']])
                                     ->lockForUpdate()
@@ -141,40 +139,44 @@ class DonationLogController extends Controller
                         }
                     } else {
                         //Se o item não existe na db, adicionamos as unidades
-                        DonationContent::create([
-                            'donation_log_id' => $donation->id,
-                            'donation_goods_types_id' => $item['category_id'],
+                        DistributionContent::create([
+                            'donation_distribution_id' => $donationDistribution->id,
+                            'donation_goods_type_id' => $item['category_id'],
                             'quantity' => $item['quantity'],
                         ]);
 
                         DonationStock::where(['donation_goods_type_id' => $item['category_id']])
                             ->lockForUpdate()
-                            ->increment('stock', $item['quantity']);
+                            ->decrement('stock', $item['quantity']);
 
                         broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
                     }
                 });
 
                 //Se o item existe apenas na db mas não está no request é porque foi removido. Removemos todas as unidades
-                DonationContent::where(['donation_log_id' => $donation->id])
+                DistributionContent::where(['donation_distribution_id' => $donationDistribution->id])
                     ->get()
                     ->filter(function ($good) use ($fields) {
-                        return !collect($fields['goods'])->contains('category_id', $good->donation_goods_types_id);
+                        return !collect($fields['goods'])->contains('category_id', $good->donation_goods_type_id);
                     })
                     ->each(function ($good) {
 
-                        DonationStock::where(['donation_goods_type_id' => $good->donation_goods_types_id])
+                        DonationStock::where(['donation_goods_type_id' => $good->donation_goods_type_id])
                             ->lockForUpdate()
-                            ->decrement('stock', $good->quantity);
+                            ->increment('stock', $good->quantity);
 
                         $good->delete();
-                        broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good->donation_goods_types_id])->first()));
+                        broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good->donation_goods_type_id])->first()));
                     });
+
+
             });
 
             DB::commit();
-            return new DonationLogResource($donation->fresh());
-        } catch (\Throwable $e) {
+            broadcast(new DistributionUpdated($donationDistribution));
+            return new DonationDistributionResource($donationDistribution->fresh());
+        }
+        catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
         }

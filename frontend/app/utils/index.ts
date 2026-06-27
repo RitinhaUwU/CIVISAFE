@@ -1,3 +1,5 @@
+import type {DonationGoodType} from "~/types";
+
 export async function checkServerAccess() {
   try {
 
@@ -50,4 +52,17 @@ export function convertedMeasurementUnit(techString: string) {
     default:
       return techString;
   }
+}
+
+export const suffixForQuantityBox = (categories: DonationGoodType[], categoryId: number, simple: boolean = false) => {
+  const category = categories.find((x: DonationGoodType) => x.id == categoryId);
+
+  if(!category || !category.unit)
+    return '';
+
+  if(simple)
+  {
+    return convertedMeasurementUnit(category.unit);
+  }
+  return `(em ${convertedMeasurementUnit(category.unit)})`;
 }

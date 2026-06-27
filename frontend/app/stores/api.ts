@@ -509,6 +509,19 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
+  const getAllDonationGoodTypes = async () => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/donationGoodsTypes/all`)
+      await storeData('donation_goods_types', res.data.data)
+      return res;
+    }
+    else
+    {
+      console.debug("OFFLINE DATA")
+      return await retrieveData('donation_goods_types');
+    }
+  }
+
   const getDonationGoodType = async (id: number, params?: QueryParams) => {
     if (await checkServerAccess()) {
       const res = await axios.get(`${config.public.apiBase}/donationGoodsTypes/${id}`, {params})
@@ -574,14 +587,6 @@ export const useApiStore = defineStore('api', () => {
     return axios.put(`${config.public.apiBase}/donations/${id}`, params)
   }
 
-  const deleteDonationLog = async (id: number) => {
-    const res = await axios.delete(`${config.public.apiBase}/donations/${id}`)
-    if (res.status === 200) {
-      await removeEntry('donation_logs', id);
-    }
-    return res;
-  }
-
   /*************************
    *
    *  Donation Statistics
@@ -592,6 +597,15 @@ export const useApiStore = defineStore('api', () => {
     if(await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donationStatistics`);
     }
+    //TODO
+    throw new Error('Not Implemented');
+  }
+
+  const getAllStock = async () => {
+    if(await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/donations/stock`);
+    }
+    //TODO
     throw new Error('Not Implemented');
   }
 
@@ -623,6 +637,24 @@ export const useApiStore = defineStore('api', () => {
 
   const deleteFacilityDocument = (facilityId: number, mediaId: number) => {
     return axios.delete(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}`)
+  }
+
+  /**
+   *
+   * Doações - Distribuição
+   *
+   **/
+
+  const getAllDistributions = async (params: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/donationDistributions`, {params})
+  }
+
+  const createDistribution = (params: any) => {
+    return axios.post(`${config.public.apiBase}/donationDistributions`, params)
+  }
+
+  const updateDistribution = (id:number, params: any) => {
+    return axios.put(`${config.public.apiBase}/donationDistributions/${id}`, params)
   }
 
   return {
@@ -692,6 +724,7 @@ export const useApiStore = defineStore('api', () => {
     downloadFacilityDocument,
     deleteFacilityDocument,
     getDonationGoodTypes,
+    getAllDonationGoodTypes,
     getDonationGoodType,
     createDonationGoodType,
     updateDonationGoodType,
@@ -700,7 +733,10 @@ export const useApiStore = defineStore('api', () => {
     getDonationLog,
     createDonationLog,
     updateDonationLog,
-    deleteDonationLog,
     getStockStats,
+    getAllStock,
+    getAllDistributions,
+    createDistribution,
+    updateDistribution,
   }
 })

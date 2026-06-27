@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {useApiStore} from "@/stores/api";
-import type {StockStatistics} from "@/types";
+import type {DonationLog, StockStatistics} from "@/types";
 import LowestStockChart from "@/components/donation/LowestStockChart.vue";
 import TopStockChart from "@/components/donation/TopStockChart.vue";
 
 const stockStats = ref<StockStatistics>({
-  totalSock: 0,
+  totalStock: 0,
   stockAlerts: [],
   topStock: [],
   lowestStock: []
@@ -50,7 +50,7 @@ onMounted(async () => {
         >
           <div class="flex items-center gap-2">
             <span class="text-2xl font-semibold text-highlighted">
-              234
+              {{ stockStats.totalStock }}
             </span>
           </div>
         </UPageCard>
@@ -97,7 +97,6 @@ onMounted(async () => {
         <UCard>
           <template #header>
             Doações recentes
-<!--            <UButton label="Nova Doação" icon="i-lucide-plus" size="xs" class="flex float-right ml-4"/>-->
             <DonationAddModal class="flex float-right ml-4" />
             <UInput
               placeholder="Pesquisar..."

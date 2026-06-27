@@ -18,6 +18,7 @@ class DonationGoodsTypeFactory extends Factory
             'name' => $this->faker->words(3, true),
             'is_type_countable' => $is_countable,
             'unit' => $is_countable ? $this->faker->randomElement(['liters', 'kilos', 'units', 'linear_meters', 'squared_meters']) : null,
+            'danger_level' => $this->faker->boolean() ? $this->faker->randomNumber(2) : null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];

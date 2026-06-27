@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
+use App\Models\Donations\DistributionContent;
 use App\Models\Donations\DonationContent;
+use App\Models\Donations\DonationDistribution;
 use App\Models\Donations\DonationGoodsType;
 use App\Models\Donations\DonationLog;
 use App\Models\Donations\DonationStock;
@@ -29,23 +31,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            PermissionSeeder::class,
-            RoleSeeder::class,
-            IncidentTypesSeeder::class,
-            IncidentStateSeeder::class,
-            IncidentPrioritySeeder::class,
-            EntityTypesSeeder::class,
-            DonationGoodsTypeSeeder::class
-        ]);
-
-
-        User::factory()->create([
-            'name' => 'Utilizador Administrador',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
-            'locked' => false,
-        ])->assignRole(RolesEnum::ADMIN->value);
+        $this->call([ProdSeeder::class]);
 
         User::factory()->create([
             'name' => 'Utilizador User',
@@ -57,14 +43,13 @@ class DatabaseSeeder extends Seeder
         User::factory(100)->create()->each(function ($user) {
             $roles = Role::all();
 
-            $userRoles  = $roles->filter(fn($role) => !str_starts_with($role->name, 'module_'))->values();
+            $userRoles = $roles->filter(fn($role) => !str_starts_with($role->name, 'module_'))->values();
             $moduleAccess = $roles->filter(fn($role) => str_starts_with($role->name, 'module_'))->values();
 
             $userRole = $userRoles->random()->name;
             $user->assignRole($userRole);
 
-            if(RolesEnum::from($userRole) === RolesEnum::USER)
-            {
+            if (RolesEnum::from($userRole) === RolesEnum::USER) {
                 $temp = $moduleAccess->random(random_int(1, 2));
                 $user->assignRole($temp->pluck('name')->toArray());
             }
@@ -107,5 +92,15 @@ class DatabaseSeeder extends Seeder
             )
             ->create();
 
+        DonationDistribution::factory(20)
+            ->has(DistributionContent::factory()
+                ->afterMaking(function (DistributionContent $distributionContent) {
+                    DonationStock::where(['donation_goods_type_id' => $distributionContent->donation_goods_type_id])
+                        ->lockForUpdate()
+                        ->decrement('stock', $distributionContent->quantity);
+                })
+                ->count(2)
+            )
+            ->create();
     }
 }

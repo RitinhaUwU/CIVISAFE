@@ -5,6 +5,7 @@ import {useHead} from "nuxt/app";
 import {checkServerAccess} from "@/utils";
 import {useAuthStore} from "@/stores/auth";
 import {useRegisterSW} from 'virtual:pwa-register/vue'
+import moment from "moment";
 
 const toast = useToast()
 
@@ -28,7 +29,6 @@ useHead({
   },
   title: 'CIVISAFE',
 })
-
 
 const INTERVAL_MS = 5000
 let intervalId: number | null | NodeJS.Timeout = null

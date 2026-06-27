@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\DB;
 
 class DonationStatsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:DONATION_LOG_LIST')->only(['stats']);
+    }
 
     public function stats()
     {
@@ -43,7 +47,6 @@ class DonationStatsController extends Controller
                 'danger_level' => null,
             ]);
         }
-
 
         $lowestStock = DB::table('donation_stocks')
             ->join('donation_goods_types', 'donation_goods_types.id', '=', 'donation_stocks.donation_goods_type_id')

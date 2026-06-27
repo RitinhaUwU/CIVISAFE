@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DonationDistributionController;
 use App\Http\Controllers\DonationGoodsTypeController;
 use App\Http\Controllers\DonationLogController;
 use App\Http\Controllers\DonationStatsController;
+use App\Http\Controllers\DonationStockController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
@@ -70,7 +72,7 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('/entities')->group(function () {
             Route::apiResource('/', EntityController::class)
-            ->parameter('', 'entity');
+                ->parameter('', 'entity');
             Route::post('/uploadUrl', [EntityController::class, 'signedUrl']);
             Route::post('/{entity}/upload', [EntityController::class, 'confirmUpload']);
         });
@@ -104,8 +106,14 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{facility}/documents/{mediaId}', [FacilitiesController::class, 'deleteDocument']);
         });
 
+        Route::get('/donationGoodsTypes/all', [DonationGoodsTypeController::class, 'all']);
         Route::apiResource('/donationGoodsTypes', DonationGoodsTypeController::class);
-        Route::apiResource('/donations', DonationLogController::class);
+        Route::get('/donations/stock', [DonationStockController::class, 'stock']);
+        Route::apiResource('/donations', DonationLogController::class)
+            ->except(['destroy']);
         Route::get('/donationStatistics', [DonationStatsController::class, 'stats']);
+
+        Route::apiResource('/donationDistributions', DonationDistributionController::class)
+            ->except(['destroy']);
     });
 });

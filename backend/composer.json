@@ -23,7 +23,8 @@
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-permission": "^7.2",
-        "spatie/laravel-query-builder": "^7.0"
+        "spatie/laravel-query-builder": "^7.0",
+        "ext-iconv": "*"
     },
     "require-dev": {
         "laravel/pail": "^1.2.5",

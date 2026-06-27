@@ -21,10 +21,14 @@ class DonationLogResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'user_id' => $this->user_id,
-            'user' => $this->user,
+            'user' => $this->user->only(['id', 'name']),
 
-            'content' => $this->donationContent
+            'goods' => $this->donationContent->map(function ($good) {
+                return [
+                    'category_id' => $good->donation_goods_types_id,
+                    'quantity' => $good->quantity,
+                ];
+            })
         ];
     }
 }

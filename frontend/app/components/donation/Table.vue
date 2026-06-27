@@ -22,6 +22,10 @@ const total = ref(0)
 
 const columns: TableColumn<DonationLog>[] = [
   {
+    accessorKey: "date",
+    header: "Data"
+  },
+  {
     accessorKey: "name",
     header: "Nome",
     cell: ({row}) => {

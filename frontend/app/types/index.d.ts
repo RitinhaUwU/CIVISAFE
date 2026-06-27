@@ -175,8 +175,18 @@ export interface StatisticalStockMetadata {
 }
 
 export interface StockStatistics {
-  totalSock: number;
+  totalStock: number;
   stockAlerts: StatisticalStockMetadata[];
   topStock: StatisticalStockMetadata[];
   lowestStock: StatisticalStockMetadata[];
+}
+
+export interface DonationDistribution {
+  id: number;
+  name: string;
+  contact: string;
+  obs: string;
+  user: User;
+  created_by: Date;
+  updated_at: Date;
 }

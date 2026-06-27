@@ -14,7 +14,7 @@ class DonationGoodsTypeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:DONATION_GOODS_TYPES_LIST')->only(['index', 'show']);
+        $this->middleware('permission:DONATION_GOODS_TYPES_LIST')->only(['index', 'show', 'all']);
         $this->middleware('permission:DONATION_GOODS_TYPES_CREATE')->only(['store']);
         $this->middleware('permission:DONATION_GOODS_TYPES_UPDATE')->only(['update']);
         $this->middleware('permission:DONATION_GOODS_TYPES_DELETE')->only(['destroy']);
@@ -37,6 +37,16 @@ class DonationGoodsTypeController extends Controller
             ->appends($request->query());
 
         return DonationGoodsTypeResource::collection($records);
+    }
+
+    public function all()
+    {
+        return DonationGoodsTypeResource::collection(
+            DonationGoodsType::all()->sortBy(function (DonationGoodsType $donationGoodsType) {
+                // Para ordenar independentemente dos acentos
+                return iconv('UTF-8', 'ASCII//TRANSLIT', $donationGoodsType->name);
+            })->values()
+        );
     }
 
     public function store(DonationGoodsTypeRequest $request)

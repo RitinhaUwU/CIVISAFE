@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type {NavigationMenuItem} from '@nuxt/ui'
-import { useAuthStore } from '@/stores/auth'
+import {useAuthStore} from '@/stores/auth'
 import LogoSection from "@/components/LogoSection.vue";
 
-let { isNotificationsSlideoverOpen } = useDashboard()
+let {isNotificationsSlideoverOpen} = useDashboard()
 
 const auth = useAuthStore()
 const open = ref(false)
@@ -25,11 +25,13 @@ onMounted(() => {
     {
       label: 'Início',
       icon: 'i-lucide-house',
-      to: '/inicio', onSelect: () => { open.value = false }
+      to: '/inicio', onSelect: () => {
+        open.value = false
+      }
     }
   ] satisfies NavigationMenuItem[];
 
-  if(auth.hasPermission('INCIDENTS_LIST')){
+  if (auth.hasPermission('INCIDENTS_LIST')) {
     holder.push({
       label: 'Ocorrências',
       icon: 'i-lucide-flame',
@@ -38,16 +40,29 @@ onMounted(() => {
     });
   }
 
-  if(auth.hasPermission('DONATION_LOG_LIST')){
+  if (auth.hasPermission('DONATION_LOG_LIST')) {
     holder.push({
       label: 'Doações',
       icon: 'i-lucide-blocks',
-      to: '/donations',
-      onSelect: () => (open.value = false)
+      type: 'trigger',
+      children: [
+        {
+          label: 'Dashboard',
+          icon: 'i-lucide-pie-chart',
+          to: '/donations',
+          onSelect: () => (open.value = false)
+        },
+        {
+          label: 'Distribuição',
+          icon: 'i-lucide-hand-coins',
+          to: '/donations/distribution',
+          onSelect: () => (open.value = false)
+        }
+      ]
     });
   }
 
-  if(auth.hasPermission('VOLUNTEERS_LIST')){
+  if (auth.hasPermission('VOLUNTEERS_LIST')) {
     holder.push({
       label: 'Voluntários',
       icon: 'i-lucide-users',
@@ -56,7 +71,7 @@ onMounted(() => {
     });
   }
 
-  if(auth.hasPermission('FACILITIES_LIST')){
+  if (auth.hasPermission('FACILITIES_LIST')) {
     holder.push({
       label: 'Instalações',
       icon: 'i-lucide-building-2',
@@ -65,7 +80,7 @@ onMounted(() => {
     });
   }
 
-  if(auth.hasPermission('USERS_VIEW_ANY')){
+  if (auth.hasPermission('USERS_VIEW_ANY')) {
     holder.push({
       label: 'Utilizadores',
       icon: 'i-lucide-user',
@@ -78,7 +93,7 @@ onMounted(() => {
   let incidentsChildren = [];
   let entitiesChildren = [];
 
-  if(auth.hasPermission('INCIDENT_TYPES_LIST')){
+  if (auth.hasPermission('INCIDENT_TYPES_LIST')) {
     incidentsChildren.push({
       label: 'Tipos',
       to: '/administration/incidentTypes',
@@ -86,7 +101,7 @@ onMounted(() => {
     });
   }
 
-  if(auth.hasPermission('INCIDENT_PRIORITIES_LIST')){
+  if (auth.hasPermission('INCIDENT_PRIORITIES_LIST')) {
     incidentsChildren.push({
       label: 'Prioridades',
       to: '/administration/incidentPriorities',
@@ -94,7 +109,7 @@ onMounted(() => {
     });
   }
 
-  if(auth.hasPermission('INCIDENT_STATES_LIST')){
+  if (auth.hasPermission('INCIDENT_STATES_LIST')) {
     incidentsChildren.push({
       label: 'Estados',
       to: '/administration/incidentStates',
@@ -102,15 +117,14 @@ onMounted(() => {
     });
   }
 
-  if(incidentsChildren.length > 0)
-  {
+  if (incidentsChildren.length > 0) {
     administrationChildren.push({
-        label: 'Ocorrências',
-        children: incidentsChildren,
-      })
+      label: 'Ocorrências',
+      children: incidentsChildren,
+    })
   }
 
-  if(auth.hasPermission('ENTITIES_LIST')){
+  if (auth.hasPermission('ENTITIES_LIST')) {
     entitiesChildren.push({
       label: 'Entidades',
       to: '/administration/entities',
@@ -118,7 +132,7 @@ onMounted(() => {
     });
   }
 
-  if(auth.hasPermission('ENTITY_TYPES_LIST')){
+  if (auth.hasPermission('ENTITY_TYPES_LIST')) {
     entitiesChildren.push({
       label: 'Tipos de Entidades',
       to: '/administration/entityTypes',
@@ -126,15 +140,14 @@ onMounted(() => {
     });
   }
 
-  if(entitiesChildren.length > 0)
-  {
+  if (entitiesChildren.length > 0) {
     administrationChildren.push({
       label: 'Entidades',
       children: entitiesChildren,
     })
   }
 
-  if(auth.hasPermission('DONATION_GOODS_TYPES_LIST')){
+  if (auth.hasPermission('DONATION_GOODS_TYPES_LIST')) {
     administrationChildren.push({
       label: 'Tipos de Bens Doáveis',
       to: '/administration/donationGoodsTypes',
@@ -142,8 +155,7 @@ onMounted(() => {
     });
   }
 
-  if(administrationChildren.length > 0)
-  {
+  if (administrationChildren.length > 0) {
     holder.push({
       label: 'Administração',
       icon: 'i-lucide-wrench',
@@ -157,7 +169,6 @@ onMounted(() => {
   links.value.push([{
     label: 'Notificações',
     icon: 'i-lucide-message-circle',
-    target: '_blank',
     onSelect: () => {
       isNotificationsSlideoverOpen.value = true
       open.value = false
