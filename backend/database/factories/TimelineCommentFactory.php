@@ -18,7 +18,7 @@ class TimelineCommentFactory extends Factory
             'body' => $this->faker->paragraph(),
             'incident_id' => Incident::factory(),
             'user_id'     => User::factory(),
-            'start_datetime' => Carbon::now(),
+            'datetime' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];

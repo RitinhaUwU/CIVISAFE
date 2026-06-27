@@ -51,7 +51,7 @@ class IncidentTimelineController extends Controller
                 'event'      => 'acrescentou uma entrada',
                 'user'       => $comment->user?->name,
                 'body'       => $comment->body,
-                'date'       => $comment->start_datetime->toISOString(),
+                'date'       => $comment->datetime->toISOString(),
                 'changes'    => null,
                 'old_values' => null,
                 'comment_id' => $comment->id,

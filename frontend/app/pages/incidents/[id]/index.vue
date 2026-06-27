@@ -646,7 +646,7 @@ const submitComment = async () => {
       incident_id: Number(route.params.id),
       user_id: authStore.currentUserID,
       body: newComment.value,
-      start_datetime: commentDateTime.value
+      datetime: commentDateTime.value
     }
 
     await api.createTimelineComment(Number(route.params.id), payload)
@@ -676,7 +676,7 @@ const saveEditComment = async (item: any) => {
       body: editingCommentBody.value,
       incident_id: Number(route.params.id),
       user_id: authStore.currentUserID,
-      start_datetime: editingCommentDate.value
+      datetime: editingCommentDate.value
     })
 
     toast.add({

@@ -15,7 +15,7 @@ class TimelineCommentResource extends JsonResource
             'id'          => $this->id,
             'body'        => $this->body,
             'incident_id' => $this->incident_id,
-            'start_datetime' => $this->start_datetime,
+            'datetime' => $this->datetime,
             'created_at'  => $this->created_at,
             'updated_at'  => $this->updated_at,
 
