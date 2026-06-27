@@ -131,15 +131,8 @@ const submitDistribution = async () => {
       color: 'success',
     });
 
-    Object.assign(distributionForm, {
-      name: '',
-      contact: '',
-      obs: '',
-      goods: [{
-        category_id: null,
-        quantity: 0,
-      }]
-    })
+    clearForm();
+
   } catch (error) {
     console.error(error)
     toast.add({
@@ -158,6 +151,18 @@ const onRowSelected = (record: DonationDistribution) => {
       category_id: item.donation_goods_type_id,
     }))
   });
+}
+
+const clearForm = () => {
+  Object.assign(distributionForm, {
+    name: '',
+    contact: '',
+    obs: '',
+    goods: [{
+      category_id: null,
+      quantity: 0,
+    }]
+  })
 }
 
 </script>
@@ -188,6 +193,7 @@ const onRowSelected = (record: DonationDistribution) => {
               size="sm"
               class="float-end"
               v-if="distributionForm.id !== undefined"
+              @click="clearForm"
             />
           </template>
 
