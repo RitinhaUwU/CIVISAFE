@@ -83,7 +83,27 @@ const fetch = async() => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
+const handleUpdateToDistribution = (event) => {
+  const idx = distributions.value.findLastIndex(dist => dist.id === event.resource.id);
+
+  if(idx !== -1) {
+    // Update event
+    distributions.value[idx] = event.resource
+  }
+  else
+  {
+    distributions.value.push(event.resource)
+    distributions.value.sort((a, b) => b.id - a.id)
+  }
+}
+
 onMounted(() => {
+  const {$echo} = useNuxtApp();
+
+  $echo.private('DonationStocks')
+    .listen('.distribution.created', handleUpdateToDistribution)
+    .listen('.distribution.updated', handleUpdateToDistribution);
+
   fetch()
 
   useInfiniteScroll(

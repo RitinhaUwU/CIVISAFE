@@ -35,10 +35,6 @@ const handleStockUpdate = async (stockUpdate: { id: number, stock: number, times
   }
 }
 
-const handleIncomingGoodDelivery = (goodDelivery: any) => {
-  console.debug(goodDelivery);
-}
-
 onMounted(async () => {
   if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
     await useRouter().push('/inicio');
@@ -48,8 +44,7 @@ onMounted(async () => {
   const {$echo} = useNuxtApp();
 
   $echo.private('DonationStocks')
-    .listen('.stock.updated', handleStockUpdate)
-    .listen('.goods.delivered', handleIncomingGoodDelivery);
+    .listen('.stock.updated', handleStockUpdate);
 
   const initialStocks = (await useApiStore().getAllStock()).data.data;
   goodCategories.value = (await useApiStore().getAllDonationGoodTypes()).data.data;
@@ -84,7 +79,7 @@ const removeGood = (index: number) => {
 const distributionFormSchema = z.object({
   name: z.string().min(1, 'O Nome é obrigatório'),
   contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
-  obs: z.string().optional(),
+  obs: z.string().nullable().optional(),
   goods: z.array(
     z.object({
       category_id: z.number({error: 'Selecione a categoria'})

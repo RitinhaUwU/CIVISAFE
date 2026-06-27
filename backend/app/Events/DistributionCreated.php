@@ -39,7 +39,7 @@ class DistributionCreated implements ShouldBroadcast, ShouldQueue
 
     public function broadcastWith(): array
     {
-        return [new DonationDistributionResource($this->data)];
+        return ['resource' => new DonationDistributionResource($this->data)];
     }
 
     public function broadcastAs(): string
