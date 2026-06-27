@@ -76,7 +76,6 @@ function renderMarkers(L: any) {
           <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
         </div>
       `)
-
     markers.push(marker)
   })
 }
