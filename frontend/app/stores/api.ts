@@ -639,6 +639,24 @@ export const useApiStore = defineStore('api', () => {
     return axios.delete(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}`)
   }
 
+  /*************************
+   *
+   *  Timeline
+   *
+   *************************/
+
+  const getIncidentTimeline = (incidentId: number) => {
+    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`)
+  }
+
+  const createTimelineComment = (incidentId: number, params: { body: string }) => {
+    return axios.post(`${config.public.apiBase}/incidents/${incidentId}/comments`, params)
+  }
+
+  const updateTimelineComment = (incidentId: number, commentId: number, params: { body: string }) => {
+    return axios.put(`${config.public.apiBase}/incidents/${incidentId}/comments/${commentId}`, params)
+  }
+
   /**
    *
    * Doações - Distribuição
@@ -723,6 +741,9 @@ export const useApiStore = defineStore('api', () => {
     uploadFacilityDocuments,
     downloadFacilityDocument,
     deleteFacilityDocument,
+    getIncidentTimeline,
+    createTimelineComment,
+    updateTimelineComment,
     getDonationGoodTypes,
     getAllDonationGoodTypes,
     getDonationGoodType,

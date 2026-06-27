@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import {useRoute, useRouter} from 'vue-router'
-import {useToast} from "@nuxt/ui/composables";
-import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
+import {useToast} from '@nuxt/ui/composables'
+import type {BreadcrumbItem} from '@nuxt/ui/components/Breadcrumb.vue'
+import type { TimelineItem } from '@nuxt/ui'
+import {formatTimeAgoIntl, useTimeAgo} from '@vueuse/core'
 import {useApiStore} from '@/stores/api'
 import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';
 import Map from '@/components/Map.vue'
 import {computed} from 'vue'
-import LogisticFormModal from "@/components/incidents/LogisticFormModal.vue";
-import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
-import PCOFormModal from "@/components/incidents/PCOFormModal.vue";
-import ConflictPCOModal from "@/components/incidents/ConflictPCOModal.vue";
+import LogisticFormModal from '@/components/incidents/LogisticFormModal.vue'
+import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
+import PCOFormModal from '@/components/incidents/PCOFormModal.vue'
+import ConflictPCOModal from '@/components/incidents/ConflictPCOModal.vue'
 
 const router = useRouter()
 const route = useRoute()
 const api = useApiStore()
+const authStore = useAuthStore()
 const toast = useToast()
 
 const saving = ref(false)
@@ -70,6 +73,11 @@ const tabs = [
     label: 'Meios e Recursos',
     slot: 'logistica',
     icon: 'i-lucide-ambulance'
+  },
+  {
+    label: 'Fita de Tempo',
+    slot: 'timeline',
+    icon: 'i-lucide-history'
   }
 ]
 
@@ -122,7 +130,7 @@ const state = reactive<Partial<Schema>>({
   incident_state_id: null as any,
   incident_priority_id: null as any,
   incident_id: null as any,
-  user_id: null as number,
+  user_id: null as any,
   user: null as any,
   start_datetime: '',
   end_datetime: '',
@@ -169,7 +177,15 @@ const loadingIncident = ref(true)
 const toDatetimeLocal = (value?: string | null) => {
   if (!value) return ''
 
-  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
+  const date = new Date(value)
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 const handleSaveGeral = async () => {
@@ -223,6 +239,7 @@ const handleSaveGeral = async () => {
       color: 'success'
     })
 
+    await fetchTimeline()
   } catch (e: any) {
     toast.add({
       title: 'Erro',
@@ -401,6 +418,7 @@ const persistPCO = async (payload: any) => {
     })
 
     await fetchPCOList()
+    await fetchTimeline()
     pcoModalOpen.value = false
 
   } catch (e: any) {
@@ -466,6 +484,7 @@ const saveLogistic = async (payload: any) => {
       color: 'success'
     })
     await fetchLogistics()
+    await fetchTimeline()
     logisticModalOpen.value = false
   } catch (e: any) {
     toast.add({
@@ -480,6 +499,203 @@ const fetchLogistics = async () => {
   const res = await api.getIncidentLogistics(Number(route.params.id))
   logistics.value = res?.data?.data ?? []
   logisticTotals.value = res?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
+}
+
+// Linha de Tempo
+const timeline = ref<TimelineItem[]>([])
+const loadingTimeline = ref(false)
+const newComment = ref('')
+const savingComment = ref(false)
+
+const commentSchema = z.object({
+  incident_id: z.number({ required_error: 'Ocorrência inválida' }),
+  user_id: z.number({ required_error: 'Utilizador inválido' }),
+  body: z.string().min(1, 'O comentário não pode estar vazio').max(2000, 'Máximo de 2000 caracteres'),
+})
+
+type TimelineCommentSchema = z.output<typeof commentSchema>
+
+const stateTimeline = reactive<Partial<TimelineCommentSchema>>({
+  user_id: authStore.currentUserID,
+  incident_id: null,
+  body: ''
+})
+
+const commentDateTime = ref(toDatetimeLocal(new Date().toISOString()))
+
+const dateFields = [
+  'start_datetime',
+  'end_datetime',
+  'activation_pco_datetime',
+  'start_pco_datetime',
+  'end_pco_datetime',
+]
+
+const formatValue = (key: string, value: any) => {
+  if (value === null || value === undefined || value === '') {
+    return '-'
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? 'Sim' : 'Não'
+  }
+
+  return value
+}
+
+const timeAgo = (date: Date) => formatTimeAgoIntl(new Date(date), { locale: 'pt-PT' })
+
+const fieldLabels: Record<string, string> = {
+  identifier: 'Identificador',
+  incident_type_id: 'Tipo',
+  incident_state_id: 'Estado',
+  incident_priority_id: 'Prioridade',
+  start_datetime: 'Data Início',
+  end_datetime: 'Data Fim',
+  coodinates: 'Coordenadas',
+  common_place: 'Ponto de Referência',
+  address: 'Morada',
+  parish: 'Freguesia',
+  municipality: 'Municipio',
+  district: 'Distrito',
+  is_major: 'Ocorrência Major',
+  alert_source_relationship: 'Fonte de Alerta',
+  alert_source_name: 'Nome do Contacto',
+  alert_source_contact: 'Tlf. Contacto',
+  obs: 'Observações',
+  coordinates_pco: 'Coordenadas do Posto de Comando',
+  name_pco: 'Nome do Posto de Comando',
+
+  entity_id: 'Entidade',
+  vehicle_count: 'N.º Veículos',
+  human_count: 'N.º Operacionais',
+
+  function_pco: 'Função',
+  resp_pco: 'Responsável',
+  category_pco: 'Categoria',
+  contact1_pco: 'Contacto 1',
+  contact2_pco: 'Contacto 2',
+  localization_pco: 'Localização',
+  rob_pco: 'ROB',
+  srp_pco: 'SRP',
+  activation_pco_datetime: 'Data Ativação',
+  start_pco_datetime: 'Data Início',
+  end_pco_datetime: 'Data Fim',
+}
+
+const fieldLabel = (key: string) => {
+  return fieldLabels[key] ?? key
+}
+
+const moduleIcon = (module: string) => {
+  const icons: Record<string, string> = {
+    'incidents': 'i-lucide-users',
+    'pcos':      'i-lucide-satellite-dish',
+    'parties':   'i-lucide-ambulance',
+    'comments':  'i-lucide-message-circle'
+  }
+  return icons[module] ?? 'i-lucide-message-circle'
+}
+
+const fetchTimeline = async () => {
+  loadingTimeline.value = true
+
+  try {
+    const res = await api.getIncidentTimeline(Number(route.params.id))
+
+    timeline.value = res.data.map((entry: any) => ({
+      date:        entry.date,
+      username:    entry.user,
+      action:      entry.event,
+      module:      entry.module,
+      changes:     entry.changes,
+      old_values:  entry.old_values,
+      type:        entry.type,
+      body:        entry.body ?? null,
+      comment_id:  entry.comment_id ?? null,
+      icon:        entry.type === 'comment' ? 'i-lucide-message-circle' : moduleIcon(entry.module),
+      description: ' ',
+    }))
+  } finally {
+    loadingTimeline.value = false
+  }
+}
+
+const editingCommentId = ref<number | null>(null)
+const editingCommentBody = ref('')
+const editingCommentDate = ref('')
+
+const startEditComment = (item: any) => {
+  editingCommentId.value = item.comment_id
+  editingCommentBody.value = item.body
+  editingCommentDate.value = toDatetimeLocal(item.date)
+}
+
+const cancelEditComment = () => {
+  editingCommentId.value = null
+  editingCommentBody.value = ''
+}
+
+const submitComment = async () => {
+  if (!newComment.value.trim()) return
+
+  savingComment.value = true
+
+  try {
+    const payload = {
+      incident_id: Number(route.params.id),
+      user_id: authStore.currentUserID,
+      body: newComment.value,
+      datetime: commentDateTime.value
+    }
+
+    await api.createTimelineComment(Number(route.params.id), payload)
+
+    toast.add({
+      title: 'Sucesso',
+      description: 'Entrada registada',
+      color: 'success'
+    })
+
+    newComment.value = ''
+    await fetchTimeline()
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: 'Erro ao registar a entrada',
+      color: 'error'
+    })
+  }finally {
+    savingComment.value = false
+  }
+}
+
+const saveEditComment = async (item: any) => {
+  try {
+    await api.updateTimelineComment(Number(route.params.id), item.comment_id, {
+      body: editingCommentBody.value,
+      incident_id: Number(route.params.id),
+      user_id: authStore.currentUserID,
+      datetime: editingCommentDate.value
+    })
+
+    toast.add({
+      title: 'Sucesso',
+      description: 'Entrada atualizada',
+      color: 'success'
+    })
+
+    editingCommentId.value = null
+    editingCommentBody.value = ''
+
+    await fetchTimeline()
+  } catch (e: any) {
+    toast.add({
+      title: 'Erro',
+      description: e.response?.data?.message ?? 'Erro ao atualizar comentário',
+      color: 'error'
+    })
+  }
 }
 
 watch(() => state.is_major, async () => {
@@ -505,9 +721,9 @@ onMounted(async () => {
     states.fetchItems(),
     priorities.fetchItems(),
     fetchPCOList(),
-    fetchLogistics()
+    fetchLogistics(),
+    fetchTimeline()
   ])
-
   await fetchIncident()
 })
 </script>
@@ -634,6 +850,9 @@ onMounted(async () => {
                   <UInput v-model="state.district" class="w-full"/>
                 </UFormField>
               </div>
+              <UFormField label="Ponto de Referência" name="common_place">
+                <UInput v-model="state.common_place" class="w-full"/>
+              </UFormField>
               <Map
                   v-if="!state.is_major"
                   :center="mapCenter"
@@ -646,7 +865,7 @@ onMounted(async () => {
             <section class="space-y-2">
               <h2 class="font-bold">Observações</h2>
               <UFormField name="obs">
-                <UTextarea v-model="state.obs" :rows="5" class="w-full"/>
+                <UTextarea id="obs" v-model="state.obs" :rows="5" class="w-full"/>
               </UFormField>
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
@@ -748,14 +967,14 @@ onMounted(async () => {
               <template #actions-cell="{ row }">
                 <div class="flex gap-2 justify-end">
                   <UButton
-                      icon="i-lucide-pencil"
-                      color="warning"
-                      variant="soft"
-                      size="sm"
-                      data-testid="edit-logistic"
-                      class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
-                      :ui="{ rounded: 'rounded-full' }"
-                      @click="editLogistic(row.original)"
+                    icon="i-lucide-pencil"
+                    color="warning"
+                    variant="soft"
+                    size="sm"
+                    data-testid="edit-logistic"
+                    class="group-hover:opacity-100 transition-all duration-200 hover:scale-110 hover:bg-yellow-100 dark:hover:bg-yellow-950/40"
+                    :ui="{ rounded: 'rounded-full' }"
+                    @click="editLogistic(row.original)"
                   />
                 </div>
               </template>
@@ -773,6 +992,117 @@ onMounted(async () => {
                 </div>
               </template>
             </UTable>
+          </div>
+        </template>
+        <template #timeline>
+          <div class="space-y-6 pt-4">
+            <section class="space-y-2">
+              <h2 class="font-bold">Nova entrada manual</h2>
+              <UFormField label="Data da ocorrência">
+                <UInput
+                  type="datetime-local"
+                  v-model="commentDateTime"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField label="Descrição">
+                <UTextarea v-model="newComment" placeholder="Escreva uma entrada..." :rows="3" class="w-full"/>
+              </UFormField>
+              <div class="flex justify-end gap-2">
+                <UButton
+                  color="primary"
+                  label="Guardar"
+                  :loading="savingComment"
+                  :disabled="!newComment.trim()"
+                  @click="submitComment"
+                />
+              </div>
+            </section>
+            <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
+            <h2 class="font-bold">Fita de Tempo</h2>
+            <div v-if="loadingTimeline" class="flex justify-center py-10">
+              <UIcon name="i-lucide-loader-circle" class="animate-spin text-stone-400 size-6" />
+            </div>
+            <div v-else-if="timeline.length === 0" class="text-center py-10 text-sm text-stone-400">
+              Sem registos na fita de tempo
+            </div>
+            <UTimeline v-else :items="timeline" size="xl" :ui="{ date: 'float-end ms-1' }">
+              <template #title="{ item }">
+                <div class="flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <div>
+                      <span class="font-semibold">{{ (item as any).username }}</span>
+                      <span class="font-normal text-muted">&nbsp;{{ (item as any).action }}</span>
+                    </div>
+                    <UButton
+                      v-if="(item as any).type === 'comment'"
+                      icon="i-lucide-pencil"
+                      data-testid="edit-comment"
+                      color="warning"
+                      variant="ghost"
+                      size="xs"
+                      @click="startEditComment(item)"
+                    />
+                  </div>
+                  <div v-if="(item as any).type === 'comment'" class="space-y-2">
+                    <div v-if="editingCommentId !== (item as any).comment_id" class="text-sm px-3 py-2 ring ring-default rounded-md text-stone-400 shrink-0 dark:text-stone-300">
+                      {{ (item as any).body }}
+                    </div>
+                    <div v-else class="space-y-2">
+                      <UFormField label="Data da ocorrência">
+                        <UInput
+                          type="datetime-local"
+                          v-model="editingCommentDate"
+                          class="w-full"
+                        />
+                      </UFormField>
+                      <UFormField label="Descrição">
+                        <UTextarea v-model="editingCommentBody" :rows="3" class="w-full"/>
+                      </UFormField>
+                      <div class="flex justify-end gap-2">
+                        <UButton
+                          color="neutral"
+                          variant="ghost"
+                          label="Cancelar"
+                          @click="cancelEditComment"
+                        />
+                        <UButton
+                          color="primary"
+                          label="Guardar"
+                          @click="saveEditComment(item)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else-if="Object.keys((item as any).changes ?? {}).length">
+                    <UAccordion
+                      :items="[{
+                        label: 'Ver alterações',
+                      }]"
+                      class="text-sm text-stone-400 shrink-0 dark:text-stone-300"
+                      :ui="{
+                        trigger: 'px-3 py-2 ring ring-default rounded-md bg-default/30',
+                        content: 'px-3 py-2'
+                      }"
+                    >
+                      <template #content>
+                        <div class="space-y-1 text-xs px-3 py-2">
+                          <div v-for="(value, key) in (item as any).changes" :key="key" class="flex gap-2 flex-wrap">
+                            <span class="text-stone-400 shrink-0">{{ fieldLabel(key) }}:</span>
+                            <template v-if="key in ((item as any).old_values ?? {})">
+                              <span class="line-through text-red-400">{{ formatValue(key, (item as any).old_values?.[key]) }}</span>
+                              <UIcon name="i-lucide-move-right" />
+                            </template>
+                            <span class="text-green-500">{{ formatValue(key, value) }}</span>
+                          </div>
+                        </div>
+                      </template>
+                    </UAccordion>
+                  </div>
+                </div>
+              </template>
+              <template #date="{ item }">{{ timeAgo(new Date((item as any).date)) }}</template>
+            </UTimeline>
           </div>
         </template>
       </UTabs>
