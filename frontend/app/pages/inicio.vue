@@ -28,16 +28,15 @@ async function handleMapClick(coords: { lat: number, lng: number }) {
 const majorIncidents = computed(() =>
   incidents.value.filter(incident =>
     incident.is_major &&
-    incident.incidentState?.name !== 'Terminada' &&
-    incident.incidentState?.name !== 'Transitou Para Outra Divisão'
+    incident.incidentState?.terminates_incident !== true
   )
 )
 
 const incidentsMap = computed(() =>
   incidents.value.filter(incident =>
     !incident.is_major &&
-    incident.incidentState?.name !== 'Terminada' &&
-    incident.incidentState?.name !== 'Transitou Para Outra Divisão')
+    incident.incidentState?.terminates_incident !== true
+  )
 )
 
 async function refreshIncidents() {
