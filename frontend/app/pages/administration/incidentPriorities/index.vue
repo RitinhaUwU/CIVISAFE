@@ -8,10 +8,8 @@ const toast = useToast()
 const api = useApiStore()
 
 const priorities = ref<IncidentPriority[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const search = ref('')
 const statusFilter = ref<boolean|string>('all')
@@ -89,32 +87,44 @@ const columns: TableColumn<IncidentPriority>[] = [
   }
 ]
 
-const fetch = async () => {
+const extractCursor = (url: string | null) => {
+  if (!url) return null
+  try {
+    return new URL(url).searchParams.get('cursor')
+  } catch {
+    return null
+  }
+}
+
+const fetch = async (loadMore = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
+
   try {
     const params: any = {
-      page: page.value,
-      per_page: 10
+      per_page: 10,
+      filter: {},
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
-
     if (search.value) {
-      params.filter = { search: search.value }
+      params.filter.search = search.value
     }
-
     if (statusFilter.value !== 'all') {
-      params.filter = {
-        ...params.filter,
-        status: statusFilter.value === true ? 1 : 0
-      }
+      params.filter.status = statusFilter.value === true ? 1 : 0
     }
     const res = await api.getIncidentPriorities(params)
 
-    priorities.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    const newPriorities = res.data.data
+
+    if (loadMore) {
+      const existing = new Set(priorities.value.map(p => p.id))
+      priorities.value.push(...newPriorities.filter(p => !existing.has(p.id)))
+    } else {
+      priorities.value = newPriorities
+    }
+
+    nextCursor.value = extractCursor(res.data.links?.next)
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -126,11 +136,10 @@ const fetch = async () => {
   }
 }
 
-watch([search, statusFilter], () => {
-  page.value = 1
-  lastPage.value = Infinity
+watch([search, statusFilter], async () => {
+  nextCursor.value = null
   priorities.value = []
-  fetch();
+  await fetch(false);
 })
 
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -147,12 +156,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if (!nextCursor.value) return
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && !!nextCursor.value
     }
   )
 })

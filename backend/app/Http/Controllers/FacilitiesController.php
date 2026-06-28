@@ -32,8 +32,8 @@ class FacilitiesController extends Controller
                     });
                 }),
             )
-            ->orderBy('id', 'asc')
-            ->paginate($request->input('per_page', 15))
+            ->orderBy('id')
+            ->cursorPaginate($request->input('per_page', 15))
             ->appends($request->query());
 
         return FacilityResource::collection($facility);    }

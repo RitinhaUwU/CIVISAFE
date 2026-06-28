@@ -3,7 +3,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useToast} from '@nuxt/ui/composables'
 import type {BreadcrumbItem} from '@nuxt/ui/components/Breadcrumb.vue'
 import type { TimelineItem } from '@nuxt/ui'
-import {formatTimeAgoIntl, useTimeAgo} from '@vueuse/core'
+import {formatTimeAgoIntl} from '@vueuse/core'
 import {useApiStore} from '@/stores/api'
 import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';

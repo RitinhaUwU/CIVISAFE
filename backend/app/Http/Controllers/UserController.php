@@ -31,16 +31,16 @@ class UserController extends Controller
         ]);
 
         $types = QueryBuilder::for(User::class)
-            ->allowedFilters(
-                AllowedFilter::callback('search', function (Builder $query, $value) {
-                    $query->where(function (Builder $q) use ($value) {
-                        $q->where('name', 'ILIKE', "%{$value}%");
-                    });
-                }),
-            )
-            ->orderBy('id', 'asc')
-            ->paginate($request->input('per_page', 10))
-            ->appends($request->query());
+        ->allowedFilters(
+            AllowedFilter::callback('search', function (Builder $query, $value) {
+                $query->where(function (Builder $q) use ($value) {
+                    $q->where('name', 'ILIKE', "%{$value}%");
+                });
+            }),
+        )
+        ->orderBy('id')
+        ->cursorPaginate($request->input('per_page', 10))
+        ->appends($request->query());
 
         return UserResource::collection($types);
     }
