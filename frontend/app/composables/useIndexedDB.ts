@@ -143,33 +143,36 @@ export async function retrieveDataPaginated(objectStore: string, params?: QueryP
     params = {};
   }
 
-  const page = params.page ?? 1;
   const perPage = params.per_page ?? 10;
-
-  const offset = (page - 1) * perPage;
 
   let records: unknown[] = await store.getAll();
 
-  if(params.filter?.search)
-  {
+  if (params.filter?.search) {
     records = searchFilter(records, params.filter.search.toLowerCase());
   }
 
-  const total = records.length;
-  const totalPages = Math.ceil(total / perPage);
-  const data = records.slice(offset, offset + perPage);
+  if (params.cursor) {
+    const decoded = JSON.parse(atob(params.cursor));
+    records = records.filter((r: any) => r.id > decoded.id);
+  }
 
-  // Simula a estrutura da resposta do servidor
+  const data = records.slice(0, perPage);
+
+  const next_cursor = data.length === perPage ? btoa(JSON.stringify({ id: (data[data.length - 1] as any).id, _pointsToNextItems: true })) : null;
+
   return {
     data: {
       data,
-      meta: {
-        current_page: page,
-        last_page: totalPages,
-        per_page: perPage,
-        total: total,
+      links: {
+        next: next_cursor ? `http://localhost?cursor=${next_cursor}` : null,
+        prev: null
       },
-    },
+      meta: {
+        next_cursor: next_cursor,
+        prev_cursor: null,
+        per_page: perPage
+      }
+    }
   };
 }
 

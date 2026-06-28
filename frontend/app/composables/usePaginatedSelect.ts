@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { watchDebounced, useInfiniteScroll } from '@vueuse/core'
 
 interface CursorPaginatedResponse<T> {
@@ -47,7 +47,14 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
 
       nextCursor.value = res.data.meta.next_cursor
       prevCursor.value = res.data.meta.prev_cursor
+
+      console.log('Cursor:', nextCursor.value)
+
       const mapped = res.data.data.map(map)
+
+      if (nextCursor.value) {
+        console.log('Descodificado:', JSON.parse(atob(nextCursor.value)))
+      }
 
       if (loadMore) {
         const existingIds = new Set(items.value.map((i: any) => i.id))
@@ -56,7 +63,7 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
       } else {
         const prependedIds = new Set(prepended.value.map((i: any) => i.id))
         const merged = mapped.filter((i: any) => !prependedIds.has(i.id))
-        items.value.push(...merged)
+        items.value = [...prepended.value, ...filtered]
       }
     }
     finally {
@@ -74,26 +81,30 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
     nextCursor.value = null
     prevCursor.value = null
 
-    await fetchItems()
+    await fetchItems(false)
   }
 
   watchDebounced(search, async () => {
     await reset()
   }, { debounce: 300 })
 
-  useInfiniteScroll(
-    () => menuRef.value?.viewportRef,
-    async () => {
-      if (!nextCursor.value) return
+  watch(() => menuRef.value?.viewportRef, async (el) => {
+    if (!el) return
 
-      await fetchItems(true)
-    },
-    {
-      canLoadMore: () => {
-        return !loading.value && !!nextCursor.value
+    await nextTick()
+
+    useInfiniteScroll(
+      el,
+      async () => {
+        if (!nextCursor.value) return
+        await fetchItems(true)
+      },
+      {
+        distance: 10,
+        canLoadMore: () => !loading.value && !!nextCursor.value
       }
-    }
-  )
+    )
+  }, { immediate: true })
 
   return {
     items,

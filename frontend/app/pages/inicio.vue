@@ -108,7 +108,7 @@ onMounted(async () => {
                     size="sm"
                     icon="i-lucide-arrow-right"
                   >
-                    Ver detalhes
+                    Ver ocorrência
                   </UButton>
                 </div>
               </div>
