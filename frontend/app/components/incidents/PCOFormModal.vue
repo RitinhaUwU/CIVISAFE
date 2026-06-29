@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import * as z from 'zod'
+import {toDatetimeLocal} from "@/utils"
 
 const props = defineProps<{
   open: boolean
@@ -25,14 +26,6 @@ const schema = z.object({
   start_pco_datetime: z.string().min(1, 'A data de início é obrigatória'),
   end_pco_datetime: z.string().optional().nullable(),
 })
-
-//https://stackoverflow.com/questions/30166338/setting-value-of-datetime-local-from-date
-// Converte o ISO que vem da API para um objeto Date.
-const toDatetimeLocal = (value?: string | null) => {
-  if (!value) return ''
-
-  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
-}
 
 const form = reactive({
   function_pco: '',
