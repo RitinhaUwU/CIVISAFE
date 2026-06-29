@@ -5,15 +5,13 @@ import type { TableColumn } from '@nuxt/ui'
 import type {Incident} from "@/types";
 import {UBadge, UButton} from "#components";
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
-import state from "pusher-js/src/core/http/state";
+import {extractCursor} from '@/utils';
 
 const api = useApiStore()
 
 const incidents = ref<Incident[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const search = ref('')
 
@@ -134,16 +132,16 @@ const columns: TableColumn<Incident>[] = [
   }
 ]
 
-const fetch = async() => {
+const fetch = async (loadMore = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
+
   try {
     const params: any = {
-      page: page.value,
       per_page: 10,
-      filter: {}
+      filter: {},
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
     if (search.value) {
       params.filter.search = search.value
@@ -159,9 +157,16 @@ const fetch = async() => {
     }
     const res = await api.getIncidents(params)
 
-    incidents.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    const newIncidents = res.data.data
+
+    if (loadMore) {
+      const existing = new Set(incidents.value.map(i => i.id))
+      incidents.value.push(...newIncidents.filter(i => !existing.has(i.id)))
+    } else {
+      incidents.value = newIncidents
+    }
+
+    nextCursor.value = extractCursor(res.data.links?.next)
   } catch (e) {
     console.error("Erro ao carregar entidades: ", e)
   } finally {
@@ -169,11 +174,10 @@ const fetch = async() => {
   }
 }
 
-watchDebounced([search, statusFilter, prioritiesFilter, is_majorFilter], () => {
-  page.value = 1
-  lastPage.value = Infinity
+watchDebounced([search, statusFilter, prioritiesFilter, is_majorFilter], async () => {
+  nextCursor.value = null
   incidents.value = []
-  fetch()
+  await fetch(false)
 }, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -191,12 +195,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if (!nextCursor.value) return
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && !!nextCursor.value
     }
   )
 })

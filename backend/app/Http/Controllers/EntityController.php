@@ -40,8 +40,8 @@ class EntityController extends Controller
                     $query->where('entity_type_id', $value);
                 })
             )
-            ->orderBy('id', 'asc')
-            ->paginate($request->input('per_page', 10))
+            ->orderBy('id')
+            ->cursorPaginate($request->input('per_page', 10))
             ->appends($request->query());
 
         return EntityResource::collection($types);
@@ -117,7 +117,7 @@ class EntityController extends Controller
 
     public function destroy(Entity $entity)
     {
-        
+
         if($entity->logo !== null) {
             Storage::disk('data_bucket')->delete($entity->logo);
         }

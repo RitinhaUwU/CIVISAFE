@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import type {Volunteer} from "@/types";
-import {UBadge, UButton} from "#components";
+import type {Volunteer} from '@/types'
+import {UBadge, UButton} from '#components'
+import {extractCursor} from '@/utils'
 
 const api = useApiStore()
 const toast = useToast()
 
 const volunteers = ref<Volunteer[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const search = ref('')
 const accommodationFilter = ref('all')
@@ -133,16 +132,16 @@ const columns: TableColumn<Volunteer>[] = [
   }
 ]
 
-const fetch = async() => {
+const fetch = async(loadMore = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
+
   try {
     const params: any = {
-      page: page.value,
       per_page: 10,
-      filter: {}
+      filter: {},
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
     if (search.value) {
       params.filter.search = search.value
@@ -158,9 +157,16 @@ const fetch = async() => {
     }
     const res = await api.getVolunteers(params)
 
-    volunteers.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    const newVolunteers = res.data.data
+
+    if (loadMore) {
+      const existing = new Set(volunteers.value.map(v => v.id))
+      volunteers.value.push(...newVolunteers.filter(v => !existing.has(v.id)))
+    } else {
+      volunteers.value = newVolunteers
+    }
+
+    nextCursor.value = extractCursor(res.data.links?.next)
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -172,11 +178,10 @@ const fetch = async() => {
   }
 }
 
-watchDebounced([search, accommodationFilter, mealFilter, classificationFilter], () => {
-  page.value = 1
-  lastPage.value = Infinity
+watchDebounced([search, accommodationFilter, mealFilter, classificationFilter], async () => {
+  nextCursor.value = null
   volunteers.value = []
-  fetch()
+  await fetch(false)
 }, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -194,12 +199,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if (!nextCursor.value) return
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && !!nextCursor.value
     }
   )
 })

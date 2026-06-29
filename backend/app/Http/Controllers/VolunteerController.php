@@ -53,8 +53,8 @@ class VolunteerController extends Controller
                     $query->where('has_meal', $value);
                 }),
             )
-            ->orderBy('id', 'desc')
-            ->paginate($request->input('per_page', 15))
+            ->orderBy('id')
+            ->cursorPaginate($request->input('per_page', 15))
             ->appends($request->query());
 
         return VolunteerResource::collection($volunteer);

@@ -2,18 +2,17 @@
 import type { TableColumn } from '@nuxt/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
-import type {User} from "@/types";
-import {UBadge, UButton, UTooltip} from "#components";
+import type {User} from "@/types"
+import {UBadge, UButton, UTooltip} from "#components"
+import {extractCursor} from '@/utils'
 
 const api = useApiStore()
 const auth = useAuthStore()
 const toast = useToast()
 
 const users = ref<User[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const search = ref('')
 
@@ -118,33 +117,38 @@ const columns: TableColumn<User>[] = [
   }
 ]
 
-const fetch = async() => {
+const fetch = async (loadMore = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
+
   try {
     const params: any = {
-      page: page.value,
-      per_page: 10
+      per_page: 10,
+      filter: {},
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
     if (search.value) {
-      params.filter = { search: search.value }
+      params.filter.search = search.value
     }
     const res = await api.getUsers(params)
 
-    users.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
-  } catch (e) {
-    console.error("Erro ao carregar entidades: ", e)
+    const newUsers = res.data.data
+
+    if (loadMore) {
+      const existing = new Set(users.value.map(u => u.id))
+      users.value.push(...newUsers.filter(u => !existing.has(u.id)))
+    } else {
+      users.value = newUsers
+    }
+
+    nextCursor.value = extractCursor(res.data.links?.next)
   } finally {
     loading.value = false
   }
 }
 
 const patchUser = async (user: User) => {
-
   if(user.id === auth.currentUserID && !auth.hasPermission('USERS_UPDATE_OWN')) return
 
   if(user.id !== auth.currentUserID && !auth.hasPermission('USERS_UPDATE_ANY')) return
@@ -184,11 +188,10 @@ const patchUser = async (user: User) => {
   }
 }
 
-watchDebounced(search, () => {
-  page.value = 1
-  lastPage.value = Infinity
+watchDebounced(search, async () => {
+  nextCursor.value = null
   users.value = []
-  fetch()
+  await fetch(false)
 }, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -205,12 +208,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if (!nextCursor.value) return
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && !!nextCursor.value
     }
   )
 })

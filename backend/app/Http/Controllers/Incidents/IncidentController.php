@@ -51,8 +51,8 @@ class IncidentController extends Controller
                     $query->where('is_major', $value);
                 }),
             )
-            ->orderBy('id', 'asc')
-            ->paginate($request->input('per_page', 10))
+            ->orderBy('id')
+            ->cursorPaginate($request->input('per_page', 10))
             ->appends($request->query());
 
         return IncidentResource::collection($incidents);

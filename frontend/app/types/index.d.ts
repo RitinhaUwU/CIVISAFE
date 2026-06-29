@@ -71,8 +71,8 @@ export interface Notification {
 }
 
 export interface QueryParams{
-  page?: number
   per_page?: number
+  cursor?: string | null
   filter?: {
     search?: string // Pesquisa
     type?: string // Usado nas entidades para filtrar por tipo de entidade
