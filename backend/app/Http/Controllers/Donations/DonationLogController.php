@@ -39,7 +39,7 @@ class DonationLogController extends Controller
                 })
             )
             ->orderBy('id', 'desc')
-            ->paginate($request->input('per_page', 15))
+            ->cursorPaginate($request->input('per_page', 15))
             ->appends($request->query());
 
         return DonationLogResource::collection($records);

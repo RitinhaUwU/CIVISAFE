@@ -25,7 +25,7 @@ class DonationAuditController extends Controller
             })
             ->with('causer')
             ->orderBy('id', 'desc')
-            ->cursorPaginate($request->input('per_page', 20), cursor: $request->input('cursor'))
+            ->cursorPaginate($request->input('per_page', 20))
             ->through(function ($activity) {
                 return [
                     'id' => $activity->id,

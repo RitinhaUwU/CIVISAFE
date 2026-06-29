@@ -116,12 +116,10 @@ const submitDistribution = async () => {
       return;
     }
 
-    let res = null;
-
     if (distributionForm.id === undefined) {
-      res = (await useApiStore().createDistribution(distributionForm)).data.data;
+      await useApiStore().createDistribution(distributionForm)
     } else {
-      res = (await useApiStore().updateDistribution(distributionForm.id, distributionForm)).data.data;
+      await useApiStore().updateDistribution(distributionForm.id, distributionForm)
     }
 
     toast.add({

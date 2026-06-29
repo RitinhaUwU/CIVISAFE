@@ -142,7 +142,7 @@ const fetch = async (loadMore = false) => {
       users.value = newUsers
     }
 
-    nextCursor.value = extractCursor(res.data.links?.next)
+    nextCursor.value = res.data.meta?.next_cursor
   } finally {
     loading.value = false
   }
@@ -213,7 +213,7 @@ onMounted(() => {
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && !!nextCursor.value
+      canLoadMore: () => !loading.value && nextCursor.value != null
     }
   )
 })

@@ -9,10 +9,8 @@ const toast = useToast()
 const api = useApiStore()
 
 const tiposBens = ref<DonationGoodType[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string|null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const search = ref('')
 
@@ -103,15 +101,14 @@ const columns: TableColumn<DonationGoodType>[] = [
   }
 ]
 
-const fetch = async () => {
+const fetch = async (loadMore: boolean = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
   try {
     const params: any = {
-      page: page.value,
-      per_page: 15
+      per_page: 15,
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
 
     if (search.value) {
@@ -120,9 +117,19 @@ const fetch = async () => {
 
     const res = await api.getDonationGoodTypes(params)
 
-    tiposBens.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    const newGoodTypes = res.data.data;
+
+    if(loadMore)
+    {
+      const existing = new Set(tiposBens.value.map(type => type.id))
+      tiposBens.value.push(...newGoodTypes.filter(type => !existing.has(type.id)))
+    }
+    else
+    {
+      tiposBens.value = newGoodTypes
+    }
+
+    nextCursor.value = res.data.meta.next_cursor
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -134,11 +141,10 @@ const fetch = async () => {
   }
 }
 
-watchDebounced([search], () => {
-  page.value = 1
-  lastPage.value = Infinity
+watchDebounced([search], async () => {
+  nextCursor.value = null
   tiposBens.value = []
-  fetch();
+  await fetch(false);
 }, {debounce: 300})
 
 const postDelete = (id: number) => {
@@ -160,12 +166,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if(nextCursor.value == null) return;
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && nextCursor.value !== null
     }
   )
 })

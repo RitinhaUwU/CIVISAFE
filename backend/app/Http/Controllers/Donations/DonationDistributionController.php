@@ -36,7 +36,7 @@ class DonationDistributionController extends Controller
 
         $distributions = QueryBuilder::for(DonationDistribution::class)
             ->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 10))
+            ->cursorPaginate($request->input('per_page', 10))
             ->appends($request->query());
 
         return DonationDistributionResource::collection($distributions);

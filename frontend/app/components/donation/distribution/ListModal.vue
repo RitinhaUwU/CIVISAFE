@@ -64,26 +64,31 @@ const columns: TableColumn<any>[] = [
 ]
 
 const distributions = ref<DonationDistribution[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const total = ref(0)
 
-const fetch = async() => {
+const fetch = async(loadMore: boolean = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
   try {
     const params: any = {
-      page: page.value,
-      per_page: 10
+      per_page: 10,
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
     const res = await useApiStore().getAllDistributions(params);
 
-    distributions.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    if(loadMore)
+    {
+      const existing = new Set(distributions.value.map(dist => dist.id))
+      distributions.value.push(...res.data.data.filter(dist => !existing.has(dist.id)))
+    }
+    else
+    {
+      distributions.value = res.data.data
+    }
+
+    nextCursor.value = res.data.meta.next_cursor
   } catch (e) {
     console.error("Erro ao carregar distribuições de bens: ", e)
   } finally {
@@ -114,17 +119,17 @@ onMounted(() => {
     .listen('.distribution.created', handleUpdateToDistribution)
     .listen('.distribution.updated', handleUpdateToDistribution);
 
-  fetch()
+  fetch(false)
 
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if(nextCursor.value == null) return;
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && nextCursor.value !== null
     }
   )
 })

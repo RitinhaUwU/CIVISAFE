@@ -8,10 +8,8 @@ import {useToast} from "@nuxt/ui/composables";
 const searchBind = defineModel();
 
 const donations = ref<DonationLog[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string|null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const columns: TableColumn<DonationLog>[] = [
   {
@@ -74,15 +72,14 @@ const columns: TableColumn<DonationLog>[] = [
   }
 ]
 
-const fetch = async () => {
+const fetch = async (loadMore: boolean = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
   try {
     const params: any = {
-      page: page.value,
-      per_page: 10
+      per_page: 10,
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
 
     if (searchBind.value) {
@@ -92,9 +89,17 @@ const fetch = async () => {
     }
     const res = await useApiStore().getDonationLogs(params)
 
-    donations.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    if(loadMore)
+    {
+      const existing = new Set(donations.value.map(d => d.id))
+      donations.value.push(...res.data.data.filter((d: DonationLog) => !existing.has(d.id)))
+    }
+    else
+    {
+      donations.value = res.data.data
+    }
+
+    nextCursor.value = res.data.meta.next_cursor
   } catch (e) {
     useToast().add({
       title: 'Erro',
@@ -106,11 +111,10 @@ const fetch = async () => {
   }
 }
 
-watchDebounced(searchBind, () => {
-  page.value = 1
-  lastPage.value = Infinity
+watchDebounced(searchBind, async () => {
+  nextCursor.value = null
   donations.value = []
-  fetch()
+  await fetch(false)
 }, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -121,12 +125,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if(nextCursor.value == null) return;
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && nextCursor.value !== null
     }
   )
 })
