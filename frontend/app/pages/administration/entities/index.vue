@@ -2,8 +2,9 @@
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
 import type { Entity } from '@/types'
-import {UButton} from "#components";
-import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import {UButton} from '#components'
+import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
+import {extractCursor} from '@/utils'
 
 const toast = useToast()
 const api = useApiStore()
@@ -84,15 +85,6 @@ const columns: TableColumn<Entity>[] = [
     }
   }
 ]
-
-const extractCursor = (url: string | null) => {
-  if (!url) return null
-  try {
-    return new URL(url).searchParams.get('cursor')
-  } catch {
-    return null
-  }
-}
 
 const fetch = async(loadMore = false) => {
   if (loading.value) return

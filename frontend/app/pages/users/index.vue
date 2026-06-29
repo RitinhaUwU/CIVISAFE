@@ -2,8 +2,9 @@
 import type { TableColumn } from '@nuxt/ui'
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
-import type {User} from "@/types";
-import {UBadge, UButton, UTooltip} from "#components";
+import type {User} from "@/types"
+import {UBadge, UButton, UTooltip} from "#components"
+import {extractCursor} from '@/utils'
 
 const api = useApiStore()
 const auth = useAuthStore()
@@ -102,15 +103,6 @@ const columns: TableColumn<User>[] = [
     }
   }
 ]
-
-const extractCursor = (url: string | null) => {
-  if (!url) return null
-  try {
-    return new URL(url).searchParams.get('cursor')
-  } catch {
-    return null
-  }
-}
 
 const fetch = async (loadMore = false) => {
   if (loading.value) return

@@ -1,5 +1,6 @@
-import {openDB, type IDBPDatabase} from "idb";
-import type {QueryParams} from "~/types";
+import {openDB, type IDBPDatabase} from 'idb'
+import type {QueryParams} from '@/types'
+import { useRuntimeConfig } from '#imports'
 
 let database: IDBPDatabase<unknown> | null = null;
 
@@ -158,18 +159,22 @@ export async function retrieveDataPaginated(objectStore: string, params?: QueryP
 
   const data = records.slice(0, perPage);
 
+  const config = useRuntimeConfig()
+  const base = config.public.apiBase
+
   const next_cursor = data.length === perPage ? btoa(JSON.stringify({ id: (data[data.length - 1] as any).id, _pointsToNextItems: true })) : null;
+
+  const nextUrl = next_cursor ? `${base}/${objectStore}?cursor=${next_cursor}` : null
 
   return {
     data: {
       data,
       links: {
-        next: next_cursor ? `http://localhost?cursor=${next_cursor}` : null,
+        next: nextUrl,
         prev: null
       },
       meta: {
         next_cursor: next_cursor,
-        prev_cursor: null,
         per_page: perPage
       }
     }

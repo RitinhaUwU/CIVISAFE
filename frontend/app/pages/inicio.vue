@@ -40,10 +40,7 @@ const incidentsMap = computed(() =>
 )
 
 async function refreshIncidents() {
-  const res = await api.getIncidents({
-    page: 1,
-    per_page: 1000
-  })
+  const res = await api.getIncidents({per_page: 1000})
 
   incidents.value = res.data.data
 }

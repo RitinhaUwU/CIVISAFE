@@ -71,7 +71,7 @@ export interface Notification {
 }
 
 export interface QueryParams{
-  page?: number
+  per_page?: number
   cursor?: string | null
   filter?: {
     search?: string // Pesquisa

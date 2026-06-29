@@ -48,13 +48,7 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
       nextCursor.value = res.data.meta.next_cursor
       prevCursor.value = res.data.meta.prev_cursor
 
-      console.log('Cursor:', nextCursor.value)
-
       const mapped = res.data.data.map(map)
-
-      if (nextCursor.value) {
-        console.log('Descodificado:', JSON.parse(atob(nextCursor.value)))
-      }
 
       if (loadMore) {
         const existingIds = new Set(items.value.map((i: any) => i.id))
@@ -63,7 +57,7 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
       } else {
         const prependedIds = new Set(prepended.value.map((i: any) => i.id))
         const merged = mapped.filter((i: any) => !prependedIds.has(i.id))
-        items.value = [...prepended.value, ...filtered]
+        items.value = [...prepended.value]
       }
     }
     finally {

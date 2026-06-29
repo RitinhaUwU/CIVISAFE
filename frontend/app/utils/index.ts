@@ -37,3 +37,15 @@ export const formatBytes = (bytes: number, decimals = 2) => {
 export const createBlobURL = (file) => {
   return URL.createObjectURL(file)
 }
+
+/**
+ * Extrair cursor através do URL
+ **/
+export const extractCursor = (url: string | null): string | null => {
+  if (!url) return null
+  try {
+    return new URL(url).searchParams.get('cursor')
+  } catch {
+    return null
+  }
+}

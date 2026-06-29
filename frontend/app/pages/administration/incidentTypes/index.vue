@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import {UButton} from "#components";
-import type {IncidentType} from "@/types";
+import {UButton} from '#components'
+import type {IncidentType} from '@/types'
+import {extractCursor} from '@/utils'
 
 const toast = useToast()
 const api = useApiStore()
@@ -72,15 +73,6 @@ const columns: TableColumn<IncidentType | null>[] = [
     }
   }
 ]
-
-const extractCursor = (url: string | null) => {
-  if (!url) return null
-  try {
-    return new URL(url).searchParams.get('cursor')
-  } catch {
-    return null
-  }
-}
 
 const fetch = async (loadMore = false) => {
   if (loading.value) return

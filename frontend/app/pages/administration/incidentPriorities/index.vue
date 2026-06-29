@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import type { IncidentPriority } from "@/types";
-import {UBadge, UButton} from "#components";
+import type { IncidentPriority } from '@/types'
+import {UBadge, UButton} from '#components'
+import {extractCursor} from '@/utils'
 
 const toast = useToast()
 const api = useApiStore()
@@ -86,15 +87,6 @@ const columns: TableColumn<IncidentPriority>[] = [
     }
   }
 ]
-
-const extractCursor = (url: string | null) => {
-  if (!url) return null
-  try {
-    return new URL(url).searchParams.get('cursor')
-  } catch {
-    return null
-  }
-}
 
 const fetch = async (loadMore = false) => {
   if (loading.value) return
