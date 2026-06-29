@@ -19,8 +19,11 @@ class IncidentFactory extends Factory
         $is_major = $this->faker->boolean(20);
         $major_id = $is_major ? Incident::inRandomOrder()->value('id') : null;
 
-        $start = $this->faker->dateTime('-1 week')->format('Y-m-d H:i:s');
-        $end = $this->faker->dateTimeBetween($start, 'yesterday')->format('Y-m-d H:i:s');
+        $incidentState = IncidentState::inRandomOrder()->first();
+
+        $start = $this->faker->dateTimeBetween('-1 week', 'now');
+
+        $end = $incidentState->terminates_incident ? $this->faker->dateTimeBetween($start, 'now') : null;
 
         return [
             'identifier' => date('Y') . "/" . $this->faker->unique()->randomNumber(4),
@@ -43,7 +46,7 @@ class IncidentFactory extends Factory
             'updated_at' => Carbon::now(),
 
             'incident_type_id' => IncidentType::inRandomOrder()->first()->id,
-            'incident_state_id' => IncidentState::inRandomOrder()->first()->id,
+            'incident_state_id' => $incidentState->id,
             'user_id' => User::inRandomOrder()->first()->id,
             'incident_priority_id' => IncidentPriority::inRandomOrder()->first()->id,
             'incident_id' => $major_id,

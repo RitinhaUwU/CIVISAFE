@@ -40,7 +40,8 @@ const states = usePaginatedSelect({
   menuRef: stateMenu,
   map: (s: any) => ({
     id: s.id,
-    name: s.name
+    name: s.name,
+    terminates_incident: s.terminates_incident
   })
 })
 const priorities = usePaginatedSelect({
@@ -326,6 +327,14 @@ const fetchIncident = async () => {
 
   loadingIncident.value = false
 }
+
+watch(() => state.incident_state_id, (newState) => {
+  if (newState?.terminates_incident) {
+    state.end_datetime = toDatetimeLocal(new Date().toISOString())
+  } else {
+    state.end_datetime = ''
+  }
+})
 
 // Posto
 const pcoList = ref<any[]>([])
