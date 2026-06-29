@@ -2,9 +2,11 @@
 import type {TableColumn} from "@nuxt/ui";
 import moment from 'moment/min/moment-with-locales'
 import {UButton} from "#components";
-import type {DonationDistribution} from "~/types";
+import type {DonationDistribution} from "@/types";
 
 const open = ref(false)
+const historyModalOpen = ref(false)
+const selectedRowForHistoryModal = ref<DonationDistribution>();
 moment.locale('pt');
 
 const emit = defineEmits<{
@@ -39,13 +41,21 @@ const columns: TableColumn<any>[] = [
       return h('div', {class: 'text-right flex gap-1 justify-end'}, [
         (useAuthStore().hasPermission('DONATION_LOG_UPDATE')) &&
         h(UButton, {
-          'data-testid': 'edit-user',
-          icon: 'i-lucide-info',
-          color: 'info',
+          icon: 'i-lucide-pencil',
+          color: 'warning',
           variant: 'ghost',
           onClick: () => {
             emit('selected', <DonationDistribution>row.original);
             open.value = false;
+          }
+        }),
+        h(UButton, {
+          icon: 'i-lucide-clock',
+          color: 'info',
+          variant: 'ghost',
+          onClick: () => {
+            selectedRowForHistoryModal.value = <DonationDistribution>row.original;
+            historyModalOpen.value = true;
           }
         })
       ])
@@ -83,7 +93,7 @@ const fetch = async() => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-const handleUpdateToDistribution = (event) => {
+const handleUpdateToDistribution = (event: {resource: any}) => {
   const idx = distributions.value.findLastIndex(dist => dist.id === event.resource.id);
 
   if(idx !== -1) {
@@ -118,7 +128,6 @@ onMounted(() => {
     }
   )
 })
-
 </script>
 
 <template>
@@ -137,6 +146,10 @@ onMounted(() => {
       <div ref="scrollContainer" class="overflow-x-auto max-h-150 overflow-y-auto">
         <UTable :columns="columns" :data="distributions"/>
       </div>
+      <DonationAuditLogModal
+        v-model:open="historyModalOpen"
+        v-model:selectedRow="selectedRowForHistoryModal"
+      />
     </template>
   </UModal>
 </template>

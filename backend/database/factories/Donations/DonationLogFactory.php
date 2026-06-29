@@ -20,7 +20,7 @@ class DonationLogFactory extends Factory
             'name' => $type === 'single' ? $this->faker->name() : $this->faker->company(),
             'contact' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->safeEmail(),
-            'donor_type' => $this->faker->randomElement(['single', 'org', 'misc']),
+            'donor_type' => $this->faker->randomElement(['single', 'company', 'org', 'misc']),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 

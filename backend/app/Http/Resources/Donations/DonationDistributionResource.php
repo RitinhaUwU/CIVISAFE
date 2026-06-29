@@ -19,8 +19,8 @@ class DonationDistributionResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'user' => $this->user,
-            'goods' => $this->distributionContent
+            'user' => $this->user()->withTrashed()->first()?->only('id', 'name'),
+            'goods' => $this->distributionContent,
         ];
     }
 }

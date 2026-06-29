@@ -21,7 +21,7 @@ class DonationLogResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'user' => $this->user->only(['id', 'name']),
+            'user' => $this->user->withTrashed()->get()->only(['id', 'name']),
 
             'goods' => $this->donationContent->map(function ($good) {
                 return [

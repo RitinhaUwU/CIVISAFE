@@ -57,6 +57,12 @@ onMounted(() => {
           icon: 'i-lucide-hand-coins',
           to: '/donations/distribution',
           onSelect: () => (open.value = false)
+        },
+        {
+          label: 'Auditoria',
+          icon: 'i-lucide-scroll',
+          to: '/donations/audit',
+          onSelect: () => (open.value = false)
         }
       ]
     });

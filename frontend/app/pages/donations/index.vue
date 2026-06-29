@@ -35,9 +35,9 @@ onMounted(async () => {
     </template>
 
     <template #body>
-      <UPageGrid class="xl:grid-cols-3 gap-4 sm:gap-6 xl:gap-px">
+      <UPageGrid class="xl:grid-cols-2 gap-4 sm:gap-6 xl:gap-px">
         <UPageCard
-          title="Total de Itens em Stock"
+          title="Quantidade de Itens em Stock"
           icon="i-lucide-chart-pie"
           variant="subtle"
           :ui="{
@@ -73,23 +73,6 @@ onMounted(async () => {
             </span>
           </div>
         </UPageCard>
-
-        <UPageCard
-          title="Manutenção"
-          icon="i-lucide-wrench"
-          variant="subtle"
-          :ui="{
-            container: 'gap-y-1.5',
-            wrapper: 'items-start',
-            leading: 'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
-            title: 'font-normal text-muted text-xs uppercase'
-          }"
-          class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
-        >
-          <div class="flex items-center gap-2">
-            <UButton label="Ajustar Stocks"/>
-          </div>
-        </UPageCard>
       </UPageGrid>
 
       <div class="xl:grid grid-cols-2 gap-4">
@@ -107,14 +90,9 @@ onMounted(async () => {
           </template>
 
           <DonationTable
-            class="h-80"
-            preview="10"
+            class="h-90"
             v-model="tableSearchTerm"
           />
-
-          <template #footer>
-            <ULink>Ver todas as Doações</ULink>
-          </template>
         </UCard>
 
         <!-- Alertas Abastecimento -->
@@ -123,7 +101,6 @@ onMounted(async () => {
             Alertas de Abastecimento
           </template>
 
-          <!-- Este tem de ser h-90 para ficar do mesmo tamanho do card ao lado já que o outro tem um footer -->
           <UEmpty
             v-if="stockStats.stockAlerts.length == 0"
             icon="i-lucide-check"

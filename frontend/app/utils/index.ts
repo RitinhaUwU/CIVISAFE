@@ -66,3 +66,12 @@ export const suffixForQuantityBox = (categories: DonationGoodType[], categoryId:
   }
   return `(em ${convertedMeasurementUnit(category.unit)})`;
 }
+
+export const extractCursor = (url: string | null) => {
+  if (!url) return null
+  try {
+    return new URL(url).searchParams.get('cursor')
+  } catch {
+    return null
+  }
+}

@@ -187,6 +187,16 @@ export interface DonationDistribution {
   contact: string;
   obs: string;
   user: User;
-  created_by: Date;
+  created_at: Date;
   updated_at: Date;
+}
+
+export interface AuditLog {
+  id: number;
+  type: string;
+  action: string;
+  user: string;
+  date: Date;
+  changes: any;
+  old_values: any;
 }

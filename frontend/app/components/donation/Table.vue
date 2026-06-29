@@ -6,13 +6,6 @@ import {useApiStore} from "~/stores/api";
 import {useToast} from "@nuxt/ui/composables";
 
 const searchBind = defineModel();
-const props = defineProps({
-  preview: {
-    type: Number,
-    required: false,
-    default: -1
-  }
-})
 
 const donations = ref<DonationLog[]>([])
 const page = ref(1)
@@ -105,7 +98,7 @@ const fetch = async () => {
   } catch (e) {
     useToast().add({
       title: 'Erro',
-      description: 'Erro ao carregar as instalações',
+      description: 'Erro ao carregar as doações',
       color: 'error'
     })
   } finally {
@@ -148,12 +141,12 @@ onMounted(() => {
     variant="naked"
     class="h-80"
   />
-  <UTable
-    v-else
-    :data="donations"
-    :columns="columns"
-    :loading="loading"
-    :ui="{
+  <div v-else ref="scrollContainer" class="overflow-x-auto max-h-150 overflow-y-auto">
+    <UTable
+      :data="donations"
+      :columns="columns"
+      :loading="loading"
+      :ui="{
         base: 'table-fixed border-separate border-spacing-0',
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
@@ -161,8 +154,9 @@ onMounted(() => {
         td: 'border-b border-default',
         separator: 'h-0'
       }"
-    class="w-full"
-  />
+      class="w-full"
+    />
+  </div>
 </template>
 
 <style scoped>

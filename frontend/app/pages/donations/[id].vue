@@ -239,7 +239,7 @@ onMounted(async () => {
                       class="w-full"/>
                   </UFormField>
 
-                  <UButton v-if="index !== 0" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removeGood(index)"/>
+                  <UButton v-if="state.goods.length > 1" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removeGood(index)"/>
                 </div>
 
               </UCard>

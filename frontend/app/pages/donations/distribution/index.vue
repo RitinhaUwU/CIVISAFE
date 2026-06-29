@@ -12,7 +12,6 @@ const stockTracker = ref(new Map<number, {
 }>());
 const goodCategories = ref<DonationGoodType[]>([]);
 
-
 /**
  * Websocket event handlers
  */
@@ -163,6 +162,7 @@ const clearForm = () => {
       quantity: 0,
     }]
   })
+  delete distributionForm.id
 }
 
 </script>
@@ -256,7 +256,7 @@ const clearForm = () => {
                         </span>
                     </UFormField>
 
-                    <UButton v-if="index !== 0" icon="i-lucide-trash-2" class="w-fit h-fit"
+                    <UButton v-if="distributionForm.goods.length > 1" icon="i-lucide-trash-2" class="w-fit h-fit"
                              @click="removeGood(index)"/>
                   </div>
 

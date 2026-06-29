@@ -1,29 +1,31 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DonationDistributionController;
-use App\Http\Controllers\DonationGoodsTypeController;
-use App\Http\Controllers\DonationLogController;
-use App\Http\Controllers\DonationStatsController;
-use App\Http\Controllers\DonationStockController;
+use App\Http\Controllers\Donations\DonationAuditController;
+use App\Http\Controllers\Donations\DonationDistributionController;
+use App\Http\Controllers\Donations\DonationGoodsTypeController;
+use App\Http\Controllers\Donations\DonationInventoryManagementController;
+use App\Http\Controllers\Donations\DonationLogController;
+use App\Http\Controllers\Donations\DonationStatsController;
+use App\Http\Controllers\Donations\DonationStockController;
 use App\Http\Controllers\EntityController;
 use App\Http\Controllers\EntityTypesController;
 use App\Http\Controllers\FacilitiesController;
-use App\Http\Controllers\IncidentTimelineController;
-use App\Http\Controllers\TimelineCommentController;
-use App\Http\Controllers\IncidentController;
-use App\Http\Controllers\IncidentPartyController;
-use App\Http\Controllers\IncidentPCOController;
-use App\Http\Controllers\IncidentPriorityController;
-use App\Http\Controllers\IncidentStateController;
-use App\Http\Controllers\IncidentTypeController;
+use App\Http\Controllers\Incidents\IncidentController;
+use App\Http\Controllers\Incidents\IncidentPartyController;
+use App\Http\Controllers\Incidents\IncidentPCOController;
+use App\Http\Controllers\Incidents\IncidentPriorityController;
+use App\Http\Controllers\Incidents\IncidentStateController;
+use App\Http\Controllers\Incidents\IncidentTimelineController;
+use App\Http\Controllers\Incidents\IncidentTypeController;
+use App\Http\Controllers\Incidents\TimelineCommentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VolunteerController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
 
 if (!app()->environment('production')) {
     Route::post('/test/reset', function (Request $request) {
@@ -113,14 +115,31 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{facility}/documents/{mediaId}', [FacilitiesController::class, 'deleteDocument']);
         });
 
-        Route::get('/donationGoodsTypes/all', [DonationGoodsTypeController::class, 'all']);
-        Route::apiResource('/donationGoodsTypes', DonationGoodsTypeController::class);
-        Route::get('/donations/stock', [DonationStockController::class, 'stock']);
-        Route::apiResource('/donations', DonationLogController::class)
-            ->except(['destroy']);
-        Route::get('/donationStatistics', [DonationStatsController::class, 'stats']);
+        Route::prefix('/donationGoodsTypes')->group(function () {
+            Route::get('/all', [DonationGoodsTypeController::class, 'all']);
+            Route::apiResource('/', DonationGoodsTypeController::class)
+                ->parameter('', 'donationGoodsType');
+        });
 
-        Route::apiResource('/donationDistributions', DonationDistributionController::class)
-            ->except(['destroy']);
+        Route::prefix('/donations')->group(function () {
+            Route::apiResource('/audit', DonationAuditController::class)
+                ->only(['index', 'store']);
+            Route::get('/stats', [DonationStatsController::class, 'stats']);
+            Route::get('/stock', [DonationStockController::class, 'stock']);
+
+            Route::prefix('/distributions')->group(function () {
+                Route::get('/{donationDistribution}/audit', [DonationDistributionController::class, 'audit']);
+
+                Route::apiResource('/', DonationDistributionController::class)
+                    ->parameter('', 'donationDistribution')
+                    ->except(['destroy']);
+            });
+
+            Route::get('/{donationLog}/audit', [DonationLogController::class, 'audit']);
+
+            Route::apiResource('/', DonationLogController::class)
+                ->parameter('', 'donationLog')
+                ->except(['destroy']);
+        });
     });
 });
