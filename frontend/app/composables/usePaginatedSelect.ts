@@ -1,15 +1,14 @@
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { watchDebounced, useInfiniteScroll } from '@vueuse/core'
 
-interface PaginatedResponse<T> {
-  data: {
-    data: T[]
-    meta: { last_page: number }
-  }
+interface CursorPaginatedResponse<T> {
+  data: T[]
+  next_cursor: string | null
+  prev_cursor: string | null
 }
 
 interface UsePaginatedSelectOptions<T, Mapped> {
-  fetcher: (params: any) => Promise<PaginatedResponse<T>>
+  fetcher: (params: any) => Promise<CursorPaginatedResponse<T>>
   map: (item: T) => Mapped
   menuRef: any
   filters?: () => Record<string, any>
@@ -17,8 +16,8 @@ interface UsePaginatedSelectOptions<T, Mapped> {
 
 export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }: UsePaginatedSelectOptions<T, Mapped>) {
   const items = ref<Mapped[]>([])
-  const page = ref(1)
-  const lastPage = ref(Infinity)
+  const nextCursor = ref<string | null>(null)
+  const prevCursor = ref<string | null>(null)
   const loading = ref(false)
   const search = ref('')
   const prepended = ref<any[]>([])
@@ -38,25 +37,27 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
 
     try {
       const res = await fetcher({
-        page: page.value,
         per_page: 10,
+        cursor: loadMore ? nextCursor.value : null,
         filter: {
           ...(search.value ? {search: search.value} : {}),
           ...(filters?.() ?? {})
         }
       })
 
-      lastPage.value = res.data.meta.last_page
+      nextCursor.value = res.data.meta.next_cursor
+      prevCursor.value = res.data.meta.prev_cursor
+
       const mapped = res.data.data.map(map)
 
       if (loadMore) {
         const existingIds = new Set(items.value.map((i: any) => i.id))
         const merged = mapped.filter((i: any) => !existingIds.has(i.id))
-        items.value = [...items.value, ...merged]
+        items.value.push(...merged)
       } else {
         const prependedIds = new Set(prepended.value.map((i: any) => i.id))
         const merged = mapped.filter((i: any) => !prependedIds.has(i.id))
-        items.value = [...prepended.value, ...merged]
+        items.value = [...prepended.value]
       }
     }
     finally {
@@ -70,31 +71,37 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
     }
 
     items.value = [...prepended.value]
-    page.value = 1
-    lastPage.value = Infinity
 
-    await fetchItems()
+    nextCursor.value = null
+    prevCursor.value = null
+
+    await fetchItems(false)
   }
 
   watchDebounced(search, async () => {
-      page.value = 1
-      await fetchItems()
-    },
-    { debounce: 300 } )
+    await reset()
+  }, { debounce: 300 })
 
-  useInfiniteScroll(
-    () => menuRef.value?.viewportRef,
-    async () => {
-      if (page.value >= lastPage.value) return
-      page.value++
-      await fetchItems(true)
-    },
-    { canLoadMore: () => !loading.value && page.value < lastPage.value }
-  )
+  watch(() => menuRef.value?.viewportRef, async (el) => {
+    if (!el) return
+
+    await nextTick()
+
+    useInfiniteScroll(
+      el,
+      async () => {
+        if (!nextCursor.value) return
+        await fetchItems(true)
+      },
+      {
+        distance: 10,
+        canLoadMore: () => !loading.value && !!nextCursor.value
+      }
+    )
+  }, { immediate: true })
 
   return {
     items,
-    page,
     loading: computed(() => loading.value),
     search,
     reset,

@@ -37,8 +37,8 @@ class IncidentPriorityController extends Controller
                     $query->where('is_active', $value);
                 }),
             )
-            ->orderBy('id', 'asc')
-            ->paginate($request->input('per_page', 10))
+            ->orderBy('id')
+            ->cursorPaginate($request->input('per_page', 10))
             ->appends($request->query());
 
         return IncidentPriorityResource::collection($types);

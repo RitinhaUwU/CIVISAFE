@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import { useApiStore } from '@/stores/api'
 import type { TableColumn } from '@nuxt/ui'
-import {UButton} from "#components";
-import type {Facilities} from "@/types";
+import {UButton} from '#components'
+import type {Facilities} from '@/types'
+import {extractCursor} from '@/utils'
 
 const toast = useToast()
 const api = useApiStore()
 
 const facilities = ref<Facilities[]>([])
-const page = ref(1)
-const lastPage = ref<number>(Infinity)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
-const total = ref(0)
 
 const search = ref('')
 
@@ -66,26 +65,32 @@ const columns: TableColumn<Facilities | null>[] = [
   }
 ]
 
-const fetch = async() => {
+const fetch = async(loadMore = false) => {
   if (loading.value) return
-  if (page.value > lastPage.value) return
 
   loading.value = true
+
   try {
     const params: any = {
-      page: page.value,
-      per_page: 10
+      per_page: 10,
+      filter: {},
+      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
     if (search.value) {
-      params.filter = {
-        search: search.value
-      }
+      params.filter.search = search.value
     }
     const res = await api.getFacilities(params)
 
-    facilities.value.push(...res.data.data)
-    total.value = res.data.meta.total
-    lastPage.value = res.data.meta.last_page
+    const newFacilities = res.data.data
+
+    if (loadMore) {
+      const existing = new Set(facilities.value.map(f => f.id))
+      facilities.value.push(...newFacilities.filter(f => !existing.has(f.id)))
+    } else {
+      facilities.value = newFacilities
+    }
+
+    nextCursor.value = extractCursor(res.data.links?.next)
   } catch (e) {
     toast.add({
       title: 'Erro',
@@ -97,11 +102,10 @@ const fetch = async() => {
   }
 }
 
-watch(search, () => {
-  page.value = 1
-  lastPage.value = Infinity
+watch(search, async () => {
+  nextCursor.value = null
   facilities.value = []
-  fetch()
+  await fetch(false)
 })
 
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -118,12 +122,12 @@ onMounted(() => {
   useInfiniteScroll(
     scrollContainer,
     () => {
-      page.value++
-      fetch()
+      if (!nextCursor.value) return
+      fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && page.value < lastPage.value
+      canLoadMore: () => !loading.value && !!nextCursor.value
     }
   )
 })
