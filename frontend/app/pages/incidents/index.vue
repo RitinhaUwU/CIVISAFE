@@ -109,6 +109,14 @@ const columns: TableColumn<Incident>[] = [
         'div',
         { class: 'text-right' },
         h(UButton, {
+          icon: 'i-lucide-notebook-text',
+          color: 'warning',
+          variant: 'ghost',
+          onClick: () => {
+            navigateTo(`/incidents/${row.original.id}/dashboard`)
+          }
+        }),
+        h(UButton, {
           icon: 'i-lucide-info',
           color: 'info',
           variant: 'ghost',

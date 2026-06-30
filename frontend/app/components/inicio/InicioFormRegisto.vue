@@ -2,9 +2,10 @@
 import Map from '../Map.vue'
 import * as z from "zod"
 import type { FormSubmitEvent } from "@nuxt/ui"
-import { useApiStore } from "~/stores/api"
-import { useAuthStore } from "~/stores/auth"
-import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import { useApiStore } from "@/stores/api"
+import { useAuthStore } from "@/stores/auth"
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import {toDatetimeLocal} from "@/utils"
 
 const props = defineProps<{
   modelValue: boolean
@@ -106,7 +107,8 @@ const states = usePaginatedSelect({
   menuRef: stateMenu,
   map: (s: any) => ({
     id: s.id,
-    name: s.name
+    name: s.name,
+    terminates_incident: s.terminates_incident
   })
 })
 const priorities = usePaginatedSelect({
@@ -204,6 +206,14 @@ watch(() => state.is_major, async (isMajor) => {
   }
 
   await incidents.reset()
+})
+
+watch(() => state.incident_state_id, (newState) => {
+  if (newState?.terminates_incident) {
+    state.end_datetime = toDatetimeLocal(new Date().toISOString())
+  } else {
+    state.end_datetime = ''
+  }
 })
 
 // Map
