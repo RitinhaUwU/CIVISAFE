@@ -124,6 +124,15 @@ const items = ref<BreadcrumbItem[]>([
 ])
 
 onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: "O Módulo de Doações só está disponível Online",
+      color: "warning"
+    })
+    await useRouter().push('/inicio');
+    return;
+  }
+
   if (!useAuthStore().hasPermission('DONATION_LOG_LIST')) {
     await useRouter().push('/inicio');
     return;

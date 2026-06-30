@@ -14,6 +14,15 @@ const stockStats = ref<StockStatistics>({
 const tableSearchTerm = ref<String>();
 
 onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: "O Módulo de Doações só está disponível Online",
+      color: "warning"
+    })
+    await useRouter().push('/inicio');
+    return;
+  }
+
   if (!useAuthStore().hasPermission('DONATION_LOG_LIST')) {
     await useRouter().push('/inicio');
     return;
@@ -80,7 +89,7 @@ onMounted(async () => {
         <UCard>
           <template #header>
             Doações recentes
-            <DonationAddModal class="flex float-right ml-4" />
+            <DonationAddModal class="flex float-right ml-4"/>
             <UInput
               placeholder="Pesquisar..."
               v-model="tableSearchTerm"

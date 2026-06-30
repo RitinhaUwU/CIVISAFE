@@ -35,6 +35,15 @@ const handleStockUpdate = async (stockUpdate: { id: number, stock: number, times
 }
 
 onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: "O Módulo de Doações só está disponível Online",
+      color: "warning"
+    })
+    await useRouter().push('/inicio');
+    return;
+  }
+
   if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
     await useRouter().push('/inicio');
     throw new Error('User does not have access to the donations module');

@@ -136,14 +136,23 @@ const formatLogDiffValues = (key: string, value: any = undefined) => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
-  if (!auth.hasPermission('DONATION_LOG_LIST')) {
-    useRouter().push('/inicio');
+onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: "O Módulo de Doações só está disponível Online",
+      color: "warning"
+    })
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetchCategories()
-  fetch()
+  if (!auth.hasPermission('DONATION_LOG_LIST')) {
+    await useRouter().push('/inicio');
+    return;
+  }
+
+  await fetchCategories()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
