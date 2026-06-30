@@ -19,7 +19,7 @@ class BootstrapCommand extends Command
         if(!Schema::hasTable('users'))
         {
             $this->runCommand('migrate', ['--force' => true], $this->output);
-            $this->runCommand('db:seed --class=ProdSeeder', ['--force' => true], $this->output);
+            $this->runCommand('db:seed', ['--class' => 'ProdSeeder', '--force' => true], $this->output);
         }
 
         $this->runCommand('migrate', ['--force' => true], $this->output);
