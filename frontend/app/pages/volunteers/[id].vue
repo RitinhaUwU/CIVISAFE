@@ -4,6 +4,7 @@ import { useApiStore } from '@/stores/api'
 import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import {toDatetimeLocal} from "@/utils"
 
 const route = useRoute()
 const router = useRouter()
@@ -113,14 +114,6 @@ const handleSave = async () => {
   } finally {
     saving.value = false
   }
-}
-
-//https://stackoverflow.com/questions/30166338/setting-value-of-datetime-local-from-date
-// Converte o ISO que vem da API para um objeto Date.
-const toDatetimeLocal = (value?: string | null) => {
-  if (!value) return ''
-
-  return new Date(value).toISOString().slice(0, 16) // toISOString() -> Transforma a data em formato padrão
 }
 
 const fetchVolunteer = async () => {

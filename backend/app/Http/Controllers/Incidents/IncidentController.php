@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\IncidentRequest;
 use App\Http\Resources\Incidents\IncidentResource;
 use App\Models\Incident;
+use App\Models\IncidentState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,11 +59,23 @@ class IncidentController extends Controller
         return IncidentResource::collection($incidents);
     }
 
+    private function applyEndDatetimeRule(array &$data): void
+    {
+        if (!isset($data['incident_state_id'])) {
+            return;
+        }
+
+        $state = IncidentState::find($data['incident_state_id']);
+
+        $data['end_datetime'] = $state?->terminates_incident ? now() : null;
+    }
+
     public function store(IncidentRequest $request)
     {
         return DB::transaction(function () use ($request) {
 
             $data = $request->validated();
+            $this->applyEndDatetimeRule($data);
             $children = $data['children_incidents'] ?? [];
 
             unset($data['children_incidents']);
@@ -105,6 +118,7 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
+            $this->applyEndDatetimeRule($data);
             $children = $data['children_incidents'] ?? [];
 
             unset($data['children_incidents']);
