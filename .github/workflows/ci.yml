@@ -24,10 +24,12 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: ghcr.io/ritinhauwu/civisafe-backend:latest
+          tags: ghcr.io/ritinhauwu/civisafe-backend:master-${{ github.sha }}
 
       - uses: docker/build-push-action@v5
         with:
           context: ./frontend
+          build-args: |
+            COMMIT_SHA=master-${{ github.sha }}
           push: true
-          tags: ghcr.io/ritinhauwu/civisafe-frontend:latest
+          tags: ghcr.io/ritinhauwu/civisafe-frontend:master-${{ github.sha }}
