@@ -49,7 +49,7 @@ const columns: TableColumn<User>[] = [
   },
   {
     accessorKey: "name",
-    header: "Responsável",
+    header: "Nome",
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-col' }, [
         h('span', { class: 'font-medium text-highlighted' }, row.original.name),

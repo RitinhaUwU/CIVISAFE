@@ -277,7 +277,7 @@ const fetchIncident = async () => {
   if (data.incidentType) {
     types.prependSelected([{
       id: data.incidentType.id,
-      name: `${data.incidentType.code} - ${data.incidentType.species}`
+      name: `${data.incidentType.code} - ${data.incidentType.species} - ${data.incidentType.types}`
     }])
   }
 
@@ -301,7 +301,7 @@ const fetchIncident = async () => {
     ...data,
     user_id: data.user?.id,
     user: data.user,
-    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.species}`} : null,
+    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.species} - ${data.incidentType.types}`} : null,
     incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
     incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: i.identifier})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
