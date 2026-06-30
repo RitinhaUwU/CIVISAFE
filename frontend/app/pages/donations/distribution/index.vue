@@ -150,7 +150,6 @@ const submitDistribution = async () => {
 }
 
 const onRowSelected = (record: DonationDistribution) => {
-  console.log(record);
   Object.assign(distributionForm, {
     ...record, goods: record.goods.map(item => ({
       quantity: item.quantity,
@@ -170,6 +169,21 @@ const clearForm = () => {
     }]
   })
   delete distributionForm.id
+}
+
+const calculateBoxMaxValue = (index: number) => {
+
+  if(!distributionForm.goods[index].category_id)
+  {
+    return 0
+  }
+
+  if(stockTracker.value.has(distributionForm.goods[index].category_id))
+  {
+    return stockTracker.value.get(distributionForm.goods[index].category_id)?.stock ?? Infinity
+  }
+
+  return Infinity
 }
 
 </script>
@@ -251,14 +265,14 @@ const clearForm = () => {
                         :min="0"
                         :step="suffixForQuantityBox(goodCategories, distributionForm.goods[index].category_id, true) === 'Unidades' ? 1 : 0.1"
                         :format-options="{ minimumFractionDigits: 0, maximumFractionDigits: 1 }"
-                        :max="distributionForm.goods[index].category_id ? stockTracker.get(distributionForm.goods[index].category_id).stock : 0"
+                        :max="calculateBoxMaxValue(index)"
                         class="w-full"/>
                       <span
                         v-if="distributionForm.goods[index].category_id"
                         class="float-end"
                       >
                           Stock atual: {{
-                          stockTracker.get(distributionForm.goods[index].category_id).stock
+                          stockTracker.get(distributionForm.goods[index].category_id)?.stock ?? 0
                         }} {{ suffixForQuantityBox(goodCategories, distributionForm.goods[index].category_id, true) }}
                         </span>
                     </UFormField>

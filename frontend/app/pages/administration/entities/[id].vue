@@ -30,12 +30,12 @@ const selectOptionSchema = z.object({
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  email_contact: z.string().email('Email inválido').optional().nullable(),
+  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().or(z.literal('')).nullable(),
+  email_contact: z.string().email('Email inválido').optional().or(z.literal('')).nullable(),
   address: z.string().optional().nullable(),
   poc_name: z.string().optional().nullable(),
-  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  poc_email: z.string().email('Email inválido').optional().nullable(),
+  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().or(z.literal('')).nullable(),
+  poc_email: z.string().email('Email inválido').optional().or(z.literal('')).nullable(),
   description: z.string().optional().nullable(),
   entity_type_id: selectOptionSchema.nullable()
 })

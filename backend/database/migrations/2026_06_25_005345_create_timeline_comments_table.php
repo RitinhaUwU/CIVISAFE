@@ -9,10 +9,10 @@ return new class extends Migration {
     {
         Schema::create('timeline_comments', function (Blueprint $table) {
             $table->id();
-            $table->string('body');
+            $table->longText('body');
             $table->foreignId('incident_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->dateTime('datetime')->nullable();
+            $table->foreignId('user_id')->constrained();
+            $table->dateTime('datetime');
             $table->timestamps();
         });
     }

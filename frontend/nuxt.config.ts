@@ -52,6 +52,9 @@ export default defineNuxtConfig({
         'idb',
         'laravel-echo',
         'leaflet', // CJS
+        'moment',
+        'moment/locale/pt', // CJS
+        'moment/min/moment-with-locales', // CJS
         'pusher-js', // CJS
         'vue-chartjs',
         'zod',

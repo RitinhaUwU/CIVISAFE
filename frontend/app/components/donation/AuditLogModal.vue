@@ -71,7 +71,6 @@ const fetchAuditLogs = async (loadMore: boolean) => {
 }
 
 watch(historyModalOpen, async () => {
-  console.log('historyModalOpen', historyModalOpen.value);
   if(historyModalOpen.value === true)
   {
     await fetchAuditLogs(false);
