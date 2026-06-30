@@ -183,7 +183,7 @@ const clearForm = () => {
         <UCard class="col-span-3">
 
           <template #title>
-            Nova Entrega
+            {{distributionForm.id === undefined ? "Nova Entrega" : `Entrega a ${distributionForm.name}`}}
 
             <UButton
               label="Voltar"
@@ -280,7 +280,7 @@ const clearForm = () => {
 
           <UButton
             icon="i-lucide-hand-coins"
-            label="Registar Entrega"
+            :label="distributionForm.id === undefined ? 'Registar Entrega' : 'Guardar Alterações'"
             size="xl"
             class="h-fit p-4"
             type="submit"
@@ -300,3 +300,35 @@ const clearForm = () => {
   </UDashboardPanel>
 
 </template>
+
+<style scoped>
+.slide-enter-active {
+  animation: slideDown .25s ease;
+}
+
+.slide-leave-active {
+  animation: slideUp .2s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+</style>

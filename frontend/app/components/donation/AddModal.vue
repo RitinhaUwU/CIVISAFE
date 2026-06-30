@@ -180,11 +180,12 @@ onMounted(async () => {
                     :min="0"
                     :step="suffixForQuantityBox(goodCategories, state.goods[index].category_id, true) === 'Unidades' ? 1 : 0.1"
                     :format-options="{ minimumFractionDigits: 0, maximumFractionDigits: 1 }"
+                    :max="state.goods[index].category_id ? Infinity : 0"
                     :defaultValue="0"
                     class="w-full"/>
                 </UFormField>
 
-                <UButton v-if="index !== 0" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removeGood(index)"/>
+                <UButton v-if="state.goods.length > 1" icon="i-lucide-trash-2" class="w-fit h-fit" @click="removeGood(index)"/>
               </div>
 
             </UCard>

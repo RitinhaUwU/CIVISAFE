@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Donations\DonationAuditController;
 use App\Http\Controllers\Donations\DonationDistributionController;
 use App\Http\Controllers\Donations\DonationGoodsTypeController;
-use App\Http\Controllers\Donations\DonationInventoryManagementController;
 use App\Http\Controllers\Donations\DonationLogController;
 use App\Http\Controllers\Donations\DonationStatsController;
 use App\Http\Controllers\Donations\DonationStockController;
@@ -122,10 +121,13 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('/donations')->group(function () {
-            Route::apiResource('/audit', DonationAuditController::class)
-                ->only(['index', 'store']);
+            Route::prefix('/stock')->group(function () {
+                Route::apiResource('/audit', DonationStockController::class)
+                    ->only(['index', 'store']);
+                Route::get('/', [DonationStockController::class, 'stock']);
+            });
+
             Route::get('/stats', [DonationStatsController::class, 'stats']);
-            Route::get('/stock', [DonationStockController::class, 'stock']);
 
             Route::prefix('/distributions')->group(function () {
                 Route::get('/{donationDistribution}/audit', [DonationDistributionController::class, 'audit']);

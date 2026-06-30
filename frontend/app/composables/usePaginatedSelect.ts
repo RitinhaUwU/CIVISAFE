@@ -55,7 +55,9 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
         const merged = mapped.filter((i: any) => !existingIds.has(i.id))
         items.value.push(...merged)
       } else {
-        items.value = [...prepended.value]
+        const prependedIds = new Set(prepended.value.map((i: any) => i.id))
+        const merged = mapped.filter((i: any) => !prependedIds.has(i.id))
+        items.value = [...prepended.value, ...merged]
       }
     }
     finally {
@@ -97,24 +99,6 @@ export function usePaginatedSelect<T, Mapped>({ fetcher, map, menuRef, filters }
       }
     )
   }, { immediate: true })
-
-  watch(
-    () => menuRef.value?.[0]?.viewportRef,
-    (viewport) => {
-      if (!viewport) return
-
-      useInfiniteScroll(
-        viewport,
-        async () => {
-          if (loading.value) return
-          if (page.value >= lastPage.value) return
-          page.value++
-          await fetchItems(true)
-        }
-      )
-    },
-    { immediate: true }
-  )
 
   return {
     items,

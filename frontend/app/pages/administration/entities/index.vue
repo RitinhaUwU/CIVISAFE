@@ -199,7 +199,7 @@ onMounted(() => {
           />
         </div>
       </div>
-      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
           :data="entities"
           :columns="columns"

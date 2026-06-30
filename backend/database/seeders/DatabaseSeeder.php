@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
 use App\Models\Donations\DistributionContent;
+use App\Models\Donations\DonationAudit;
 use App\Models\Donations\DonationContent;
 use App\Models\Donations\DonationDistribution;
-use App\Models\Donations\DonationGoodsType;
 use App\Models\Donations\DonationLog;
 use App\Models\Donations\DonationStock;
 use App\Models\Entity;
@@ -20,7 +20,6 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
-use function Illuminate\Support\enum_value;
 
 class DatabaseSeeder extends Seeder
 {
@@ -102,5 +101,41 @@ class DatabaseSeeder extends Seeder
                 ->count(2)
             )
             ->create();
+
+        DonationAudit::factory(10)
+            ->afterMaking(function (DonationAudit $donationAudit) {
+                if($donationAudit->adjustment_type === "add")
+                {
+                    DonationStock::upsert(
+                        [
+                            'donation_goods_type_id' => $donationAudit->donation_goods_type_id,
+                            'stock' => $donationAudit->quantity,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ],
+                        'donation_goods_type_id',
+                        [
+                            'stock' => DB::raw('"donation_stocks".stock + ' . (int)$donationAudit->quantity),
+                            'updated_at' => now()
+                        ]
+                    );
+                }
+                else
+                {
+                    DonationStock::upsert(
+                        [
+                            'donation_goods_type_id' => $donationAudit->donation_goods_type_id,
+                            'stock' => -$donationAudit->quantity,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ],
+                        'donation_goods_type_id',
+                        [
+                            'stock' => DB::raw('"donation_stocks".stock + ' . -(int)$donationAudit->quantity),
+                            'updated_at' => now()
+                        ]
+                    );
+                }
+            });
     }
 }

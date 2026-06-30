@@ -539,7 +539,7 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
-  const getAllDonationGoodTypes = async (deleted: boolean) => {
+  const getAllDonationGoodTypes = async (deleted: boolean = false)  => {
     if (await checkServerAccess()) {
       const res = await axios.get(`${config.public.apiBase}/donationGoodsTypes/all${deleted ? '?include_deleted' : ''}`)
       await storeData('donation_goods_types', res.data.data)
@@ -659,7 +659,7 @@ export const useApiStore = defineStore('api', () => {
   // Registo de Auditoria das Doações
   const getAllDonationsAudit = async (params: QueryParams) => {
     if (await checkServerAccess()) {
-      return await axios.get(`${config.public.apiBase}/donations/audit`, {params});
+      return await axios.get(`${config.public.apiBase}/donations/stock/audit`, {params});
     }
     throw new Error('Not Implemented');
   }
@@ -674,6 +674,13 @@ export const useApiStore = defineStore('api', () => {
   const getDistributionAudit = async (id: number, params?: QueryParams) => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/distributions/${id}/audit`, {params});
+    }
+    throw new Error('Not Implemented');
+  }
+
+  const postStockAudit = async (params: any) => {
+    if(await checkServerAccess()) {
+      return await axios.post(`${config.public.apiBase}/donations/stock/audit`, params)
     }
     throw new Error('Not Implemented');
   }
@@ -783,5 +790,6 @@ export const useApiStore = defineStore('api', () => {
     getAllDonationsAudit,
     getDonationAudit,
     getDistributionAudit,
+    postStockAudit,
   }
 })

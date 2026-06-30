@@ -28,7 +28,7 @@ export const formatBytes = (bytes: number, decimals = 2) => {
   return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-export const createBlobURL = (file) => {
+export const createBlobURL = (file: any) => {
   return URL.createObjectURL(file)
 }
 

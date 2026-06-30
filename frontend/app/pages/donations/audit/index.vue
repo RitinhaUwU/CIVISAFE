@@ -80,7 +80,9 @@ const readableKey = (key: string) => {
     'donor_type': 'Tipo de Doador',
     'donation_distribution_id': 'ID Entrega',
     'donation_goods_type_id': 'ID Bem',
-    'obs': 'Observações'
+    'obs': 'Observações',
+    'reason': 'Motivo',
+    'adjustment_type': 'Tipo de Ajuste'
   }
 
   return keys[key] ?? key;
@@ -96,6 +98,36 @@ const formatLogDiffValues = (key: string, value: any = undefined) => {
     const category = categoryLookup.get(value)
     if (category) {
       return `${category.name} (#${value})`
+    }
+  }
+
+  if(key == "adjustment_type")
+  {
+    if(value == "add")
+    {
+      return "Adicionou Stock"
+    }
+    else
+    {
+      return "Removeu Stock"
+    }
+  }
+
+  if(key == "reason")
+  {
+    switch (value)
+    {
+      case "diffCorrection":
+        return "Correção de Diferença"
+
+      case "brokenItem":
+        return "Item Danificado"
+
+      case "lost":
+        return "Perda/Roubo"
+
+      case "other":
+        return "Outro"
     }
   }
 
@@ -137,7 +169,7 @@ onMounted(() => {
           <UDashboardSidebarCollapse/>
         </template>
         <template #right>
-          <UButton label="Registar Alteração de Stock"/>
+          <DonationAuditStockUpdateModal />
         </template>
       </UDashboardNavbar>
     </template>
@@ -152,7 +184,7 @@ onMounted(() => {
         variant="naked"
       />
 
-      <div v-else ref="scrollContainer" class="overflow-x-auto max-h-dvh overflow-y-auto">
+      <div v-else ref="scrollContainer" class="overflow-x-auto max-h-[85vh] overflow-y-auto">
         <UTimeline :items="logs" size="xl" :ui="{ date: 'float-end ms-1' }">
           <template #title="{ item }">
             <div class="flex flex-col gap-2">
