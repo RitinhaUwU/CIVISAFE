@@ -99,7 +99,7 @@ const types = usePaginatedSelect({
   menuRef: typeMenu,
   map: (t: any) => ({
     id: t.id,
-    name: `${t.code} - ${t.species}`
+    name: `${t.code} - ${t.species} - ${t.type}`
   })
 })
 const states = usePaginatedSelect({
