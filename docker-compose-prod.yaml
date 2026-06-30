@@ -22,6 +22,11 @@ services:
     container_name: redis
     image: redis:alpine
     restart: on-failure:3
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   minio-storage:
     container_name: minio-storage
@@ -45,6 +50,7 @@ services:
       - '80:80'
       - '443:443'
       - '81:81'
+    restart: unless-stopped
     volumes:
       - ./docker/proxymanager-data:/data
       - ./docker/proxymanager-letsencrypt:/etc/letsencrypt
@@ -73,9 +79,9 @@ services:
       database:
         condition: service_healthy
       minio-storage:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   queue-worker-default:
     image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
@@ -98,9 +104,9 @@ services:
       database:
         condition: service_healthy
       minio-storage:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   queue-worker-notifications:
     image: ghcr.io/ritinhauwu/civisafe-backend:${IMAGE_VERSION}
@@ -146,7 +152,7 @@ services:
       database:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
 
   reverb:
     container_name: reverb
@@ -168,7 +174,7 @@ services:
     restart: on-failure:3
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
       database:
         condition: service_healthy
       backend:
@@ -184,6 +190,9 @@ services:
       - .env
     restart: on-failure:3
     depends_on:
-      - backend
-      - reverb
-      - minio-storage
+      backend:
+        condition: service_started
+      reverb:
+        condition: service_started
+      minio-storage:
+        condition: service_healthy
