@@ -102,11 +102,11 @@ const fetch = async(loadMore = false) => {
   }
 }
 
-watch(search, async () => {
+watchDebounced(search, async () => {
   nextCursor.value = null
   facilities.value = []
   await fetch(false)
-})
+}, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
@@ -154,7 +154,7 @@ onMounted(() => {
           placeholder="Filtrar instalações..."
         />
       </div>
-      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[80vh] overflow-y-auto">
         <UTable
           :data="facilities"
           :columns="columns"

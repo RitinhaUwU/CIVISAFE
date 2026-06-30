@@ -53,11 +53,16 @@ export async function createDB() {
           volunteersStore.createIndex('classification', 'classification', {unique: false});
           volunteersStore.createIndex('has_accommodation', 'has_accommodation', {unique: false});
           volunteersStore.createIndex('has_meal', 'has_meal', {unique: false});
-        }
 
-        case 1: {
           const facilitiesStore = db.createObjectStore('facilities', {keyPath: 'id'});
           facilitiesStore.createIndex('name', 'name', {unique: false});
+
+          const donationGoodsTypes = db.createObjectStore('donation_goods_types', {keyPath: 'id'});
+          donationGoodsTypes.createIndex('name', 'name', {unique: false});
+
+          const donationLogs = db.createObjectStore('donation_logs', {keyPath: 'id'});
+          donationLogs.createIndex('name', 'name', {unique: false});
+          donationLogs.createIndex('donor_type', 'donor_type', {unique: false});
         }
       }
     }
@@ -110,10 +115,9 @@ export async function retrieveData(objectStore: string, index: number = -1, para
 
     data = await store.getAll();
 
-    if(params !== undefined && params.filter !== undefined){
-      if(params.filter.search !== undefined)
-      {
-          data = searchFilter(data, params.filter.search.toLowerCase());
+    if (params !== undefined && params.filter !== undefined) {
+      if (params.filter.search !== undefined) {
+        data = searchFilter(data, params.filter.search.toLowerCase());
       }
     }
   } else {
@@ -179,6 +183,31 @@ export async function retrieveDataPaginated(objectStore: string, params?: QueryP
       }
     }
   };
+}
+
+export async function removeEntry(objectStore: string, id: number) {
+  if (database === null) {
+    await createDB()
+  }
+
+  const tx = database?.transaction(objectStore, 'readwrite');
+
+  if (tx === null || tx === undefined) {
+    throw new Error(`Erro ao iniciar a transação readwrite para "${objectStore}"`);
+  }
+
+  const store = tx.objectStore(objectStore);
+
+  await store.delete(id);
+  await tx.done;
+}
+
+export async function clearTable(objectStore: string) {
+  if (database === null) {
+    await createDB();
+  }
+
+  await database?.clear(objectStore);
 }
 
 export async function clearSensitiveTables() {

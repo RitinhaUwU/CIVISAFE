@@ -33,7 +33,7 @@ const types = usePaginatedSelect({
   menuRef: typeMenu,
   map: (t: any) => ({
     id: t.id,
-    name: `${t.code} - ${t.species}`
+    name: `${t.code} - ${t.species} - ${t.type}`
   })
 })
 const states = usePaginatedSelect({
@@ -449,7 +449,6 @@ const persistPCO = async (payload: any) => {
 const logisticModalOpen = ref(false)
 const editingLogistic = ref<any | null>(null)
 const logistics = ref<any[]>([])
-const deleteLogisticModalOpen = ref(false)
 const logisticTotals = ref({ total_vehicles: 0, total_humans: 0 })
 
 const openCreateLogistic = () => {
@@ -508,22 +507,13 @@ const commentSchema = z.object({
 })
 
 type TimelineCommentSchema = z.output<typeof commentSchema>
-
-const stateTimeline = reactive<Partial<TimelineCommentSchema>>({
+reactive<Partial<TimelineCommentSchema>>({
   user_id: authStore.currentUserID,
   incident_id: null,
   body: ''
-})
+});
 
 const commentDateTime = ref(toDatetimeLocal(new Date().toISOString()))
-
-const dateFields = [
-  'start_datetime',
-  'end_datetime',
-  'activation_pco_datetime',
-  'start_pco_datetime',
-  'end_pco_datetime',
-]
 
 const formatValue = (key: string, value: any) => {
   if (value === null || value === undefined || value === '') {

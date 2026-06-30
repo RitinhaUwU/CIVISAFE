@@ -19,7 +19,7 @@ npm run dev
 Devem ser configurados os seguintes buckets e permissões no S3:
 
  - `misc`
-   - Acesso `write` anónimo em `/` 
+ - `data`
 
 
 # Filas

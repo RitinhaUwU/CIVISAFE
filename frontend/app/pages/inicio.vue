@@ -3,6 +3,7 @@ import InicioFormRegisto from '@/components/inicio/InicioFormRegisto.vue'
 import { useApiStore } from '@/stores/api'
 import type { Incident } from '@/types'
 import { useToast } from '@nuxt/ui/composables'
+import IncidentsIsMajorSideover from "~/components/IncidentsIsMajorSideover.vue";
 
 const api = useApiStore()
 
@@ -13,6 +14,9 @@ const openSlideover = ref(false)
 const incidents = ref<Incident[]>([])
 
 async function handleMapClick(coords: { lat: number, lng: number }) {
+  if(!useAuthStore().hasPermission('INCIDENTS_CREATE'))
+    return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Não é possível adicionar ocorrências offline',
@@ -44,7 +48,10 @@ async function refreshIncidents() {
 }
 
 onMounted(async () => {
-  await refreshIncidents()
+  if(useAuthStore().hasPermission('INCIDENTS_LIST'))
+  {
+    await refreshIncidents()
+  }
 })
 </script>
 

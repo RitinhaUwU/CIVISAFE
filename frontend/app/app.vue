@@ -5,9 +5,13 @@ import {useHead} from "nuxt/app";
 import {checkServerAccess} from "@/utils";
 import {useAuthStore} from "@/stores/auth";
 import {useRegisterSW} from 'virtual:pwa-register/vue'
+import moment from "moment";
 
 const toast = useToast()
+
+//ATENÇÃO: Não importar o useColorMode do usevue.
 const colorMode = useColorMode()
+
 const color = computed(() => colorMode.value === 'dark' ? '#1b1718' : 'white')
 let last_connectivity_state = true;
 
@@ -25,7 +29,6 @@ useHead({
   },
   title: 'CIVISAFE',
 })
-
 
 const INTERVAL_MS = 5000
 let intervalId: number | null | NodeJS.Timeout = null

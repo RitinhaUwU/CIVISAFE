@@ -1,0 +1,23 @@
+info:
+  name: Criar Tipo de Bem
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/donationGoodsTypes"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Unidade Não Quantificável",
+        "is_type_countable": false,
+        "unit": ""
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

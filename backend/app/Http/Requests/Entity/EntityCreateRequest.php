@@ -17,7 +17,7 @@ class EntityCreateRequest extends FormRequest
             'poc_name' => ['nullable', 'string'],
             'poc_phone' => ['nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'poc_email' => ['nullable', 'email', 'max:254'],
-            'entity_type_id' => ['nullable', 'exists:entity_types,id'],
+            'entity_type_id' => ['required', 'exists:entity_types,id'],
         ];
     }
 

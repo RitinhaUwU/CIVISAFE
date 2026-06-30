@@ -18,11 +18,13 @@
     "@nuxt/ui": "^4.5.1",
     "@pinia/nuxt": "^0.11.3",
     "@tanstack/table-core": "^8.21.3",
-    "@unovis/ts": "^1.6.4",
+    "@unovis/ts": "^1.6.5",
     "@unovis/vue": "^1.6.4",
     "@vueuse/core": "^14.2.1",
     "@vueuse/nuxt": "^14.2.1",
     "axios": "^1.13.6",
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-annotation": "^3.1.0",
     "date-fns": "^4.1.0",
     "idb": "^8.0.3",
     "laravel-echo": "^2.3.4",
@@ -36,6 +38,7 @@
     "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.2.1",
     "vue": "^3.5.30",
+    "vue-chartjs": "^5.3.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {

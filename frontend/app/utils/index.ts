@@ -1,10 +1,4 @@
-export function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-export function randomFrom<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)]!
-}
+import type {DonationGoodType} from "~/types";
 
 export async function checkServerAccess() {
   try {
@@ -34,8 +28,43 @@ export const formatBytes = (bytes: number, decimals = 2) => {
   return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-export const createBlobURL = (file) => {
+export const createBlobURL = (file: any) => {
   return URL.createObjectURL(file)
+}
+
+export function convertedMeasurementUnit(techString: string) {
+  switch (techString) {
+    case 'units':
+      return "Unidades";
+
+    case 'liters':
+      return "Litros";
+
+    case 'kilos':
+      return "Quilos";
+
+    case 'linear_meters':
+      return "Metros";
+
+    case 'squared_meters':
+      return "Metros Quadrados";
+
+    default:
+      return techString;
+  }
+}
+
+export const suffixForQuantityBox = (categories: DonationGoodType[], categoryId: number, simple: boolean = false) => {
+  const category = categories.find((x: DonationGoodType) => x.id == categoryId);
+
+  if(!category || !category.unit)
+    return '';
+
+  if(simple)
+  {
+    return convertedMeasurementUnit(category.unit);
+  }
+  return `(em ${convertedMeasurementUnit(category.unit)})`;
 }
 
 /**

@@ -10,13 +10,14 @@ use Carbon\Carbon;
 
 class ActivityHelper{
 
-    public static function transformActivityValues(array $values): array{
+    public static function transformActivityValues(array $values, string $dateTimeFormat = "d/m/Y H:i"): array{
         $dateFields = [
             'start_datetime',
             'end_datetime',
             'activation_pco_datetime',
             'start_pco_datetime',
             'end_pco_datetime',
+            'date'
         ];
 
         foreach ($values as $field => &$value) {
@@ -25,7 +26,7 @@ class ActivityHelper{
             }
 
             if (in_array($field, $dateFields) && !empty($value)) {
-                $value = Carbon::parse($value)->format('d/m/Y H:i');
+                $value = Carbon::parse($value)->format($dateTimeFormat);
             }
 
             switch ($field) {

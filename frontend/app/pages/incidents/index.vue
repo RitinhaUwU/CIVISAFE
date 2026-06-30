@@ -182,11 +182,11 @@ const fetch = async (loadMore = false) => {
   }
 }
 
-watch([search, statusFilter, prioritiesFilter, is_majorFilter], async () => {
+watchDebounced([search, statusFilter, prioritiesFilter, is_majorFilter], async () => {
   nextCursor.value = null
   incidents.value = []
   await fetch(false)
-})
+}, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
@@ -278,7 +278,7 @@ onMounted(() => {
           />
         </div>
       </div>
-      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[80vh] overflow-y-auto">
         <UTable
           :data="incidents"
           :columns="columns"

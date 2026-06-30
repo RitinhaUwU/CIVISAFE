@@ -111,11 +111,11 @@ const fetch = async (loadMore = false) => {
   }
 }
 
-watch(search, async () => {
+watchDebounced(search, async () => {
   nextCursor.value = null
   incidentTypes.value = []
   await fetch(false)
-})
+}, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
@@ -161,7 +161,7 @@ onMounted(() => {
           placeholder="Filtrar tipos..."
         />
       </div>
-      <div ref="scrollContainer" class="overflow-x-auto max-h-[600px] overflow-y-auto">
+      <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
           :data="incidentTypes"
           :columns="columns"

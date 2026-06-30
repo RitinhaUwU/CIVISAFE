@@ -24,21 +24,19 @@ const entityTypes = usePaginatedSelect({
 
 const imageFile = ref(null)
 
-const selectOptionSchema = z.object({
-  id: z.number(),
-  name: z.string()
-})
-
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  email_contact: z.string().email('Email inválido').optional().nullable(),
+  phone_contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().or(z.literal('')).nullable(),
+  email_contact: z.string().email('Email inválido').optional().or(z.literal('')).nullable(),
   address: z.string().optional().nullable(),
   poc_name: z.string().optional().nullable(),
-  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  poc_email: z.string().email('Email inválido').optional().nullable(),
+  poc_phone: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().or(z.literal('')).nullable(),
+  poc_email: z.string().email('Email inválido').optional().or(z.literal('')).nullable(),
   description: z.string().optional().nullable(),
-  entity_type_id: selectOptionSchema.nullable()
+  entity_type_id: z.object({
+    id: z.number(),
+    name: z.string()
+  }, {error: 'Selecione um Tipo de Entidade'})
 })
 
 type Schema = z.output<typeof schema>
@@ -225,7 +223,7 @@ onMounted(async () => {
         <div class="h-px border-t border-stone-200 dark:border-stone-800 mb-5"/>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">
           <div class="space-y-5">
-            <UFormField label="Tipo de Entidade:" name="entity_type_id">
+            <UFormField label="Tipo de Entidade:" name="entity_type_id" required>
               <USelectMenu
                 data-testid="entity-type-select"
                 ref="entityTypesMenu"

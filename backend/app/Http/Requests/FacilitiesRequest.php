@@ -13,8 +13,8 @@ class FacilitiesRequest extends FormRequest
         return [
             'name' => [$is_patch ? 'sometimes' : 'required', 'min:1'],
             'address' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
-            'contact' => [$is_patch ? 'sometimes' : 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
-            'email' => [$is_patch ? 'sometimes' : 'required', 'email'],
+            'contact' => [$is_patch ? 'sometimes' : 'nullable', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
+            'email' => [$is_patch ? 'sometimes' : 'nullable', 'email'],
             'description' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
         ];
     }

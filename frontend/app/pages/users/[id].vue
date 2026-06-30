@@ -15,26 +15,33 @@ const saving = ref(false)
 const schema = z.object({
   name: z.string().min(2, 'Nome demasiado curto'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres').optional().or(z.literal('')),
-  password_confirmation: z.string().optional(),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password_confirmation: z.string(),
   mobile: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
   locked: z.boolean(),
-  role: z.enum(['admin', 'manager', 'user'], 'Selecione uma opção')
-}).refine((data) => data.password === data.password_confirmation, {
-  message: 'Passwords não coincidem',
-  path: ['password_confirmation']
+  role: z.enum(['admin', 'user'], { message: 'Selecione uma opção' }),
+  module_incidents: z.boolean().optional(),
+  module_volunteers: z.boolean().optional(),
+  module_donations: z.boolean().optional()
 })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: 'Passwords não coincidem',
+    path: ['password_confirmation']
+  })
 
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
   name: '',
   email: '',
+  password: '',
+  password_confirmation: '',
   mobile: '',
   locked: false,
-  role: 'user',
-  password: '',
-  password_confirmation: ''
+  role: undefined,
+  module_incidents: false,
+  module_volunteers: false,
+  module_donations: false
 })
 
 const handleSave = async () => {
@@ -126,13 +133,24 @@ const fetchUser = async () => {
   Object.assign(state, {
     name: data.name,
     email: data.email,
+    password: '',
+    password_confirmation: '',
     mobile: data.mobile,
     locked: data.locked,
     role: data.roles?.[0],
-    password: '',
-    password_confirmation: ''
+    module_incidents: data.roles.includes('module_incidents'),
+    module_volunteers: data.roles.includes('module_volunteers'),
+    module_donations: data.roles.includes('module_donations'),
   })
 }
+
+watch(() => state.role, (newRole) => {
+  if (newRole === 'admin') {
+    state.module_incidents = false
+    state.module_volunteers = false
+    state.module_donations = false
+  }
+})
 
 const items = ref<BreadcrumbItem[]>([
   {
@@ -204,13 +222,52 @@ onMounted(async () => {
               v-model="state.role"
               :items="[
                 { label: 'Administrador', value: 'admin' },
-                { label: 'Gestor', value: 'manager' },
                 { label: 'Utilizador', value: 'user' }
               ]"
               class="w-full"
             />
           </UFormField>
         </div>
+
+        <template v-if="state.role === 'user'">
+          <div class="h-px border-t border-stone-200 dark:border-stone-800" />
+          <h3 class="text-sm font-semibold text-muted">Acesso a Módulos</h3>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <UFormField label="Módulo de Gestão de Ocorrências" name="incidents">
+              <div class="flex items-center gap-3">
+                <USwitch
+                  checked-icon="i-lucide-check"
+                  unchecked-icon="i-lucide-x"
+                  v-model="state.module_incidents"
+                />
+                <span class="text-sm font-medium">{{ state.module_incidents ? 'Sim' : 'Não' }}</span>
+              </div>
+            </UFormField>
+
+            <UFormField label="Módulo de Gestão de Voluntários" name="volunteers">
+              <div class="flex items-center gap-3">
+                <USwitch
+                  checked-icon="i-lucide-check"
+                  unchecked-icon="i-lucide-x"
+                  v-model="state.module_volunteers"
+                />
+                <span class="text-sm font-medium">{{ state.module_volunteers ? 'Sim' : 'Não' }}</span>
+              </div>
+            </UFormField>
+
+            <UFormField label="Módulo de Gestão de Doações" name="donations">
+              <div class="flex items-center gap-3">
+                <USwitch
+                  checked-icon="i-lucide-check"
+                  unchecked-icon="i-lucide-x"
+                  v-model="state.module_donations"
+                />
+                <span class="text-sm font-medium">{{ state.module_donations ? 'Sim' : 'Não' }}</span>
+              </div>
+            </UFormField>
+          </div>
+        </template>
+
       </section>
       <section class="space-y-3">
         <h2 class="font-bold">Alterar Palavra-Passe</h2>

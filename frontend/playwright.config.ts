@@ -1,5 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import globalSetup from './tests/global.setup'
 
 /**
  * Read environment variables from file.

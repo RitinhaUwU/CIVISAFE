@@ -145,3 +145,58 @@ export interface Volunteer {
   updated_at: Date;
   deleted_at: Date;
 }
+
+export interface DonationGoodType {
+  id: number;
+  name: string;
+  is_type_countable: boolean;
+  unit: string;
+  danger_level: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface DonationLog {
+  id: number;
+  name: string;
+  contact: string;
+  email: string;
+  donor_type: string;
+  user: User;
+  created_by: Date;
+  updated_at: Date;
+}
+
+export interface StatisticalStockMetadata {
+  name: string;
+  stock: number;
+  unit: string;
+  danger_level: number;
+}
+
+export interface StockStatistics {
+  totalStock: number;
+  stockAlerts: StatisticalStockMetadata[];
+  topStock: StatisticalStockMetadata[];
+  lowestStock: StatisticalStockMetadata[];
+}
+
+export interface DonationDistribution {
+  id: number;
+  name: string;
+  contact: string;
+  obs: string;
+  user: User;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface AuditLog {
+  id: number;
+  type: string;
+  action: string;
+  user: string;
+  date: Date;
+  changes: any;
+  old_values: any;
+}

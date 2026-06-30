@@ -14,8 +14,8 @@ const imageFile = ref(null)
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().nullable(),
-  email: z.string().email('Email inválido').optional().nullable(),
+  contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000').optional().or(z.literal('')).nullable(),
+  email: z.string().email('Email inválido').optional().or(z.literal('')).nullable(),
   address: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
 })
@@ -134,7 +134,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal v-model:open="open" title="Nova Intalação" description="Adicione uma Nova Instalação">
+  <UModal v-model:open="open" title="Nova Instalação" description="Adicione uma Nova Instalação">
     <UButton
       icon="i-lucide-plus"
       label="Nova Instalação"

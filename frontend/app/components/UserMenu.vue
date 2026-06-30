@@ -7,6 +7,8 @@ defineProps<{
 }>()
 
 const auth = useAuthStore()
+
+//ATENÇÃO: Não importar o useColorMode do usevue.
 const colorMode = useColorMode()
 
 const user = computed(() => {
@@ -47,11 +49,6 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     }
   }]
 }], [{
-  label: 'Documentation',
-  icon: 'i-lucide-book-open',
-  to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-  target: '_blank'
-}, {
   label: 'Sair',
   icon: 'i-lucide-log-out',
   async onSelect() {
