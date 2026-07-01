@@ -87,31 +87,19 @@ class DonationStockController extends Controller
                             'donation_goods_type_id' => $request->validated('category_id'),
                         ], 'stock', $request->validated('quantity'));
                 } else {
-                    DonationStock::where(['donation_goods_type_id' => $request->validated('category_id')])
-                        ->lockForUpdate()
-                        ->decrement('stock', $request->validated('quantity'));
-
-                    if(DonationStock::where(['donation_goods_type_id' => $request->validated('category_id')])->exists()) {
-                        DonationStock::where(['donation_goods_type_id' => $request->validated('category_id')])
-                            ->lockForUpdate()
-                            ->decrement('stock', $request->validated('quantity'));
-                    }
-                    else
-                    {
-                        DonationStock::upsert(
-                            [
-                                'donation_goods_type_id' => $request->validated('category_id'),
-                                'stock' => (-$request->validated('quantity')),
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ],
-                            'donation_goods_type_id',
-                            [
-                                'stock' => DB::raw('"donation_stocks".stock + ' . (-$request->validated('quantity'))),
-                                'updated_at' => now()
-                            ]
-                        );
-                    }
+                    DonationStock::upsert(
+                        [
+                            'donation_goods_type_id' => $request->validated('category_id'),
+                            'stock' => (-$request->validated('quantity')),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ],
+                        'donation_goods_type_id',
+                        [
+                            'stock' => DB::raw('"donation_stocks".stock - ' . ($request->validated('quantity'))),
+                            'updated_at' => now()
+                        ]
+                    );
                 }
 
                 broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $request->validated('category_id')])->first()));

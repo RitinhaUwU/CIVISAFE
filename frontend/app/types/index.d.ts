@@ -187,6 +187,10 @@ export interface DonationDistribution {
   contact: string;
   obs: string;
   user: User;
+  goods: {
+    quantity: number;
+    donation_goods_type_id: number;
+  }[];
   created_at: Date;
   updated_at: Date;
 }
