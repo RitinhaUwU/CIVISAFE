@@ -29,6 +29,7 @@ class IncidentFactory extends Factory
             'identifier' => date('Y') . "/" . $this->faker->unique()->randomNumber(4),
             'start_datetime' => $start,
             'end_datetime' => $end,
+            'operational_grid' => $this->faker->word(),
             'coordinates' => implode(", ", $this->faker->localCoordinates()),
             'common_place' => $this->faker->words(2, true),
             'address' => $this->faker->streetAddress(),

@@ -18,6 +18,7 @@ class IncidentRequest extends FormRequest
             'incident_priority_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_priorities,id'],
             'start_datetime' => [$is_patch ? 'sometimes' : 'required', 'date'],
             'end_datetime' => [$is_patch ? 'sometimes' : 'nullable', 'date'],
+            'operational_grid' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
             'coordinates' => [$is_patch ? 'sometimes' : 'nullable'],
             'common_place' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],
             'address' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:1'],

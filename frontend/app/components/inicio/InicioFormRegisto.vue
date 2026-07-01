@@ -52,6 +52,7 @@ const schema = z.object({
   alert_source_relationship: z.string().optional().nullable(),
   alert_source_name: z.string().optional().nullable(),
   alert_source_contact: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  operational_grid: z.string().optional().nullable(),
   coordinates: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   district: z.string().optional().nullable(),
@@ -78,6 +79,7 @@ const state = reactive<Partial<Schema>>({
   alert_source_relationship: '',
   alert_source_name: '',
   alert_source_contact: '',
+  operational_grid: '',
   coordinates: '',
   address: '',
   district: '',
@@ -172,6 +174,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       alert_source_relationship: '',
       alert_source_name: '',
       alert_source_contact: '',
+      operational_grid: '',
       coordinates: '',
       address: '',
       district: '',
@@ -369,6 +372,9 @@ onMounted(async() => {
                 <USeparator />
                 <div class="space-y-4">
                   <h3 class="text-xs font-semibold uppercase tracking-wide text-muted">Localização</h3>
+                  <UFormField label="Grelha Operacional" name="operational_grid">
+                    <UInput v-model="state.operational_grid" class="w-full"/>
+                  </UFormField>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <UFormField label="Coordenadas" name="coordinates">
                       <UInput v-model="state.coordinates" class="w-full" icon="i-lucide-map-pin"/>

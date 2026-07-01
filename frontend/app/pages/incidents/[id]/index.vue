@@ -114,6 +114,7 @@ const schema = z.object({
   alert_source_relationship: z.string().optional().nullable(),
   alert_source_name: z.string().optional().nullable(),
   alert_source_contact: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  operational_grid: z.string().optional().nullable(),
   coordinates: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   district: z.string().optional().nullable(),
@@ -136,6 +137,7 @@ const state = reactive<Partial<Schema>>({
   user: null as any,
   start_datetime: '',
   end_datetime: '',
+  operational_grid: '',
   coordinates: '',
   common_place: '',
   address: '',
@@ -197,6 +199,7 @@ const handleSaveGeral = async () => {
       identifier: state.identifier,
       start_datetime: toDatetimeLocal(state.start_datetime),
       end_datetime: toDatetimeLocal(state.end_datetime),
+      operational_grid: state.operational_grid,
       coordinates: state.coordinates,
       common_place: state.common_place,
       address: state.address,
@@ -819,6 +822,9 @@ onMounted(async () => {
               <h2 class="font-bold">Localização</h2>
               <UFormField v-if="!state.is_major" label="Coordenadas" name="coordenates">
                 <UInput v-model="state.coordinates" class="w-full"/>
+              </UFormField>
+              <UFormField label="Grelha Operacional" name="operational_grid">
+                <UInput v-model="state.operational_grid" class="w-full"/>
               </UFormField>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <UFormField label="Morada" name="address">
