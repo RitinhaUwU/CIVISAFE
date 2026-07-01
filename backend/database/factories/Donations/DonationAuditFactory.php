@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Donations;
 
 use App\Models\Donations\DonationAudit;
 use App\Models\Donations\DonationGoodsType;

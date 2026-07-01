@@ -77,7 +77,7 @@ onMounted(async () => {
     <template #body>
       <div class="flex flex-col h-full min-h-0 gap-4">
         <InicioFormRegisto v-model="openModal" :coords="selectedCoords" @created="refreshIncidents"/>
-        <UCard class="shrink-0 hidden lg:block">
+        <UCard v-if="majorIncidents.length" class="shrink-0 hidden lg:block">
           <template #header>
             <h3 class="font-semibold">Incidentes Major Ativos</h3>
           </template>

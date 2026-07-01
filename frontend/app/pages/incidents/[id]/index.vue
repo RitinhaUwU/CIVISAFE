@@ -33,7 +33,7 @@ const types = usePaginatedSelect({
   menuRef: typeMenu,
   map: (t: any) => ({
     id: t.id,
-    name: `${t.code} - ${t.species} - ${t.type}`
+    name: `${t.code} - ${t.type}`
   })
 })
 const states = usePaginatedSelect({
@@ -277,7 +277,7 @@ const fetchIncident = async () => {
   if (data.incidentType) {
     types.prependSelected([{
       id: data.incidentType.id,
-      name: `${data.incidentType.code} - ${data.incidentType.species} - ${data.incidentType.types}`
+      name: `${data.incidentType.code} - ${data.incidentType.type}`
     }])
   }
 
@@ -301,7 +301,7 @@ const fetchIncident = async () => {
     ...data,
     user_id: data.user?.id,
     user: data.user,
-    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.species} - ${data.incidentType.types}`} : null,
+    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.type}`} : null,
     incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
     incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: i.identifier})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
@@ -943,8 +943,8 @@ onMounted(async () => {
               :data="logistics"
               :columns="[
                 { accessorKey: 'entity.name', header: 'Entidade' },
-                { accessorKey: 'vehicle_count', header: 'Veículos' },
-                { accessorKey: 'human_count', header: 'Humanos' },
+                { accessorKey: 'vehicle_count', header: 'Nº de Veículos' },
+                { accessorKey: 'human_count', header: 'Nº de Operacionais' },
                 { id: 'actions', header: '' },
               ]"
             >

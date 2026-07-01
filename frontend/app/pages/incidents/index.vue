@@ -124,7 +124,6 @@ const columns: TableColumn<Incident>[] = [
             navigateTo(`/incidents/${row.original.id}`)
           }
         }),
-        //@ts-ignore
         h(UButton, {
           icon: 'i-lucide-trash',
           color: 'error',

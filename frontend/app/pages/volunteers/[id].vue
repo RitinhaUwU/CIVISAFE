@@ -31,7 +31,7 @@ const selectOptionSchema = z.object({
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
-  email: z.string().email('Email inválido'),
+  email: z.string().email('Email inválido').nullable().optional(),
   classification: z.enum(['single', 'org', 'misc']),
   num_elements: z.number().min(1),
   mission: z.string().nullable().optional(),
@@ -294,7 +294,7 @@ onMounted(async () => {
       <section class="space-y-3">
         <h2 class="font-bold">Período</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <UFormField label="Início">
+          <UFormField label="Início" required>
             <UInput type="datetime-local" v-model="state.start_datetime" />
           </UFormField>
           <UFormField label="Fim">

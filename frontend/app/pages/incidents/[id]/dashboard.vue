@@ -184,10 +184,6 @@ const formatDate = (d: string) => {
 
 const timeAgo = (date: string) => formatTimeAgoIntl(new Date(date), { locale: 'pt-PT' })
 
-const goToTab = (tab: string) => {
-  router.push(`/incidents/${route.params.id}?tab=${tab}`)
-}
-
 const incidentId = computed(() => Number(route.params.id))
 
 onMounted(async () => {
@@ -284,7 +280,6 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('logistica')"
               />
             </div>
           </UPageCard>
@@ -304,7 +299,6 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('logistica')"
               />
             </div>
           </UPageCard>
@@ -324,7 +318,6 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('posto')"
               />
             </div>
           </UPageCard>
@@ -373,7 +366,6 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('posto')"
               />
             </div>
             <div v-if="activePCOs.length" class="space-y-3 px-5 py-4">
@@ -485,7 +477,6 @@ onMounted(async () => {
               size="xs"
               label="Ver todos"
               trailing-icon="i-lucide-arrow-right"
-              @click="goToTab('logistica')"
             />
           </div>
           <div v-if="logisticsByEntity.length > 0">

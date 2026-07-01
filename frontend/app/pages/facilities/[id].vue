@@ -209,12 +209,6 @@ const deleteDocument = async (mediaId: number) => {
 
 const downloadDocument = async (mediaId: number, filename: string) => {
   await api.downloadFacilityDocument(state.id, mediaId, filename)
-
-  toast.add({
-    title: 'Sucesso',
-    description: 'Download iniciado.',
-    color: 'success'
-  })
 }
 
 const items = ref<BreadcrumbItem[]>([
