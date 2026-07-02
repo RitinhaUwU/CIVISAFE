@@ -263,6 +263,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[80vh] overflow-y-auto">
         <UTable
+          v-if="loading || volunteers.length > 0"
           :data="volunteers"
           :columns="columns"
           :loading="loading"
@@ -276,6 +277,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de voluntário encontrado.
+        </div>
       </div>
       <VolunteersDeleteModal
         v-if="selectedVolunteerById"
