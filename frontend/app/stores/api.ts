@@ -626,16 +626,23 @@ export const useApiStore = defineStore('api', () => {
     {
       return axios.get(`${config.public.apiBase}/donations/distributions`, {params})
     }
-    //TODO
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
-  const createDistribution = (params: any) => {
-    return axios.post(`${config.public.apiBase}/donations/distributions`, params)
+  const createDistribution = async (params: any) => {
+    if(await checkServerAccess())
+    {
+      return axios.post(`${config.public.apiBase}/donations/distributions`, params)
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
-  const updateDistribution = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/donations/distributions/${id}`, params)
+  const updateDistribution = async (id: number, params: any) => {
+    if (await checkServerAccess())
+    {
+      return axios.put(`${config.public.apiBase}/donations/distributions/${id}`, params)
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   // Donation Statistics
@@ -643,8 +650,7 @@ export const useApiStore = defineStore('api', () => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/stats`);
     }
-    //TODO
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   // All Donation Stock
@@ -652,8 +658,7 @@ export const useApiStore = defineStore('api', () => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/stock`);
     }
-    //TODO
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   // Registo de Auditoria das Doações
@@ -661,28 +666,42 @@ export const useApiStore = defineStore('api', () => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/stock/audit`, {params});
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const getDonationAudit = async (id: number, params?: QueryParams) => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/${id}/audit`, {params});
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const getDistributionAudit = async (id: number, params?: QueryParams) => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/distributions/${id}/audit`, {params});
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const postStockAudit = async (params: any) => {
     if(await checkServerAccess()) {
       return await axios.post(`${config.public.apiBase}/donations/stock/audit`, params)
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const getDistributionRules = async () => {
+    if (await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/donations/distributions/rules`);
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const updateDistributionRules = async (params: any) => {
+    if (await checkServerAccess()) {
+      return await axios.post(`${config.public.apiBase}/donations/distributions/rules`, params);
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   /*************************
@@ -791,5 +810,7 @@ export const useApiStore = defineStore('api', () => {
     getDonationAudit,
     getDistributionAudit,
     postStockAudit,
+    getDistributionRules,
+    updateDistributionRules
   }
 })

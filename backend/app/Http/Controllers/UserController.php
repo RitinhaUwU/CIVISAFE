@@ -56,24 +56,32 @@ class UserController extends Controller
             'locked' => $data['locked'],
         ]);
 
-        $roles = [$data['role']];
 
-        if($data['module_incidents'])
+        if($data['role'] === "admin")
         {
-            $roles[] = 'module_incidents';
+            $user->assignRole('admin');
         }
-
-        if($data['module_volunteers'])
+        else
         {
-            $roles[] = 'module_volunteers';
-        }
+            $roles = ['user'];
 
-        if($data['module_donations'])
-        {
-            $roles[] = 'module_donations';
-        }
+            if($data['module_incidents'])
+            {
+                $roles[] = 'module_incidents';
+            }
 
-        $user->assignRole($roles);
+            if($data['module_volunteers'])
+            {
+                $roles[] = 'module_volunteers';
+            }
+
+            if($data['module_donations'])
+            {
+                $roles[] = 'module_donations';
+            }
+
+            $user->assignRole($roles);
+        }
 
         return new UserResource($user);
     }
@@ -99,8 +107,32 @@ class UserController extends Controller
 
         $user->update($data);
 
-        if (isset($data['role'])) {
-            $user->syncRoles([$data['role']]);
+        if(isset($data['role'])){
+            if($data['role'] === "admin")
+            {
+                $user->syncRoles('admin');
+            }
+            else
+            {
+                $roles = ['user'];
+
+                if(isset($data['module_incidents']) && $data['module_incidents'])
+                {
+                    $roles[] = 'module_incidents';
+                }
+
+                if(isset($data['module_volunteers']) && $data['module_volunteers'])
+                {
+                    $roles[] = 'module_volunteers';
+                }
+
+                if(isset($data['module_donations']) && $data['module_donations'])
+                {
+                    $roles[] = 'module_donations';
+                }
+
+                $user->syncRoles($roles);
+            }
         }
 
         return new UserResource($user->fresh());

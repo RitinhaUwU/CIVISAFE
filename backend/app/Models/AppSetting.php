@@ -2,31 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
-class IncidentPriority extends Model
+class AppSetting extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
-
-    public $timestamps = false;
+    use LogsActivity;
 
     protected $fillable = [
         'name',
-        'description',
-        'hex_color',
-        'is_active'
+        'state',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-        ];
-    }
 
     public function getActivitylogOptions(): LogOptions
     {

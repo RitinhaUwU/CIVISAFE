@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Donations\DonationAuditController;
 use App\Http\Controllers\Donations\DonationDistributionController;
 use App\Http\Controllers\Donations\DonationGoodsTypeController;
 use App\Http\Controllers\Donations\DonationLogController;
@@ -24,6 +23,8 @@ use App\Http\Controllers\VolunteerController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 if (!app()->environment('production')) {
@@ -32,13 +33,13 @@ if (!app()->environment('production')) {
             abort(403);
         }
 
-        \Log::info('RESET START');
+        Log::info('RESET START');
 
         Artisan::call('migrate:fresh');
-        \Log::info('MIGRATE DONE');
+        Log::info('MIGRATE DONE');
 
         Artisan::call('db:seed');
-        \Log::info('SEED DONE');
+        Log::info('SEED DONE');
 
         return response()->noContent();
     });
@@ -130,6 +131,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/stats', [DonationStatsController::class, 'stats']);
 
             Route::prefix('/distributions')->group(function () {
+                Route::get('/rules', [DonationDistributionController::class, 'getRules']);
+                Route::post('/rules', [DonationDistributionController::class, 'storeRules']);
+
                 Route::get('/{donationDistribution}/audit', [DonationDistributionController::class, 'audit']);
 
                 Route::apiResource('/', DonationDistributionController::class)
