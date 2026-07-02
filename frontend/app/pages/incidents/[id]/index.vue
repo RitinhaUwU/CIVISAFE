@@ -56,8 +56,13 @@ const priorities = usePaginatedSelect({
 const incidents = usePaginatedSelect({
   fetcher: api.getIncidents,
   menuRef: incidentsMenu,
-  filters: () => ({is_major: !state.is_major}),
-  map: (i: any) => ({id: i.id, name: i.identifier})
+  filters: () => ({
+    terminates_incident: !state.is_major
+  }),
+  map: (i: any) => ({
+    id: i.id,
+    name: i.identifier
+  })
 })
 
 const tabs = [

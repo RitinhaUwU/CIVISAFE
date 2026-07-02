@@ -51,6 +51,12 @@ class IncidentController extends Controller
                     if ($value === 'all' || $value === null) return;
                     $query->where('is_major', $value);
                 }),
+                AllowedFilter::callback('terminates_incident', function (Builder $query, $value) {
+                    if ($value === null) return;
+                    $query->where('is_major', $value)->whereHas('incidentState', function (Builder $q) {
+                        $q->where('terminates_incident', false);
+                    });
+                }),
             )
             ->orderBy('id')
             ->cursorPaginate($request->input('per_page', 10))

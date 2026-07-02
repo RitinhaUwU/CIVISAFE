@@ -125,7 +125,7 @@ const incidents = usePaginatedSelect({
   fetcher: api.getIncidents,
   menuRef: incidentsMenu,
   filters: () => ({
-    is_major: !state.is_major
+    terminates_incident: !state.is_major
   }),
   map: (i: any) => ({
     id: i.id,
@@ -305,7 +305,7 @@ onMounted(async() => {
                       placeholder="Selecionar tipo de ocorrência"
                     />
                   </UFormField>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <UFormField label="Estado" name="incident_state_id" required>
                       <USelectMenu
                         ref="stateMenu"
@@ -335,8 +335,6 @@ onMounted(async() => {
                     <UFormField label="Data Alerta" name="start_datetime" required>
                       <UInput type="datetime-local" v-model="state.start_datetime" class="w-full"/>
                     </UFormField>
-                  </div>
-                  <div v-if="state.end_datetime" class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                     <UFormField label="Data Fim" name="end_datetime">
                       <UInput type="datetime-local" v-model="state.end_datetime" class="w-full"/>
                     </UFormField>

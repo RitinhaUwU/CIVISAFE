@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('incidents', function (Blueprint $table) {
             $table->longText('operational_grid')->nullable();
+            $table->string('identifier')->nullable()->change();
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('incidents', function (Blueprint $table) {
             $table->dropColumn('operational_grid');
+            $table->string('identifier')->nullable(false)->change();
         });
     }
 };

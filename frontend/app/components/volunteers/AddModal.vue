@@ -219,10 +219,10 @@ onMounted(async() => {
         <h3 class="text-sm font-semibold text-muted">Período</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <UFormField label="Entrada" name="start_datetime" required>
-            <UInput type="datetime-local" v-model="state.start_datetime" />
+            <UInput type="datetime-local" v-model="state.start_datetime" class="w-full" />
           </UFormField>
           <UFormField label="Saída" name="end_datetime">
-            <UInput type="datetime-local" v-model="state.end_datetime" />
+            <UInput type="datetime-local" v-model="state.end_datetime" class="w-full" />
           </UFormField>
         </div>
         <div class="flex justify-between gap-3 pt-2">
