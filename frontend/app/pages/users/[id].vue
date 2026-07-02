@@ -25,7 +25,7 @@ const schema = z.object({
   module_donations: z.boolean().optional()
 })
   .refine((data) => data.password === data.password_confirmation, {
-    message: 'Passwords não coincidem',
+    message: 'As palavras-passe não coincidem.',
     path: ['password_confirmation']
   })
 

@@ -14,6 +14,7 @@ class UserUpdateRequest extends FormRequest
         return [
             'name' => [$is_patch ? 'sometimes' : 'required', 'min:1'],
             'email' => [$is_patch ? 'sometimes' : 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
+            'current_password' => ['required_with:password', 'current_password'],
             'password' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:8', 'confirmed'],
             'mobile' => [$is_patch ? 'sometimes' : 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'locked' => [$is_patch ? 'sometimes' : 'required', 'boolean'],
