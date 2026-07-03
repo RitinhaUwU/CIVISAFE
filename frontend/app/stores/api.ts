@@ -704,6 +704,20 @@ export const useApiStore = defineStore('api', () => {
     throw new Error('O Endpoint não é suportado no modo offline');
   }
 
+  const getStockUnlock = async () => {
+    if (await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/donations/stock/unlock`);
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const updateStockUnlock = async (status: boolean) => {
+    if (await checkServerAccess()) {
+      return await axios.post(`${config.public.apiBase}/donations/stock/unlock`, {status: status});
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
   /*************************
    *
    *  Timeline
@@ -811,6 +825,8 @@ export const useApiStore = defineStore('api', () => {
     getDistributionAudit,
     postStockAudit,
     getDistributionRules,
-    updateDistributionRules
+    updateDistributionRules,
+    getStockUnlock,
+    updateStockUnlock,
   }
 })

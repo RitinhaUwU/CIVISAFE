@@ -123,6 +123,10 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('/donations')->group(function () {
             Route::prefix('/stock')->group(function () {
+
+                Route::get('/unlock', [DonationStockController::class, 'getUnlock']);
+                Route::post('/unlock', [DonationStockController::class, 'storeUnlock']);
+
                 Route::apiResource('/audit', DonationStockController::class)
                     ->only(['index', 'store']);
                 Route::get('/', [DonationStockController::class, 'stock']);

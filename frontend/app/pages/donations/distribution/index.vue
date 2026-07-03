@@ -3,6 +3,8 @@ import z from "zod";
 import type {DonationDistribution, DonationGoodType} from "@/types";
 import {suffixForQuantityBox} from "@/utils";
 import {ref} from "@vue/runtime-core";
+import {useApiStore} from "~/stores/api";
+import {useToast} from "@nuxt/ui/composables";
 
 const toast = useToast();
 const stockTracker = ref(new Map<number, {
@@ -12,6 +14,7 @@ const stockTracker = ref(new Map<number, {
   lastUpdated: number
 }>());
 const goodCategories = ref<DonationGoodType[]>([]);
+const isStockLocked = ref(true);
 
 /**
  * Websocket event handlers
@@ -35,6 +38,10 @@ const handleStockUpdate = async (stockUpdate: { id: number, stock: number, times
   }
 }
 
+const handleStockLockUpdate = (lockUpdate: any) => {
+  isStockLocked.value = lockUpdate.isUnlocked == 0;
+}
+
 onMounted(async () => {
   if (!await checkServerAccess()) {
     useToast().add({
@@ -53,9 +60,11 @@ onMounted(async () => {
   const {$echo} = useNuxtApp();
 
   $echo.private('DonationStocks')
-    .listen('.stock.updated', handleStockUpdate);
+    .listen('.stock.updated', handleStockUpdate)
+    .listen('.stock.lock_status', handleStockLockUpdate);
 
   const initialStocks = (await useApiStore().getAllStock()).data.data;
+  isStockLocked.value = (await useApiStore().getStockUnlock()).data.state == 0;
   goodCategories.value = (await useApiStore().getAllDonationGoodTypes()).data.data;
 
   initialStocks.forEach((stock: { type_id: number, type_name: string, stock: number }) => {
@@ -198,6 +207,10 @@ const calculateBoxMaxValue = (index: number) => {
     return 0;
   }
 
+  if(!isStockLocked.value)
+  {
+    return Infinity;
+  }
 
   if(distributionForm.id !== undefined) {
     //We're editing a distribution
@@ -240,9 +253,16 @@ const calculateBoxMaxValue = (index: number) => {
 
     <template #body class="overflow-y-auto h-full">
 
-      <div class="grid grid-cols-4 gap-4">
+      <UAlert
+        v-if="!isStockLocked"
+        title="Limites de Stock Desbloqueados!"
+        description="Um Administrador desbloqueou os limites de stock. Isto significa que pode fazer entregas com quantidades superiores às indicadas pelo sistema."
+        icon="i-lucide-megaphone"
+      />
 
-        <UCard class="col-span-3">
+      <div class="grid sm:grid-cols-4 gap-4">
+
+        <UCard class="sm:col-span-3">
 
           <template #header>
             {{distributionForm.id === undefined ? "Nova Entrega" : `Entrega a ${distributionForm.name}`}}
@@ -348,7 +368,7 @@ const calculateBoxMaxValue = (index: number) => {
           </UForm>
         </UCard>
 
-        <div class="grid grid-cols-1 gap-4 max-h-fit h-fit sticky top-4 self-start">
+        <div class="grid sm:grid-cols-1 gap-4 max-h-fit h-fit sticky top-4 self-start">
 
           <UButton
             icon="i-lucide-hand-coins"
@@ -363,10 +383,12 @@ const calculateBoxMaxValue = (index: number) => {
 
           <DonationDistributionRulesModal/>
 
-          <DonationDistributionStocksModal :stockTracker="stockTracker"/>
+          <DonationDistributionStocksModal
+            :stockTracker="stockTracker"
+            v-model:stockUnlocked="isStockLocked"
+          />
 
         </div>
-
       </div>
     </template>
   </UDashboardPanel>

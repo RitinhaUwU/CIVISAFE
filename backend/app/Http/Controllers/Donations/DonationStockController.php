@@ -2,20 +2,25 @@
 
 namespace App\Http\Controllers\Donations;
 
+use App\Events\StockLockUpdate;
 use App\Events\StockUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ActivityHelper;
 use App\Http\Requests\DonationAuditRequest;
 use App\Http\Resources\Donations\DonationAuditResource;
 use App\Http\Resources\Donations\DonationStockResource;
+use App\Models\AppSetting;
 use App\Models\Donations\DistributionContent;
 use App\Models\Donations\DonationAudit;
 use App\Models\Donations\DonationContent;
 use App\Models\Donations\DonationDistribution;
 use App\Models\Donations\DonationLog;
 use App\Models\Donations\DonationStock;
-use DB;
+use App\Models\User;
+use App\Notifications\GenericNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -23,8 +28,9 @@ class DonationStockController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:DONATION_LOG_LIST')->only(['index']);
+        $this->middleware('permission:DONATION_LOG_LIST')->only(['index', 'getUnlock']);
         $this->middleware('permission:DONATION_LOG_CREATE')->only(['store']);
+        $this->middleware('permission:SETTING_DONATION_DISTRIBUTION_STOCK_UNLOCK')->only('storeUnlock');
     }
 
     public function index(Request $request)
@@ -117,5 +123,28 @@ class DonationStockController extends Controller
     public function stock(Request $request)
     {
         return DonationStockResource::collection(DonationStock::all());
+    }
+
+    public function getUnlock(Request $request)
+    {
+        $setting = AppSetting::firstOrCreate(['name' => 'donation_stock_unlocked'], ['state' => false]);
+
+        return response()->json($setting->toArray());
+    }
+
+    public function storeUnlock(Request $request)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'boolean'],
+        ]);
+
+        AppSetting::firstOrNew(['name' => 'donation_stock_unlocked'])
+            ->update(['state' => $validated['status']]);
+
+        $setting = AppSetting::where(['name' => 'donation_stock_unlocked'])->first();
+
+        broadcast(new StockLockUpdate($setting->state));
+
+        return response()->json($setting->toArray());
     }
 }
