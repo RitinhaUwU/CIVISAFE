@@ -20,7 +20,10 @@ const incidents = usePaginatedSelect({
   filters: () => ({
     is_major: false
   }),
-  map: (i: any) => ({id: i.id, name: i.identifier})
+  map: (i: any) => ({
+    id: i.id,
+    name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
+  })
 })
 
 const selectOptionSchema = z.object({
@@ -135,13 +138,13 @@ const fetchVolunteer = async () => {
     num_elements: Number(data.num_elements),
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    incident_id: data.incident ? {id: data.incident.id, name: data.incident.identifier} : null
+    incident_id: data.incident ? {id: data.incident.id, name: `${data.incident.parentIncident?.identifier ? `(Major ${data.incident.parentIncident.identifier}) ` : ''}${data.incident.incidentType?.type ?? 'Ocorrência'}${data.incident.address ? ` - ${data.incident.address}${data.incident.municipality ? `, ${data.incident.municipality}` : ''}` : ''}`} : null
   })
 
   if (data.incident) {
     incidents.prependSelected([{
       id: data.incident.id,
-      name: data.incident.identifier
+      name: `${data.incident.parentIncident?.identifier ? `(Major ${data.incident.parentIncident.identifier}) ` : ''}${data.incident.incidentType?.type ?? 'Ocorrência'}${data.incident.address ? ` - ${data.incident.address}${data.incident.municipality ? `, ${data.incident.municipality}` : ''}` : ''}`
     }])
   }
 }

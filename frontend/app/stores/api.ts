@@ -244,6 +244,10 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
+  const getNextIncidentIdentifier = () => {
+    return axios.get(`${config.public.apiBase}/incidents/next-identifier`)
+  }
+
   const createIncident = async (params: any) => {
     return axios.post(`${config.public.apiBase}/incidents`, params)
   }
@@ -732,6 +736,7 @@ export const useApiStore = defineStore('api', () => {
     createEntityType,
     getIncidents,
     getIncident,
+    getNextIncidentIdentifier,
     updateIncident,
     createIncident,
     deleteIncident,

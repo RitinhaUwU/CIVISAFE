@@ -46,7 +46,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: i.identifier
+    name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
   })
 })
 

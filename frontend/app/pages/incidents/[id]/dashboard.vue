@@ -78,7 +78,7 @@ const associatedIncidents = computed(() => {
 
 const associatedIncidentColumns: TableColumn<any>[] = [
   {
-    accessorKey: 'identifier',
+    accessorKey: 'id',
     header: 'Nº Ocorrência'
   },
   {
@@ -222,7 +222,9 @@ onMounted(async () => {
           <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <p class="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Dashboard · Ocorrência</p>
-              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{{ incident.identifier }}</h1>
+              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+                {{ incident.is_major ? incident.identifier : `${incident.parentIncident?.identifier ? `(Major ${incident.parentIncident.identifier}) ` : ''}${incident.incidentType?.type ?? 'Ocorrência'}${incident.address ? ` - ${incident.address}${incident.municipality ? `, ${incident.municipality}` : ''}` : ''}`}}
+              </h1>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <UBadge

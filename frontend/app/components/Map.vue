@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { Map, Marker } from 'leaflet'
+import { useDebounceFn } from '@vueuse/core'
 
 const mapContainer = ref<HTMLElement | null>(null)
 
@@ -24,7 +25,25 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   'map-click': [{ lat: number, lng: number }]
+  'bounds-change': [{ north: number, south: number, east: number, west: number }]
 }>()
+
+function emitBounds() {
+  if (!map) return
+
+  const bounds = map.getBounds()
+  const sw = bounds.getSouthWest()
+  const ne = bounds.getNorthEast()
+
+  emit('bounds-change', {
+    north: ne.lat,
+    south: sw.lat,
+    east: ne.lng,
+    west: sw.lng
+  })
+}
+
+const debouncedEmitBounds = useDebounceFn(emitBounds, 500)
 
 function createIcons(L: any) {
   const incidentIcon = L.icon({
@@ -70,7 +89,7 @@ function renderMarkers(L: any) {
       .addTo(map)
       .bindPopup(`
         <div style="line-height: 1.8;">
-          <b>Identificador: </b><span>${incident.identifier}</span><br>
+          <b>Identificador: </b><span>${incident.is_major ? incident.identifier : `${incident.parentIncident?.identifier ? `(Major ${incident.parentIncident.identifier}) ` : ''}${incident.incidentType?.type ?? 'Ocorrência'}${incident.address ? ` - ${incident.address}${incident.municipality ? `, ${incident.municipality}` : ''}` : ''}`}</span><br>
           <b>Tipo: </b><span>${incident.incidentType?.code} - ${incident.incidentType?.species} - ${incident.incidentType?.type}</span><br>
           <b>Estado: </b><span>${incident.incidentState?.name}</span><br>
           <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
@@ -88,6 +107,9 @@ onMounted(async () => {
   const { selectedIcon } = createIcons(L)
 
   map = L.map(mapContainer.value).setView(props.selectedCoords ?? props.center, props.zoom)
+
+  map.on('moveend', debouncedEmitBounds)
+  emitBounds()
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -153,6 +175,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  map?.off('moveend', debouncedEmitBounds)
   map?.remove()
   map = null
 })

@@ -11,8 +11,10 @@ class IncidentRequest extends FormRequest
     {
         $is_patch = $this->isMethod('PATCH');
 
+        $isMajor = $this->has('is_major') ? $this->boolean('is_major') : (bool) optional($this->route('incident'))->is_major;
+
         return [
-            'identifier' => [$is_patch ? 'sometimes' : 'required', Rule::unique('incidents', 'identifier')->ignore($this->route('incident'))],
+            'identifier' => [Rule::requiredIf($isMajor), 'nullable', 'string', Rule::unique('incidents', 'identifier')->ignore($this->route('incident')),],
             'incident_type_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_types,id'],
             'incident_state_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_states,id'],
             'incident_priority_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_priorities,id'],
@@ -41,9 +43,10 @@ class IncidentRequest extends FormRequest
 
     public function prepareForValidation(): void{
         if ($this->boolean('is_major')) {
-            $this->merge([
-                'incident_id' => null
-            ]);
+            $this->merge(['incident_id' => null]);
+        }
+        else{
+            $this->merge(['identifier' => null]);
         }
     }
 

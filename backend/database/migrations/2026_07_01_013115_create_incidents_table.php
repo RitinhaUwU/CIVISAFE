@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::table('incidents', function (Blueprint $table) {
             $table->longText('operational_grid')->nullable();
             $table->string('identifier')->nullable()->change();
+            $table->unique('identifier');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('incidents', function (Blueprint $table) {
+            $table->dropUnique(['identifier']);
             $table->dropColumn('operational_grid');
             $table->string('identifier')->nullable(false)->change();
         });

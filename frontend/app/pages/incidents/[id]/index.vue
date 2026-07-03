@@ -61,7 +61,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: i.identifier
+    name: state.is_major ? `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}` : i.identifier
   })
 })
 
@@ -107,7 +107,7 @@ const selectOptionSchema = z.object({
 
 const schema = z.object({
   is_major: z.boolean(),
-  identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
+  identifier: z.string().optional().nullable(),
   user_id: z.number(),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
@@ -129,6 +129,14 @@ const schema = z.object({
   obs: z.string().optional().nullable(),
   coordinates_pco: z.string().optional().nullable(),
   name_pco: z.string().nullable().optional(),
+}).superRefine((data, ctx) => {
+  if (data.is_major && !data.identifier?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'O nº de identificação de ocorrência é obrigatório',
+      path: ['identifier']
+    })
+  }
 })
 
 type Schema = z.output<typeof schema>
@@ -268,7 +276,7 @@ const fetchIncident = async () => {
   if (data.is_major && data.children_incidents?.length) {
     incidents.prependSelected(data.children_incidents.map((i: any) => ({
       id: i.id,
-      name: i.identifier
+      name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
     })))
   }
   else if (!data.is_major && data.parentIncident) {
@@ -312,7 +320,7 @@ const fetchIncident = async () => {
     incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.type}`} : null,
     incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: i.identifier})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
     coordinates: data.is_major ? '' : data.coordinates,
@@ -320,6 +328,35 @@ const fetchIncident = async () => {
 
   loadingIncident.value = false
 }
+
+async function loadNextIdentifier() {
+  if (!state.is_major) return
+
+  try {
+    const { data } = await api.getNextIncidentIdentifier()
+    state.identifier = data.identifier
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+watch(() => state.is_major, async (isMajor, wasMajor) => {
+  if (loadingIncident.value) return
+
+  state.incident_id = isMajor ? [] : null
+
+  await incidents.reset(true)
+
+  if (isMajor) {
+    state.coordinates = ''
+
+    if (!wasMajor) {
+      await loadNextIdentifier()
+    }
+  } else {
+    state.identifier = ''
+  }
+})
 
 watch(() => state.incident_state_id, (newState) => {
   if (newState?.terminates_incident) {
@@ -690,18 +727,6 @@ const saveEditComment = async (item: any) => {
   }
 }
 
-watch(() => state.is_major, async () => {
-  if (loadingIncident.value) return
-
-  state.incident_id = state.is_major ? [] : null
-
-  await incidents.reset(true)
-
-  if (state.is_major) {
-    state.coordinates = ''
-  }
-})
-
 onMounted(async () => {
   if (!useAuthStore().hasPermission('INCIDENTS_LIST')) {
     await router.push('/inicio');
@@ -745,8 +770,8 @@ onMounted(async () => {
             <section class="space-y-2">
               <h2 class="font-bold">Dados Gerais</h2>
               <USwitch v-model="state.is_major" label="Ocorrência Major"/>
-              <UFormField label="Identificador" name="identifier">
-                <UInput v-model="state.identifier" class="w-full"/>
+              <UFormField v-if="state.is_major" label="Identificador" name="identifier">
+                <UInput v-model="state.identifier" class="w-full" disabled />
               </UFormField>
               <UFormField label="Tipo de Ocorrência" name="incident_type_id" class="sm:col-span-2">
                 <USelectMenu

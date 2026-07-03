@@ -26,7 +26,7 @@ class IncidentFactory extends Factory
         $end = $incidentState->terminates_incident ? $this->faker->dateTimeBetween($start, 'now') : null;
 
         return [
-            'identifier' => date('Y') . "/" . $this->faker->unique()->randomNumber(4),
+            'identifier' => $is_major ? date('Y') . "/" . $this->faker->unique()->randomNumber(4) : null,
             'start_datetime' => $start,
             'end_datetime' => $end,
             'operational_grid' => $this->faker->word(),
@@ -52,5 +52,22 @@ class IncidentFactory extends Factory
             'incident_priority_id' => IncidentPriority::inRandomOrder()->first()->id,
             'incident_id' => $major_id,
         ];
+    }
+
+    public function major(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_major' => true,
+            'identifier' => date('Y') . "/" . $this->faker->unique()->randomNumber(4),
+            'incident_id' => null,
+        ]);
+    }
+
+    public function minor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_major' => false,
+            'identifier' => null,
+        ]);
     }
 }

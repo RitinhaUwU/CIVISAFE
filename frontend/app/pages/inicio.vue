@@ -28,29 +28,50 @@ async function handleMapClick(coords: { lat: number, lng: number }) {
   openModal.value = true
 }
 
-const majorIncidents = computed(() =>
-  incidents.value.filter(incident =>
-    incident.is_major &&
-    incident.incidentState?.terminates_incident !== true
-  )
-)
+const majorIncidents = ref<Incident[]>([])   // sempre globais, não dependem do mapa
+const mapIncidents = ref<Incident[]>([])     // dependem dos bounds do mapa
 
-const incidentsMap = computed(() =>
-  incidents.value.filter(incident =>
-    !incident.is_major &&
-    incident.incidentState?.terminates_incident !== true
+async function refreshMajorIncidents() {
+  const res = await api.getIncidents({
+    per_page: 1000,
+    filter: { is_major: true } // ajusta ao teu formato de filtro
+  })
+  majorIncidents.value = res.data.data.filter(
+    (i: Incident) => i.incidentState?.terminates_incident !== true
   )
-)
+}
+
+async function refreshMapIncidents(bounds: { north: number, south: number, east: number, west: number }) {
+  const res = await api.getIncidents({
+    per_page: 1000,
+    north: bounds.north,
+    south: bounds.south,
+    east: bounds.east,
+    west: bounds.west
+  })
+  mapIncidents.value = res.data.data.filter(
+    (i: Incident) => !i.is_major &&
+      i.incidentState?.terminates_incident !== true
+  )
+}
+
+const lastBounds = ref<{ north: number, south: number, east: number, west: number } | null>(null)
+
+function handleBoundsChange(bounds: { north: number, south: number, east: number, west: number }) {
+  refreshMapIncidents(bounds)
+}
 
 async function refreshIncidents() {
-  const res = await api.getIncidents({ per_page: 1000 })
-  incidents.value = res.data.data
+  await refreshMajorIncidents()
+  if (lastBounds.value) {
+    await refreshMapIncidents(lastBounds.value)
+  }
 }
 
 onMounted(async () => {
   if(useAuthStore().hasPermission('INCIDENTS_LIST'))
   {
-    await refreshIncidents()
+    await refreshMajorIncidents()
   }
 })
 </script>
@@ -112,8 +133,9 @@ onMounted(async () => {
         <div class="flex-1 min-h-[400px]">
           <Map
             class="w-full h-full"
-            :incidents="incidentsMap"
+            :incidents="mapIncidents"
             @map-click="handleMapClick"
+            @bounds-change="handleBoundsChange"
           />
         </div>
       </div>

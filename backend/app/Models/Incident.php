@@ -54,6 +54,25 @@ class Incident extends Model
         return $this->hasMany(TimelineComment::class);
     }
 
+    public static function nextIdentifier(): string
+    {
+        $year = now()->year;
+
+        $last = self::where('is_major', true)
+            ->where('identifier', 'like', "{$year}/%")
+            ->lockForUpdate()
+            ->orderByDesc('identifier')
+            ->first();
+
+        if (!$last) {
+            return sprintf('%d/%04d', $year, 1);
+        }
+
+        [, $number] = explode('/', $last->identifier);
+
+        return sprintf('%d/%04d', ((int) $year), ((int) $number) + 1);
+    }
+
     protected $with = [
         'incidentType',
         'incidentState',

@@ -84,6 +84,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('/incidentTypes', IncidentTypeController::class)->only(['index', 'store', 'show']);
         Route::apiResource('/incidentStates', IncidentStateController::class);
         Route::apiResource('/incidentPriorities', IncidentPriorityController::class);
+        Route::get('/incidents/next-identifier', [IncidentController::class, 'nextIdentifier']);
         Route::apiResource('/incidents', IncidentController::class);
         Route::prefix('incidents/{incident}')->group(function () {
             // PCO

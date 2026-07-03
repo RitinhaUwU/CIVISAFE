@@ -37,7 +37,14 @@ class IncidentController extends Controller
             ])
             ->allowedFilters(
                 AllowedFilter::callback('search', function (Builder $query, $value) {
-                    $query->where('identifier', 'ILIKE', "%{$value}%");
+                    $query->where(function (Builder $q) use ($value) {
+                        $q->where('identifier', 'ILIKE', "%{$value}%")
+                            ->orWhereHas('incidentType', function (Builder $type) use ($value) {
+                                $type->where('code', 'ILIKE', "%{$value}%")
+                                    ->orWhere('species', 'ILIKE', "%{$value}%")
+                                    ->orWhere('type', 'ILIKE', "%{$value}%");
+                            });
+                    });
                 }),
                 AllowedFilter::callback('state', function (Builder $query, $value) {
                     if ($value === 'all' || !$value) return;
@@ -76,11 +83,24 @@ class IncidentController extends Controller
         $data['end_datetime'] = $state?->terminates_incident ? now() : null;
     }
 
+    // Dá preview do próximo identificador
+    public function nextIdentifier()
+    {
+        return response()->json([
+            'identifier' => Incident::nextIdentifier()
+        ]);
+    }
+
     public function store(IncidentRequest $request)
     {
         return DB::transaction(function () use ($request) {
 
             $data = $request->validated();
+
+            if ($data['is_major']) {
+                $data['identifier'] = Incident::nextIdentifier();
+            }
+
             $this->applyEndDatetimeRule($data);
             $children = $data['children_incidents'] ?? [];
 
@@ -124,6 +144,15 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
+
+            if ($data['is_major'] && !$incident->is_major) {
+                $data['identifier'] = Incident::nextIdentifier();
+            }
+
+            if (!$data['is_major']) {
+                $data['identifier'] = null;
+            }
+
             $this->applyEndDatetimeRule($data);
             $children = $data['children_incidents'] ?? [];
 

@@ -42,7 +42,7 @@ const selectOptionSchema = z.object({
 
 const schema = z.object({
   is_major: z.boolean(),
-  identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
+  identifier: z.string().optional().nullable(),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
   incident_state_id: selectOptionSchema.nullable().refine(val => val !== null, {message: 'O estado é obrigatório'}),
@@ -62,6 +62,14 @@ const schema = z.object({
   obs: z.string().optional().nullable(),
   coordinates_pco: z.string().optional().nullable(),
   name_pco: z.string().optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.is_major && !data.identifier?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'O nº de identificação de ocorrência é obrigatório',
+      path: ['identifier']
+    })
+  }
 })
 
 type Schema = z.output<typeof schema>
@@ -129,7 +137,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: i.identifier
+    name: state.is_major ? `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}` : i.identifier
   })
 })
 
@@ -204,13 +212,35 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
+async function loadNextIdentifier() {
+  if (!state.is_major) return
+
+  try {
+    const { data } = await api.getNextIncidentIdentifier()
+    state.identifier = data.identifier
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+watch(() => props.modelValue, async (open) => {
+  if (open) {
+    await loadNextIdentifier()
+  }
+})
+
 watch(() => state.is_major, async (isMajor) => {
   state.incident_id = isMajor ? [] : null
 
   if (isMajor) {
+    await loadNextIdentifier()
     state.coordinates = ''
-  } else if (props.coords) {
-    state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
+  }
+  else {
+    state.identifier = ''
+    if (props.coords) {
+      state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
+    }
   }
 
   await incidents.reset()
@@ -273,25 +303,23 @@ onMounted(async() => {
                 </div>
                 <div class="space-y-4">
                   <h3 class="text-xs font-semibold uppercase tracking-wide text-muted">Identificação</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                    <UFormField label="Nº Ocorrência" name="identifier" required>
-                      <UInput v-model="state.identifier" class="w-full" placeholder="Ex: 2026/0001" />
-                    </UFormField>
-                    <UFormField :label="state.is_major ? 'Ocorrências Associadas' : 'Associar a Ocorrência Major'" name="incident_id">
-                      <USelectMenu
-                        ref="incidentsMenu"
-                        v-model="state.incident_id"
-                        v-model:search-term="incidents.search.value"
-                        :items="incidents.items.value"
-                        :loading="incidents.loading.value"
-                        label-key="name"
-                        :multiple="state.is_major"
-                        class="w-full"
-                        ignore-filter
-                        :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
-                      />
-                    </UFormField>
-                  </div>
+                  <UFormField v-if="state.is_major" label="Nº Ocorrência" name="identifier" required>
+                    <UInput v-model="state.identifier" class="w-full" placeholder="Ex: 2026/0001" disabled />
+                  </UFormField>
+                  <UFormField :label="state.is_major ? 'Ocorrências Associadas' : 'Associar a Ocorrência Major'" name="incident_id" :class="{ 'md:col-span-2': !state.is_major }">
+                    <USelectMenu
+                      ref="incidentsMenu"
+                      v-model="state.incident_id"
+                      v-model:search-term="incidents.search.value"
+                      :items="incidents.items.value"
+                      :loading="incidents.loading.value"
+                      label-key="name"
+                      :multiple="state.is_major"
+                      class="w-full"
+                      ignore-filter
+                      :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
+                    />
+                  </UFormField>
                   <UFormField label="Tipo de Ocorrência" name="incident_type_id" required>
                     <USelectMenu
                       ref="typeMenu"
