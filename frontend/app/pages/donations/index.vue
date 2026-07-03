@@ -11,8 +11,6 @@ const stockStats = ref<StockStatistics>({
   lowestStock: []
 });
 
-const tableSearchTerm = ref<String>();
-
 onMounted(async () => {
   if (!await checkServerAccess()) {
     useToast().add({
@@ -90,18 +88,16 @@ onMounted(async () => {
           <template #header>
             Doações recentes
             <DonationAddModal class="flex float-right ml-4"/>
-            <UInput
-              placeholder="Pesquisar..."
-              v-model="tableSearchTerm"
-              size="xs"
-              class="flex float-right invisible sm:visible"
-            />
           </template>
 
           <DonationTable
-            class="h-90"
-            v-model="tableSearchTerm"
+            class="h-80"
+            :preview="true"
           />
+
+          <template #footer>
+            <DonationAllDonationsModal class="float-end mb-4" />
+          </template>
         </UCard>
 
         <!-- Alertas Abastecimento -->
