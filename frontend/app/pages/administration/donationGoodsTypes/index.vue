@@ -102,20 +102,13 @@ const columns: TableColumn<DonationGoodType>[] = [
 ]
 
 const fetch = async (loadMore: boolean = false) => {
-  console.log('================ FETCH =================')
-  console.log('loadMore:', loadMore)
-  console.log('loading atual:', loading.value)
-
-  if (loading.value) {
-    console.log('Fetch cancelado porque já está a carregar.')
-    return
-  }
+  if (loading.value) return
 
   loading.value = true
 
   try {
     const params: any = {
-      per_page: 15,
+      per_page: 10,
       ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
 
@@ -123,42 +116,20 @@ const fetch = async (loadMore: boolean = false) => {
       params.filter = { search: search.value }
     }
 
-    console.log('Parâmetros enviados:', params)
-
     const res = await api.getDonationGoodTypes(params)
-
-    console.log('Resposta completa da API:', res)
-    console.log('Data:', res.data)
-    console.log('Meta:', res.data.meta)
-
     const newGoodTypes = res.data.data
-
-    console.log('Registos recebidos:', newGoodTypes.length)
-    console.log(newGoodTypes)
 
     if (loadMore) {
       const existing = new Set(tiposBens.value.map(type => type.id))
-
-      console.log('IDs existentes:', [...existing])
-
       const filtered = newGoodTypes.filter(type => !existing.has(type.id))
-
-      console.log('Novos registos após filtro:', filtered.length)
 
       tiposBens.value.push(...filtered)
     } else {
-      console.log('Substituindo lista completa.')
       tiposBens.value = newGoodTypes
     }
 
-    console.log('Total na tabela:', tiposBens.value.length)
-
     nextCursor.value = res.data.meta.next_cursor
-
-    console.log('Novo cursor:', nextCursor.value)
   } catch (e) {
-    console.error('Erro ao carregar tipos de bens:', e)
-
     toast.add({
       title: 'Erro',
       description: 'Erro ao carregar os Tipos de Bens.',
@@ -166,8 +137,6 @@ const fetch = async (loadMore: boolean = false) => {
     })
   } finally {
     loading.value = false
-    console.log('Loading terminado.')
-    console.log('========================================')
   }
 }
 
