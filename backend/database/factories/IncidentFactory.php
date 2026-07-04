@@ -17,12 +17,12 @@ class IncidentFactory extends Factory
     public function definition(): array
     {
         $is_major = $this->faker->boolean(20);
-        $major_id = $is_major ? Incident::inRandomOrder()->value('id') : null;
+
+        $major_id = !$is_major ? Incident::where('is_major', true)->inRandomOrder()->value('id') : null;
 
         $incidentState = IncidentState::inRandomOrder()->first();
 
         $start = $this->faker->dateTimeBetween('-1 week', 'now');
-
         $end = $incidentState->terminates_incident ? $this->faker->dateTimeBetween($start, 'now') : null;
 
         return [

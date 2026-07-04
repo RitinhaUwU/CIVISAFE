@@ -62,8 +62,7 @@ class DatabaseSeeder extends Seeder
         IncidentPCO::factory(60)->create();
 
         for ($i = 0; $i <= 100; $i++) {
-            Incident::factory()->create([
-                'is_major' => false,
+            Incident::factory()->minor()->create([
                 'incident_id' => Incident::where(['is_major' => true])->inRandomOrder()->first()->id,
             ]);
         }

@@ -80,7 +80,9 @@ class IncidentController extends Controller
 
         $state = IncidentState::find($data['incident_state_id']);
 
-        $data['end_datetime'] = $state?->terminates_incident ? now() : null;
+        if ($state?->terminates_incident && empty($data['end_datetime'])) {
+            $data['end_datetime'] = now();
+        }
     }
 
     // Dá preview do próximo identificador

@@ -102,9 +102,17 @@ const columns: TableColumn<DonationGoodType>[] = [
 ]
 
 const fetch = async (loadMore: boolean = false) => {
-  if (loading.value) return
+  console.log('================ FETCH =================')
+  console.log('loadMore:', loadMore)
+  console.log('loading atual:', loading.value)
+
+  if (loading.value) {
+    console.log('Fetch cancelado porque já está a carregar.')
+    return
+  }
 
   loading.value = true
+
   try {
     const params: any = {
       per_page: 15,
@@ -115,22 +123,42 @@ const fetch = async (loadMore: boolean = false) => {
       params.filter = { search: search.value }
     }
 
+    console.log('Parâmetros enviados:', params)
+
     const res = await api.getDonationGoodTypes(params)
 
-    const newGoodTypes = res.data.data;
+    console.log('Resposta completa da API:', res)
+    console.log('Data:', res.data)
+    console.log('Meta:', res.data.meta)
 
-    if(loadMore)
-    {
+    const newGoodTypes = res.data.data
+
+    console.log('Registos recebidos:', newGoodTypes.length)
+    console.log(newGoodTypes)
+
+    if (loadMore) {
       const existing = new Set(tiposBens.value.map(type => type.id))
-      tiposBens.value.push(...newGoodTypes.filter(type => !existing.has(type.id)))
-    }
-    else
-    {
+
+      console.log('IDs existentes:', [...existing])
+
+      const filtered = newGoodTypes.filter(type => !existing.has(type.id))
+
+      console.log('Novos registos após filtro:', filtered.length)
+
+      tiposBens.value.push(...filtered)
+    } else {
+      console.log('Substituindo lista completa.')
       tiposBens.value = newGoodTypes
     }
 
+    console.log('Total na tabela:', tiposBens.value.length)
+
     nextCursor.value = res.data.meta.next_cursor
+
+    console.log('Novo cursor:', nextCursor.value)
   } catch (e) {
+    console.error('Erro ao carregar tipos de bens:', e)
+
     toast.add({
       title: 'Erro',
       description: 'Erro ao carregar os Tipos de Bens.',
@@ -138,6 +166,8 @@ const fetch = async (loadMore: boolean = false) => {
     })
   } finally {
     loading.value = false
+    console.log('Loading terminado.')
+    console.log('========================================')
   }
 }
 
@@ -185,10 +215,10 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Bens Doáveis</h2>
           <p class="text-sm text-muted max-w-md">Lista de todos os Tipos de Bens Doáveis disponíveis no módulo de Doações.</p>
         </div>
-          <DonationGoodTypesAddModal
-            @created="fetch"
-            v-if="useAuthStore().hasPermission('DONATION_GOODS_TYPES_CREATE')"
-          />
+        <DonationGoodTypesAddModal
+          @created="fetch"
+          v-if="useAuthStore().hasPermission('DONATION_GOODS_TYPES_CREATE')"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -200,6 +230,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || tiposBens.length > 0"
           :data="tiposBens"
           :columns="columns"
           :loading="loading"
@@ -213,6 +244,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de tipos de bens encontrado.
+        </div>
       </div>
       <DonationGoodTypesDeleteModal
         v-if="selectedGoodById"

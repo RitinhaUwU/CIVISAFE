@@ -172,6 +172,10 @@ export const useApiStore = defineStore('api', () => {
     return axios.post(`${config.public.apiBase}/entities/${entityId}/upload`, {key: key})
   }
 
+  const deleteEntityLogo = (entityId: number | string) => {
+    return axios.delete(`${config.public.apiBase}/entities/${entityId}/image`)
+  }
+
   /*************************
    *
    *  EntityTypes
@@ -505,6 +509,10 @@ export const useApiStore = defineStore('api', () => {
     return axios.post(`${config.public.apiBase}/facilities/${facilityId}/upload`, {key: key})
   }
 
+  const deleteFacilityImage = (facilityId: number | string)=> {
+    return axios.delete(`${config.public.apiBase}/facilities/${facilityId}/image`)
+  }
+
   // Facilities - Documentos
   const uploadFacilityDocuments = (facilityId: number, files: File[]) => {
     const form = new FormData()
@@ -729,6 +737,7 @@ export const useApiStore = defineStore('api', () => {
     createEntity,
     requestEntitySignedUrl,
     updateEntityLogo,
+    deleteEntityLogo,
     getEntityTypes,
     getEntityType,
     updateEntityType,
@@ -771,6 +780,7 @@ export const useApiStore = defineStore('api', () => {
     createFacility,
     requestFacilitySignedUrl,
     updateFacilityImage,
+    deleteFacilityImage,
     uploadFacilityDocuments,
     downloadFacilityDocument,
     deleteFacilityDocument,

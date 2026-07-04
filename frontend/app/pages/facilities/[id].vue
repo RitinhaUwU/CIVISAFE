@@ -111,6 +111,16 @@ const fetchFacility = async () => {
   Object.assign(state, data)
 }
 
+const imageRemoved = ref(false)
+
+const handleRemoveImage = (removeFile: () => void) => {
+  removeFile()
+  if (state.image) {
+    imageRemoved.value = true
+    state.image = undefined
+  }
+}
+
 const handleSave = async () => {
   if (!useAuthStore().hasPermission('FACILITIES_UPDATE')) return
 
@@ -136,7 +146,7 @@ const handleSave = async () => {
     return
   }
 
-  if(fileState.image !== undefined){
+  if(fileState.image){
     //Existe uma imagem para carregar/atualizar
     const uploadURL = await api.requestFacilitySignedUrl(fileState.image.name);
 
@@ -146,8 +156,7 @@ const handleSave = async () => {
       body: fileState.image
     })
 
-    if(!bucketResponse.ok)
-    {
+    if(!bucketResponse.ok) {
       toast.add({
         title: 'Erro ao carregar imagem',
         description: 'Ocorreu um erro ao carregar imagem.',
@@ -159,8 +168,17 @@ const handleSave = async () => {
     await api.updateFacilityImage(parseInt(<string>route.params.id), uploadURL.data.key)
   }
   else {
-    //Remover o logotipo
-    //if()
+    try {
+      await api.deleteFacilityImage(state.id)
+      imageRemoved.value = false
+    } catch (e) {
+      toast.add({
+        title: 'Erro',
+        description: 'Erro ao remover logotipo',
+        color: 'error'
+      })
+      return;
+    }
   }
 
   saving.value = true
@@ -289,6 +307,7 @@ onMounted(() => {
                     <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
                       <UButton icon="i-lucide-pencil" label="Alterar" color="neutral" variant="solid" size="sm" @click.stop="open()" />
                       <UButton icon="i-lucide-rotate-ccw" label="Restaurar" color="primary" variant="solid" size="sm" @click.stop="removeFile()" />
+                      <UButton icon="i-lucide-trash-2" label="Remover" color="error" variant="solid" size="sm" @click.stop="handleRemoveImage(removeFile)" />
                     </div>
                   </template>
                   <template v-else>

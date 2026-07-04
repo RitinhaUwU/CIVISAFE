@@ -28,13 +28,13 @@ async function handleMapClick(coords: { lat: number, lng: number }) {
   openModal.value = true
 }
 
-const majorIncidents = ref<Incident[]>([])   // sempre globais, não dependem do mapa
-const mapIncidents = ref<Incident[]>([])     // dependem dos bounds do mapa
+const majorIncidents = ref<Incident[]>([])
+const mapIncidents = ref<Incident[]>([])
 
 async function refreshMajorIncidents() {
   const res = await api.getIncidents({
     per_page: 1000,
-    filter: { is_major: true } // ajusta ao teu formato de filtro
+    filter: { is_major: true }
   })
   majorIncidents.value = res.data.data.filter(
     (i: Incident) => i.incidentState?.terminates_incident !== true
@@ -100,7 +100,7 @@ onMounted(async () => {
         <InicioFormRegisto v-model="openModal" :coords="selectedCoords" @created="refreshIncidents"/>
         <UCard v-if="majorIncidents.length" class="shrink-0 hidden lg:block">
           <template #header>
-            <h3 class="font-semibold">Incidentes Major Ativos</h3>
+            <h3 class="font-semibold">Ocorrências Major Ativas</h3>
           </template>
           <div class="flex gap-4 overflow-x-auto pb-2">
             <div v-for="incident in majorIncidents" :key="incident.id" class="w-72 sm:w-80 shrink-0 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20 p-4 flex flex-col">

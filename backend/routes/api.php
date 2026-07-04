@@ -78,6 +78,7 @@ Route::prefix('v1')->group(function () {
                 ->parameter('', 'entity');
             Route::post('/uploadUrl', [EntityController::class, 'signedUrl']);
             Route::post('/{entity}/upload', [EntityController::class, 'confirmUpload']);
+            Route::delete('/{entity}/image', [EntityController::class, 'deleteImage']);
         });
 
         Route::apiResource('/entityTypes', EntityTypesController::class);
@@ -109,6 +110,7 @@ Route::prefix('v1')->group(function () {
             // IMAGEM
             Route::post('/uploadUrl', [FacilitiesController::class, 'signedUrl']);
             Route::post('/{facility}/upload', [FacilitiesController::class, 'confirmUpload']);
+            Route::delete('/{facility}/image', [FacilitiesController::class, 'deleteImage']);
             // DOCUMENTOS
             Route::post('/{facility}/documents', [FacilitiesController::class, 'uploadDocuments']);
             Route::get('/{facility}/documents/{mediaId}/download', [FacilitiesController::class, 'downloadDocument']);

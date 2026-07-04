@@ -65,28 +65,35 @@ const incidents = usePaginatedSelect({
   })
 })
 
-const tabs = [
-  {
-    label: 'Geral',
-    slot: 'geral',
-    icon: 'i-lucide-users'
-  },
-  {
-    label: 'Posto de Comando',
-    slot: 'posto',
-    icon: 'i-lucide-satellite-dish',
-  },
-  {
-    label: 'Meios e Recursos',
-    slot: 'logistica',
-    icon: 'i-lucide-ambulance'
-  },
-  {
+const tabs = computed(() => {
+  const items = [
+    {
+      label: 'Geral',
+      slot: 'geral',
+      icon: 'i-lucide-users'
+    }
+  ]
+  if (!state.is_major) {
+    items.push(
+      {
+        label: 'Posto de Comando',
+        slot: 'posto',
+        icon: 'i-lucide-satellite-dish'
+      },
+      {
+        label: 'Meios e Recursos',
+        slot: 'logistica',
+        icon: 'i-lucide-ambulance'
+      }
+    )
+  }
+  items.push({
     label: 'Fita de Tempo',
     slot: 'timeline',
     icon: 'i-lucide-history'
-  }
-]
+  })
+  return items
+})
 
 const items = ref<BreadcrumbItem[]>([
   {
@@ -276,7 +283,7 @@ const fetchIncident = async () => {
   if (data.is_major && data.children_incidents?.length) {
     incidents.prependSelected(data.children_incidents.map((i: any) => ({
       id: i.id,
-      name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
+      name: `(Major ${data.identifier}) ${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
     })))
   }
   else if (!data.is_major && data.parentIncident) {
@@ -320,14 +327,23 @@ const fetchIncident = async () => {
     incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.type}`} : null,
     incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: `(Major ${data.identifier}) ${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
     coordinates: data.is_major ? '' : data.coordinates,
   })
 
+  await nextTick()
+
   loadingIncident.value = false
 }
+
+const showEndDateWarning = computed(() => {
+  return (
+    !!state.end_datetime &&
+    !state.incident_state_id?.terminates_incident
+  )
+})
 
 async function loadNextIdentifier() {
   if (!state.is_major) return
@@ -359,6 +375,8 @@ watch(() => state.is_major, async (isMajor, wasMajor) => {
 })
 
 watch(() => state.incident_state_id, (newState) => {
+  if (loadingIncident.value) return
+
   if (newState?.terminates_incident) {
     state.end_datetime = toDatetimeLocal(new Date().toISOString())
   } else {
@@ -834,7 +852,16 @@ onMounted(async () => {
                   <UInput type="datetime-local" v-model="state.start_datetime" class="w-full"/>
                 </UFormField>
                 <UFormField label="Data Fim:" name="end_datetime">
-                  <UInput type="datetime-local" v-model="state.end_datetime" class="w-full"/>
+                  <UInput type="datetime-local" v-model="state.end_datetime" class="w-full" />
+                  <UAlert
+                    v-if="showEndDateWarning"
+                    class="mt-2"
+                    color="warning"
+                    variant="soft"
+                    icon="i-lucide-triangle-alert"
+                    title="Estado e data de fim inconsistentes"
+                    description="Foi definida uma data de fim, mas o estado selecionado não indica que a ocorrência está terminada. Esta informação será guardada, mas poderá representar uma inconsistência nos dados."
+                  />
                 </UFormField>
                 <UFormField label="Fonte de Alerta:" name="alert_source_relationship">
                   <UInput v-model="state.alert_source_relationship" class="w-full"/>

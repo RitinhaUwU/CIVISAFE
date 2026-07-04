@@ -73,23 +73,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UModal
-    v-model:open="open"
-    title="Novo Tipo de Bem Doável"
-    description="Adicione um Novo Tipo de Bem Doável"
-  >
+  <UModal v-model:open="open" title="Novo Tipo de Bem Doável" description="Adicione um Novo Tipo de Bem Doável">
     <UButton
       icon="i-lucide-plus"
       label="Novo Bem Doável"
       color="primary"
     />
     <template #body>
-      <UForm
-        :state="state"
-        :schema="schema"
-        class="space-y-5"
-        @submit="onSubmit"
-      >
+      <UForm :state="state" :schema="schema" class="space-y-5" @submit="onSubmit">
         <UFormField label="Nome" name="name">
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
@@ -107,7 +98,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </div>
         </UFormField>
         <template v-if="state.is_type_countable">
-          <UFormField label="Unidade" name="unit" >
+          <UFormField label="Unidade" name="unit">
             <USelect
               v-model="state.unit"
               class="w-full"
@@ -120,18 +111,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               ]"
             />
           </UFormField>
-
           <UFormField
             label="Número mínimo"
             description="(Opcional) Quantidade crítica para mostrar alertas na dashboard"
             name="danger_level"
           >
             <UInputNumber v-model="state.danger_level" class="w-full" min="1" />
-            <UButton label="Limpar" @click="state.danger_level=null"></UButton>
           </UFormField>
         </template>
-
-        <div class="flex justify-between gap-3 pt-2">
+        <div class="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
           <UButton
             label="Cancelar"
             color="neutral"
