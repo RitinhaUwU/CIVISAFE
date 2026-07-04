@@ -111,12 +111,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               ]"
             />
           </UFormField>
-          <UFormField
-            label="Número mínimo"
-            description="(Opcional) Quantidade crítica para mostrar alertas na dashboard"
-            name="danger_level"
-          >
-            <UInputNumber v-model="state.danger_level" class="w-full" min="1" />
+          <UFormField label="Número mínimo" description="(Opcional) Quantidade crítica para mostrar alertas na dashboard" name="danger_level">
+            <div class="flex flex-row gap-2">
+              <UInputNumber v-model="state.danger_level" class="w-full" :min="1" />
+              <UButton label="Limpar" @click="state.danger_level=null"></UButton>
+            </div>
           </UFormField>
         </template>
         <div class="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">

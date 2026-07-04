@@ -138,11 +138,11 @@ onMounted(fetchEntity)
         <div class="space-y-6">
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Nome" class="sm:col-span-2">
+            <div class="grid grid-cols-1 gap-4">
+              <UFormField label="Nome">
                 <UInput v-model="state.name" class="w-full" />
               </UFormField>
-              <UFormField label="Descrição" class="sm:col-span-2">
+              <UFormField label="Descrição">
                 <UInput v-model="state.description" class="w-full" />
               </UFormField>
               <USwitch
@@ -151,7 +151,7 @@ onMounted(fetchEntity)
                 unchecked-icon="i-lucide-x"
                 checked-icon="i-lucide-check"
               />
-              <div class="sm:col-span-2 p-2">
+              <div class="p-2">
                 <div class="flex items-center justify-between w-full">
                   <UPopover>
                     <div class="flex items-center gap-3 cursor-pointer">

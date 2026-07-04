@@ -12,6 +12,12 @@ const openModal = ref(false)
 const openSlideover = ref(false)
 
 const incidents = ref<Incident[]>([])
+const mapIncidents = ref<Incident[]>([])
+
+const majorIncidents = ref<Incident[]>([])
+const majorNextCursor = ref<string | null>(null)
+const majorLoading = ref(false)
+const majorScrollContainer = ref<HTMLElement | null>(null)
 
 async function handleMapClick(coords: { lat: number, lng: number }) {
   if(!useAuthStore().hasPermission('INCIDENTS_CREATE'))
@@ -28,17 +34,34 @@ async function handleMapClick(coords: { lat: number, lng: number }) {
   openModal.value = true
 }
 
-const majorIncidents = ref<Incident[]>([])
-const mapIncidents = ref<Incident[]>([])
+async function fetchMajorIncidents(loadMore = false) {
+  if (majorLoading.value) return
+  if (loadMore && !majorNextCursor.value) return
 
-async function refreshMajorIncidents() {
-  const res = await api.getIncidents({
-    per_page: 1000,
-    filter: { is_major: true }
-  })
-  majorIncidents.value = res.data.data.filter(
-    (i: Incident) => i.incidentState?.terminates_incident !== true
-  )
+  majorLoading.value = true
+
+  try {
+    const res = await api.getIncidents({
+      per_page: 10,
+      filter: { is_major: true },
+      ...(loadMore && majorNextCursor.value ? { cursor: majorNextCursor.value } : {})
+    })
+
+    const newIncidents = res.data.data.filter(
+      (i: Incident) => i.incidentState?.terminates_incident !== true
+    )
+
+    if (loadMore) {
+      const existing = new Set(majorIncidents.value.map(i => i.id))
+      majorIncidents.value.push(...newIncidents.filter(i => !existing.has(i.id)))
+    } else {
+      majorIncidents.value = newIncidents
+    }
+
+    majorNextCursor.value = res.data.meta?.next_cursor
+  } finally {
+    majorLoading.value = false
+  }
 }
 
 async function refreshMapIncidents(bounds: { north: number, south: number, east: number, west: number }) {
@@ -69,9 +92,18 @@ async function refreshIncidents() {
 }
 
 onMounted(async () => {
-  if(useAuthStore().hasPermission('INCIDENTS_LIST'))
-  {
-    await refreshMajorIncidents()
+  if(useAuthStore().hasPermission('INCIDENTS_LIST')){
+    await fetchMajorIncidents()
+
+    useInfiniteScroll(
+      majorScrollContainer,
+      () => fetchMajorIncidents(true),
+      {
+        distance: 200,
+        direction: 'right',
+        canLoadMore: () => !majorLoading.value && majorNextCursor.value != null
+      }
+    )
   }
 })
 </script>
@@ -103,26 +135,28 @@ onMounted(async () => {
             <h3 class="font-semibold">Ocorrências Major Ativas</h3>
           </template>
           <div class="flex gap-4 overflow-x-auto pb-2">
-            <div v-for="incident in majorIncidents" :key="incident.id" class="w-72 sm:w-80 shrink-0 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20 p-4 flex flex-col">
-              <div class="flex items-start justify-between">
-                <div class="font-semibold">{{ incident.identifier }}</div>
-                <UBadge color="primary" variant="soft">
-                  {{ incident.incidentState?.name }}
-                </UBadge>
+            <div ref="majorScrollContainer" class="flex gap-4 overflow-x-auto pb-2">
+              <div v-for="incident in majorIncidents" :key="incident.id" class="w-72 sm:w-80 shrink-0 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20 p-4 flex flex-col">
+                <div class="flex items-start justify-between">
+                  <div class="font-semibold">{{ incident.identifier }}</div>
+                  <UBadge color="primary" variant="soft">
+                    {{ incident.incidentState?.name }}
+                  </UBadge>
+                </div>
+                <div class="mt-4 space-y-2 text-sm flex-1">
+                  <div><span class="font-medium">Tipo:</span> {{ incident.incidentType?.code }}</div>
+                  <div><span class="font-medium">Espécie:</span> {{ incident.incidentType?.species }}</div>
+                  <div><span class="font-medium">Categoria:</span> {{ incident.incidentType?.type }}</div>
+                </div>
+                <footer class="pt-4 flex justify-end">
+                  <UButton
+                    :to="`/incidents/${incident.id}/dashboard`"
+                    size="sm"
+                    icon="i-lucide-arrow-right"
+                    label="Ver ocorrência"
+                  />
+                </footer>
               </div>
-              <div class="mt-4 space-y-2 text-sm flex-1">
-                <div><span class="font-medium">Tipo:</span> {{ incident.incidentType?.code }}</div>
-                <div><span class="font-medium">Espécie:</span> {{ incident.incidentType?.species }}</div>
-                <div><span class="font-medium">Categoria:</span> {{ incident.incidentType?.type }}</div>
-              </div>
-              <footer class="pt-4 flex justify-end">
-                <UButton
-                  :to="`/incidents/${incident.id}/dashboard`"
-                  size="sm"
-                  icon="i-lucide-arrow-right"
-                  label="Ver ocorrência"
-                />
-              </footer>
             </div>
           </div>
         </UCard>
