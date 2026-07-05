@@ -37,8 +37,6 @@ const onSubmit = async () => {
       description: 'Não foi possível eliminar o voluntário.',
       color: 'error'
     })
-  } finally {
-    loading.value = false
   }
 }
 </script>

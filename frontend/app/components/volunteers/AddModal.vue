@@ -3,6 +3,7 @@ import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '@/stores/api'
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import moment from "moment";
 
 const api = useApiStore()
 const open = ref(false)
@@ -72,6 +73,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await api.createVolunteer({
       ...event.data,
+      start_datetime: moment(event.data.start_datetime).toISOString(),
+      end_datetime: event.data.end_datetime != '' ? moment(event.data.end_datetime).toISOString() : null,
       incident_id: event.data.incident_id?.id ?? null
     })
 

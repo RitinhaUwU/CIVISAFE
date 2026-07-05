@@ -724,15 +724,15 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentTimeline = (incidentId: number) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`)
+  const getIncidentTimeline = (incidentId: number, params: QueryParams) => {
+    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
   }
 
-  const createTimelineComment = (incidentId: number, params: { body: string }) => {
+  const createTimelineComment = (incidentId: number, params: { body: string, datetime: string }) => {
     return axios.post(`${config.public.apiBase}/incidents/${incidentId}/comments`, params)
   }
 
-  const updateTimelineComment = (incidentId: number, commentId: number, params: { body: string }) => {
+  const updateTimelineComment = (incidentId: number, commentId: number, params: { body: string, datetime: string }) => {
     return axios.put(`${config.public.apiBase}/incidents/${incidentId}/comments/${commentId}`, params)
   }
 

@@ -67,7 +67,7 @@ class IncidentController extends Controller
 
         $state = IncidentState::find($data['incident_state_id']);
 
-        $data['end_datetime'] = $state?->terminates_incident ? now() : null;
+        $data['end_datetime'] = $state?->terminates_incident ? now()->toIso8601String() : null;
     }
 
     public function store(IncidentRequest $request)

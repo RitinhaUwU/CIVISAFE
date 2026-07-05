@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 import * as z from 'zod'
 import {toDatetimeLocal} from "@/utils"
+import moment from "moment/min/moment-with-locales";
 
 const props = defineProps<{
   open: boolean
@@ -57,8 +58,6 @@ const resetForm = () => {
   })
 }
 
-const isEditMode = computed(() => !!props.modelValue?.id)
-
 watch(() => [props.modelValue, props.open], ([val, open]) => {
     if (!open) return resetForm()
 
@@ -100,7 +99,12 @@ const submit = () => {
     return
   }
 
-  emit('save', result.data)
+  emit('save', {
+    ...result.data,
+    activation_pco_datetime: result.data.activation_pco_datetime !== '' ?  moment(result.data.activation_pco_datetime).toISOString() : null,
+    start_pco_datetime:  moment(result.data.start_pco_datetime).toISOString(),
+    end_pco_datetime:  result.data.end_pco_datetime !== '' ? moment(result.data.end_pco_datetime).toISOString() : null,
+  })
   close()
 }
 </script>

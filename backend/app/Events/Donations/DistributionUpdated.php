@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Donations;
 
 use App\Http\Resources\Donations\DonationDistributionResource;
 use App\Models\Donations\DonationDistribution;
-use App\Models\Donations\DonationStock;
-use Carbon\Carbon;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;

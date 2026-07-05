@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Donations;
 
 use App\Http\Resources\Donations\DonationLogResource;
 use App\Models\Donations\DonationLog;
@@ -10,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\SerializesModels;
 
-class DonationUpdated implements ShouldBroadcast, ShouldQueue
+class DonationCreated implements ShouldBroadcast, ShouldQueue
 {
     use SerializesModels;
 
@@ -42,6 +42,6 @@ class DonationUpdated implements ShouldBroadcast, ShouldQueue
 
     public function broadcastAs(): string
     {
-        return 'donation.updated';
+        return 'donation.created';
     }
 }

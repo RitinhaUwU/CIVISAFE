@@ -1,26 +1,25 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Donations;
 
-use App\Http\Resources\Donations\DonationLogResource;
-use App\Models\Donations\DonationLog;
+use App\Models\Donations\DonationStock;
+use Carbon\Carbon;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\SerializesModels;
 
-class DonationCreated implements ShouldBroadcast, ShouldQueue
+class StockUpdated implements ShouldBroadcast, ShouldQueue
 {
-    use SerializesModels;
-
     public string $queue = 'notifications';
 
-    public DonationLog $data;
+    public int $goodsTypeId;
+    public int $stock;
 
-    public function __construct(DonationLog $donationLog)
+    public function __construct(DonationStock $donationStock)
     {
-        $this->data = $donationLog;
+        $this->goodsTypeId = $donationStock->donation_goods_type_id;
+        $this->stock = $donationStock->stock;
     }
 
     /**
@@ -37,11 +36,15 @@ class DonationCreated implements ShouldBroadcast, ShouldQueue
 
     public function broadcastWith(): array
     {
-        return ['resource' => new DonationLogResource($this->data)];
+        return [
+            'id' => $this->goodsTypeId,
+            'stock' => $this->stock,
+            'timestamp' => Carbon::now()->timestamp
+        ];
     }
 
     public function broadcastAs(): string
     {
-        return 'donation.created';
+        return 'stock.updated';
     }
 }

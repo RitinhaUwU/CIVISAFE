@@ -22,6 +22,8 @@ class TimelineComment extends Model
         return $this->belongsTo(Incident::class);
     }
 
+    protected $dateFormat = 'Y-m-d H:i:sP';
+
     protected $fillable = [
         'body',
         'incident_id',

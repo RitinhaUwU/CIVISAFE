@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Donations;
 
-use App\Events\DistributionCreated;
-use App\Events\DistributionUpdated;
-use App\Events\StockUpdated;
+use App\Events\Donations\DistributionCreated;
+use App\Events\Donations\DistributionUpdated;
+use App\Events\Donations\StockUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ActivityHelper;
 use App\Http\Requests\Donations\DonationDistributionRequest;

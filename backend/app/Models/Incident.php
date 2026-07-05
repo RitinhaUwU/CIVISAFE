@@ -63,6 +63,8 @@ class Incident extends Model
         'comments',
     ];
 
+    protected $dateFormat = 'Y-m-d H:i:sP';
+
     protected function casts(): array
     {
         return [

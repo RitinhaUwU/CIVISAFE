@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Donations;
 
-use App\Events\StockLockUpdate;
-use App\Events\StockUpdated;
+use App\Events\Donations\StockLockUpdate;
+use App\Events\Donations\StockUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ActivityHelper;
 use App\Http\Requests\DonationAuditRequest;
@@ -16,10 +16,7 @@ use App\Models\Donations\DonationContent;
 use App\Models\Donations\DonationDistribution;
 use App\Models\Donations\DonationLog;
 use App\Models\Donations\DonationStock;
-use App\Models\User;
-use App\Notifications\GenericNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\QueryBuilder\QueryBuilder;

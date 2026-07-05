@@ -6,6 +6,7 @@ import { useApiStore } from "@/stores/api"
 import { useAuthStore } from "@/stores/auth"
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import {toDatetimeLocal} from "@/utils"
+import moment from "moment"
 
 const props = defineProps<{
   modelValue: boolean
@@ -135,6 +136,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const payload = {
       ...event.data,
+      start_datetime: event.data.start_datetime != '' ? moment(event.data.start_datetime).toISOString() : '',
+      end_datetime: event.data.end_datetime != '' ? moment(event.data.end_datetime).toISOString() : '',
       user_id: authStore.currentUserID,
       incident_state_id: event.data.incident_state_id?.id,
       incident_priority_id: event.data.incident_priority_id?.id,
@@ -179,7 +182,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       name_pco: ''
     })
   } catch (e) {
-    if (errors?.identifier?.length) {
+    if (e?.identifier?.length) {
       toast.add({
         title: 'Identificador duplicado',
         description: 'O identificador já se encontra em uso',

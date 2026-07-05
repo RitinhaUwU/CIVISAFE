@@ -1,28 +1,21 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Donations;
 
-use App\Http\Resources\Donations\DonationDistributionResource;
-use App\Models\Donations\DonationDistribution;
-use App\Models\Donations\DonationStock;
-use Carbon\Carbon;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\SerializesModels;
 
-class DistributionCreated implements ShouldBroadcast, ShouldQueue
+class StockLockUpdate implements ShouldBroadcast, ShouldQueue
 {
-    use SerializesModels;
-
     public string $queue = 'notifications';
 
-    public DonationDistribution $data;
+    public bool $unlocked;
 
-    public function __construct(DonationDistribution $donationDistribution)
+    public function __construct(bool $unlocked)
     {
-        $this->data = $donationDistribution;
+        $this->unlocked = $unlocked;
     }
 
     /**
@@ -39,11 +32,13 @@ class DistributionCreated implements ShouldBroadcast, ShouldQueue
 
     public function broadcastWith(): array
     {
-        return ['resource' => new DonationDistributionResource($this->data)];
+        return [
+            'isUnlocked' => $this->unlocked
+        ];
     }
 
     public function broadcastAs(): string
     {
-        return 'distribution.created';
+        return 'stock.lock_status';
     }
 }
