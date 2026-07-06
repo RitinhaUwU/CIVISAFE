@@ -79,10 +79,11 @@ function isWithinBbox(coordinates: string | undefined, bbox: string): boolean {
   return lat >= south && lat <= north && lng >= west && lng <= east
 }
 
-async function refreshMapIncidents(bbox: string) {
+async function refreshMapIncidents(bbox: string, cursor: string | null = null): Promise<void> {
   const res = await api.getIncidents({
-    per_page: 1000,
-    filter: { bbox }
+    per_page: 10,
+    filter: { bbox },
+    ...(cursor ? { cursor } : {})
   })
 
   const newIncidents = res.data.data.filter((i: Incident) =>
@@ -94,6 +95,12 @@ async function refreshMapIncidents(bbox: string) {
 
   newIncidents.forEach((i: Incident) => loadedIncidentIds.add(i.id))
   mapIncidents.value.push(...newIncidents)
+
+  const nextCursor = res.data.meta?.next_cursor ?? null
+
+  if (nextCursor) {
+    await refreshMapIncidents(bbox, nextCursor)
+  }
 }
 
 function handleBoundsChange(bbox: string) {
