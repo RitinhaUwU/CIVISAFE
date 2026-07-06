@@ -64,28 +64,46 @@ async function fetchMajorIncidents(loadMore = false) {
   }
 }
 
-async function refreshMapIncidents(bounds: { north: number, south: number, east: number, west: number }) {
-  const res = await api.getIncidents({
-    per_page: 1000,
-    north: bounds.north,
-    south: bounds.south,
-    east: bounds.east,
-    west: bounds.west
-  })
-  mapIncidents.value = res.data.data.filter(
-    (i: Incident) => !i.is_major &&
-      i.incidentState?.terminates_incident !== true
-  )
+const lastBounds = ref<string | null>(null)
+
+const loadedIncidentIds = new Set<number>()
+
+function isWithinBbox(coordinates: string | undefined, bbox: string): boolean {
+  if (!coordinates) return false
+
+  const [lat, lng] = coordinates.split(',').map(Number)
+  const [west, south, east, north] = bbox.split(',').map(Number)
+
+  if ([lat, lng, west, south, east, north].some(Number.isNaN)) return false
+
+  return lat >= south && lat <= north && lng >= west && lng <= east
 }
 
-const lastBounds = ref<{ north: number, south: number, east: number, west: number } | null>(null)
+async function refreshMapIncidents(bbox: string) {
+  const res = await api.getIncidents({
+    per_page: 1000,
+    filter: { bbox }
+  })
 
-function handleBoundsChange(bounds: { north: number, south: number, east: number, west: number }) {
-  refreshMapIncidents(bounds)
+  const newIncidents = res.data.data.filter((i: Incident) =>
+    !i.is_major &&
+    i.incidentState?.terminates_incident !== true &&
+    isWithinBbox(i.coordinates, bbox) &&
+    !loadedIncidentIds.has(i.id)
+  )
+
+  newIncidents.forEach((i: Incident) => loadedIncidentIds.add(i.id))
+  mapIncidents.value.push(...newIncidents)
+}
+
+function handleBoundsChange(bbox: string) {
+  lastBounds.value = bbox
+  refreshMapIncidents(bbox)
 }
 
 async function refreshIncidents() {
-  await refreshMajorIncidents()
+  await fetchMajorIncidents()
+
   if (lastBounds.value) {
     await refreshMapIncidents(lastBounds.value)
   }

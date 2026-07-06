@@ -64,6 +64,13 @@ class IncidentController extends Controller
                         $q->where('terminates_incident', false);
                     });
                 }),
+                AllowedFilter::callback('bbox', function (Builder $query, $value) {
+                    if (!is_array($value) || count($value) !== 4) return;
+
+                    [$west, $south, $east, $north] = array_map('floatval', $value);
+
+                    $query->whereRaw("split_part(coordinates, ',', 1)::float BETWEEN ? AND ?", [$south, $north])->whereRaw("split_part(coordinates, ',', 2)::float BETWEEN ? AND ?", [$west, $east]);
+                }),
             )
             ->orderBy('id')
             ->cursorPaginate($request->input('per_page', 10))

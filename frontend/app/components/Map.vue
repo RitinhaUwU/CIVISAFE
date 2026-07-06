@@ -25,22 +25,12 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   'map-click': [{ lat: number, lng: number }]
-  'bounds-change': [{ north: number, south: number, east: number, west: number }]
+  'bounds-change': [string]
 }>()
 
 function emitBounds() {
   if (!map) return
-
-  const bounds = map.getBounds()
-  const sw = bounds.getSouthWest()
-  const ne = bounds.getNorthEast()
-
-  emit('bounds-change', {
-    north: ne.lat,
-    south: sw.lat,
-    east: ne.lng,
-    west: sw.lng
-  })
+  emit('bounds-change', map.getBounds().toBBoxString())
 }
 
 const debouncedEmitBounds = useDebounceFn(emitBounds, 500)
@@ -77,9 +67,7 @@ function renderMarkers(L: any) {
   props.incidents.forEach((incident) => {
     if (!incident.coordinates) return
 
-    const [lat, lng] = incident.coordinates
-      .split(',')
-      .map((v: string) => Number(v.trim()))
+    const [lat, lng] = incident.coordinates.split(',').map((v: string) => Number(v.trim()))
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) return
 
