@@ -19,11 +19,9 @@ const incident       = ref<any>(null)
 const pcoList        = ref<any[]>([])
 const logistics      = ref<any[]>([])
 const logisticTotals = ref({ total_vehicles: 0, total_humans: 0 })
-const timeline       = ref<any[]>([])
 const loading        = ref(true)
 
 const activePCOs = computed(() => pcoList.value.filter(p => !p.end_pco_datetime))
-const mainActivePCO = computed(() => activePCOs.value[0] ?? null)
 
 const now = ref(Date.now())
 const isActive = computed(() => !incident.value?.end_datetime)
@@ -172,8 +170,6 @@ const cardUi = {
   title: 'font-normal text-muted text-xs uppercase'
 }
 
-const recentTimeline = computed(() => timeline.value.slice(0, 5))
-
 const formatDate = (d: string) => {
   if (!d) return '—'
   return new Intl.DateTimeFormat('pt-PT', {
@@ -181,8 +177,6 @@ const formatDate = (d: string) => {
     hour: '2-digit', minute: '2-digit'
   }).format(new Date(d))
 }
-
-const timeAgo = (date: string) => formatTimeAgoIntl(new Date(date), { locale: 'pt-PT' })
 
 const goToTab = (tab: string) => {
   router.push(`/incidents/${route.params.id}?tab=${tab}`)
@@ -197,18 +191,16 @@ onMounted(async () => {
   }
 
   try {
-    const [incRes, pcoRes, logRes, tlRes] = await Promise.all([
+    const [incRes, pcoRes, logRes] = await Promise.all([
       api.getIncident(incidentId.value),
       api.getIncidentPCOs(incidentId.value),
-      api.getIncidentLogistics(incidentId.value),
-      api.getIncidentTimeline(incidentId.value),
+      api.getIncidentLogistics(incidentId.value)
     ])
 
     incident.value = incRes.data.data
     pcoList.value = pcoRes?.data?.data ?? []
     logistics.value = logRes?.data?.data ?? []
     logisticTotals.value = logRes?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
-    timeline.value = tlRes.data ?? []
   } finally {
     loading.value = false
   }

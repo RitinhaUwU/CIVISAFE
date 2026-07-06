@@ -5,8 +5,7 @@ import {
   clearTable,
   removeEntry,
   retrieveData,
-  retrieveDataPaginated, retrieveIncidentPartiesDataPaginated, retrievePaginatedByIncident,
-  retrievePCODataPaginated,
+  retrieveDataPaginated, retrievePaginatedByIncident,
   storeData
 } from "@/composables/useIndexedDB";
 import type {QueryParams} from "@/types";
@@ -274,14 +273,11 @@ export const useApiStore = defineStore('api', () => {
    *************************/
 
   const getIncidentPCOs = async (incidentId: number, params?: QueryParams) => {
-    if(await checkServerAccess())
-    {
-      const res = axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
       await storeData('incident_pcos', res.data.data);
       return res;
-    }
-    else
-    {
+    } else {
       console.debug("OFFLINE DATA")
       return await retrievePaginatedByIncident('incident_pcos', 'pco', incidentId, params);
     }
@@ -302,14 +298,11 @@ export const useApiStore = defineStore('api', () => {
    *************************/
 
   const getIncidentLogistics = async (incidentId: number, params?: QueryParams) => {
-    if(await checkServerAccess())
-    {
-      const res = axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
       await storeData('incident_parties', res.data.data)
       return res;
-    }
-    else
-    {
+    } else {
       console.debug("OFFLINE DATA")
       return await retrievePaginatedByIncident('incident_parties', 'parties', incidentId, params);
     }
@@ -564,7 +557,7 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
-  const getAllDonationGoodTypes = async (deleted: boolean = false)  => {
+  const getAllDonationGoodTypes = async (deleted: boolean = false) => {
     if (await checkServerAccess()) {
       const res = await axios.get(`${config.public.apiBase}/donationGoodsTypes/all${deleted ? '?include_deleted' : ''}`)
       await storeData('donation_goods_types', res.data.data)
@@ -647,24 +640,21 @@ export const useApiStore = defineStore('api', () => {
    **/
 
   const getAllDistributions = async (params: QueryParams) => {
-    if(await checkServerAccess())
-    {
+    if (await checkServerAccess()) {
       return axios.get(`${config.public.apiBase}/donations/distributions`, {params})
     }
     throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const createDistribution = async (params: any) => {
-    if(await checkServerAccess())
-    {
+    if (await checkServerAccess()) {
       return axios.post(`${config.public.apiBase}/donations/distributions`, params)
     }
     throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const updateDistribution = async (id: number, params: any) => {
-    if (await checkServerAccess())
-    {
+    if (await checkServerAccess()) {
       return axios.put(`${config.public.apiBase}/donations/distributions/${id}`, params)
     }
     throw new Error('O Endpoint não é suportado no modo offline');
@@ -709,7 +699,7 @@ export const useApiStore = defineStore('api', () => {
   }
 
   const postStockAudit = async (params: any) => {
-    if(await checkServerAccess()) {
+    if (await checkServerAccess()) {
       return await axios.post(`${config.public.apiBase}/donations/stock/audit`, params)
     }
     throw new Error('O Endpoint não é suportado no modo offline');
@@ -750,16 +740,16 @@ export const useApiStore = defineStore('api', () => {
    *************************/
 
   const getIncidentTimeline = async (incidentId: number, params: QueryParams) => {
-    if(await checkServerAccess())
-    {
-      const res = axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
-      await storeData('incident_timeline', res.data.data);
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
+      // console.log(res);
+      // await storeData('incident_timeline', res.data.data);
       return res;
-    }
-    else
-    {
-      console.debug("OFFLINE DATA")
-      return await retrievePaginatedByIncident('incident_timeline', 'timeline', incidentId, params);
+    } else {
+      throw new Error('O Endpoint não é suportado no modo offline');
+
+      // console.debug("OFFLINE DATA")
+      // return await retrievePaginatedByIncident('incident_timeline', 'timeline', incidentId, params);
     }
   }
 
