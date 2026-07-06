@@ -528,9 +528,25 @@ const saveLogistic = async (payload: any) => {
   const incidentId = Number(route.params.id)
 
   try {
+    const existing = !editingLogistic.value?.id ? logistics.value.find(l => l.entity_id === payload.entity_id) : null
+
     if (editingLogistic.value?.id) {
       await api.updateIncidentLogistic(incidentId, editingLogistic.value.id, payload)
-    } else {
+    }
+    else if (existing){
+      await api.updateIncidentLogistic(incidentId, existing.id, {
+        entity_id: existing.entity_id,
+        vehicle_count: (existing.vehicle_count ?? 0) + (payload.vehicle_count ?? 0),
+        human_count: (existing.human_count ?? 0) + (payload.human_count ?? 0),
+      })
+
+      toast.add({
+        title: 'Recurso atualizado',
+        description: 'Esta entidade já tinha um registo — os valores foram somados.',
+        color: 'info'
+      })
+    }
+    else {
       await api.createIncidentLogistic(incidentId, payload)
     }
 
