@@ -1,7 +1,14 @@
 import {defineStore} from 'pinia'
 import axios from 'axios'
 import {checkServerAccess} from "@/utils";
-import {clearTable, removeEntry, retrieveData, retrieveDataPaginated, storeData} from "@/composables/useIndexedDB";
+import {
+  clearTable,
+  removeEntry,
+  retrieveData,
+  retrieveDataPaginated, retrieveIncidentPartiesDataPaginated, retrievePaginatedByIncident,
+  retrievePCODataPaginated,
+  storeData
+} from "@/composables/useIndexedDB";
 import type {QueryParams} from "@/types";
 
 export const useApiStore = defineStore('api', () => {
@@ -263,12 +270,21 @@ export const useApiStore = defineStore('api', () => {
   /*************************
    *
    *  Incidents PCO
-   *  TODO: Implementar lógica de storage offline
    *
    *************************/
 
-  const getIncidentPCOs = (incidentId: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
+  const getIncidentPCOs = async (incidentId: number, params?: QueryParams) => {
+    if(await checkServerAccess())
+    {
+      const res = axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
+      await storeData('incident_pcos', res.data.data);
+      return res;
+    }
+    else
+    {
+      console.debug("OFFLINE DATA")
+      return await retrievePaginatedByIncident('incident_pcos', 'pco', incidentId, params);
+    }
   }
 
   const createIncidentPCO = (incidentId: number, params: any) => {
@@ -282,12 +298,21 @@ export const useApiStore = defineStore('api', () => {
   /*************************
    *
    *  Incidents Logistic
-   *  TODO: Implementar lógica de storage offline
    *
    *************************/
 
-  const getIncidentLogistics = (incidentId: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
+  const getIncidentLogistics = async (incidentId: number, params?: QueryParams) => {
+    if(await checkServerAccess())
+    {
+      const res = axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
+      await storeData('incident_parties', res.data.data)
+      return res;
+    }
+    else
+    {
+      console.debug("OFFLINE DATA")
+      return await retrievePaginatedByIncident('incident_parties', 'parties', incidentId, params);
+    }
   }
 
   const createIncidentLogistic = (incidentId: number, params: any) => {
@@ -724,8 +749,18 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentTimeline = (incidentId: number, params: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
+  const getIncidentTimeline = async (incidentId: number, params: QueryParams) => {
+    if(await checkServerAccess())
+    {
+      const res = axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
+      await storeData('incident_timeline', res.data.data);
+      return res;
+    }
+    else
+    {
+      console.debug("OFFLINE DATA")
+      return await retrievePaginatedByIncident('incident_timeline', 'timeline', incidentId, params);
+    }
   }
 
   const createTimelineComment = (incidentId: number, params: { body: string, datetime: string }) => {
