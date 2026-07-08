@@ -68,17 +68,6 @@ const lastBounds = ref<string | null>(null)
 
 const loadedIncidentIds = new Set<number>()
 
-function isWithinBbox(coordinates: string | undefined, bbox: string): boolean {
-  if (!coordinates) return false
-
-  const [lat, lng] = coordinates.split(',').map(Number)
-  const [west, south, east, north] = bbox.split(',').map(Number)
-
-  if ([lat, lng, west, south, east, north].some(Number.isNaN)) return false
-
-  return lat >= south && lat <= north && lng >= west && lng <= east
-}
-
 async function refreshMapIncidents(bbox: string, cursor: string | null = null): Promise<void> {
   const res = await api.getIncidents({
     per_page: 10,
@@ -89,7 +78,6 @@ async function refreshMapIncidents(bbox: string, cursor: string | null = null): 
   const newIncidents = res.data.data.filter((i: Incident) =>
     !i.is_major &&
     i.incidentState?.terminates_incident !== true &&
-    isWithinBbox(i.coordinates, bbox) &&
     !loadedIncidentIds.has(i.id)
   )
 

@@ -5,7 +5,7 @@ import type { FormSubmitEvent } from "@nuxt/ui"
 import { useApiStore } from "@/stores/api"
 import { useAuthStore } from "@/stores/auth"
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
-import {toDatetimeLocal} from "@/utils"
+import {toDatetimeLocal, incidentDisplayName} from "@/utils"
 
 const props = defineProps<{
   modelValue: boolean
@@ -137,7 +137,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: state.is_major ? `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}` : i.identifier
+    name: incidentDisplayName(i)
   })
 })
 
@@ -194,7 +194,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       name_pco: ''
     })
     setDefaultIncidentState()
-  } catch (e) {
+  } catch (e: any) {
+    const errors = e?.response?.data?.errors
+
     if (errors?.identifier?.length) {
       toast.add({
         title: 'Identificador duplicado',
@@ -212,8 +214,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
+function clearIncidentAssociation() {
+  state.incident_id = state.is_major ? [] : null
+}
+
+function shouldHaveOwnIdentifier() {
+  if (state.is_major) return true
+  return !state.incident_id
+}
+
 async function loadNextIdentifier() {
-  if (!state.is_major) return
+  if (!shouldHaveOwnIdentifier()) {
+    state.identifier = ''
+    return
+  }
 
   try {
     const { data } = await api.getNextIncidentIdentifier()
@@ -233,17 +247,19 @@ watch(() => state.is_major, async (isMajor) => {
   state.incident_id = isMajor ? [] : null
 
   if (isMajor) {
-    await loadNextIdentifier()
     state.coordinates = ''
-  }
-  else {
-    state.identifier = ''
-    if (props.coords) {
-      state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
-    }
+  } else if (props.coords) {
+    state.coordinates = `${props.coords.lat}, ${props.coords.lng}`
   }
 
+  await loadNextIdentifier()
   await incidents.reset()
+})
+
+watch(() => state.incident_id, async () => {
+  if (!state.is_major) {
+    await loadNextIdentifier()
+  }
 })
 
 watch(() => state.incident_state_id, (newState) => {
@@ -303,22 +319,31 @@ onMounted(async() => {
                 </div>
                 <div class="space-y-4">
                   <h3 class="text-xs font-semibold uppercase tracking-wide text-muted">Identificação</h3>
-                  <UFormField v-if="state.is_major" label="Nº Ocorrência" name="identifier" required>
+                  <UFormField label="Nº Ocorrência" name="identifier" required>
                     <UInput v-model="state.identifier" class="w-full" placeholder="Ex: 2026/0001" disabled />
                   </UFormField>
                   <UFormField :label="state.is_major ? 'Ocorrências Associadas' : 'Associar a Ocorrência Major'" name="incident_id" :class="{ 'md:col-span-2': !state.is_major }">
-                    <USelectMenu
-                      ref="incidentsMenu"
-                      v-model="state.incident_id"
-                      v-model:search-term="incidents.search.value"
-                      :items="incidents.items.value"
-                      :loading="incidents.loading.value"
-                      label-key="name"
-                      :multiple="state.is_major"
-                      class="w-full"
-                      ignore-filter
-                      :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
-                    />
+                    <div class="flex gap-2">
+                      <USelectMenu
+                        ref="incidentsMenu"
+                        v-model="state.incident_id"
+                        v-model:search-term="incidents.search.value"
+                        :items="incidents.items.value"
+                        :loading="incidents.loading.value"
+                        label-key="name"
+                        :multiple="state.is_major"
+                        class="w-full"
+                        ignore-filter
+                        :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
+                      />
+                      <UButton
+                        v-if="!state.is_major && !!state.incident_id"
+                        icon="i-lucide-x"
+                        color="neutral"
+                        variant="ghost"
+                        @click="clearIncidentAssociation"
+                      />
+                    </div>
                   </UFormField>
                   <UFormField label="Tipo de Ocorrência" name="incident_type_id" required>
                     <USelectMenu

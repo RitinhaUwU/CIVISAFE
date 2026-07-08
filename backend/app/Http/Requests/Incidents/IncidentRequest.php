@@ -11,10 +11,11 @@ class IncidentRequest extends FormRequest
     {
         $is_patch = $this->isMethod('PATCH');
 
-        $isMajor = $this->has('is_major') ? $this->boolean('is_major') : (bool) optional($this->route('incident'))->is_major;
-
         return [
-            'identifier' => [Rule::requiredIf($isMajor), 'nullable', 'string', Rule::unique('incidents', 'identifier')->ignore($this->route('incident')),],
+            'identifier' => [$is_patch ? 'sometimes' : 'nullable', 'string',
+                Rule::requiredIf(fn () => $this->has('is_major') ? $this->boolean('is_major') : (bool) optional($this->route('incident'))->is_major),
+                Rule::unique('incidents', 'identifier')->ignore($this->route('incident')),
+            ],
             'incident_type_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_types,id'],
             'incident_state_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_states,id'],
             'incident_priority_id' => [$is_patch ? 'sometimes' : 'required', 'exists:incident_priorities,id'],

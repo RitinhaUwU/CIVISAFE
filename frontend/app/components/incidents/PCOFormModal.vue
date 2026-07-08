@@ -1,4 +1,4 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
+<script setup lang="ts">
 import { computed, watch } from 'vue'
 import * as z from 'zod'
 import {toDatetimeLocal} from "@/utils"

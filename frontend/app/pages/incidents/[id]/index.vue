@@ -13,7 +13,7 @@ import LogisticFormModal from '@/components/incidents/LogisticFormModal.vue'
 import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
 import PCOFormModal from '@/components/incidents/PCOFormModal.vue'
 import ConflictPCOModal from '@/components/incidents/ConflictPCOModal.vue'
-import {toDatetimeLocal} from "@/utils";
+import {toDatetimeLocal, incidentDisplayName} from "@/utils";
 
 const router = useRouter()
 const route = useRoute()
@@ -61,7 +61,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: state.is_major ? `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}` : i.identifier
+    name: incidentDisplayName(i)
   })
 })
 
@@ -220,7 +220,7 @@ const handleSaveGeral = async () => {
       start_datetime: toDatetimeLocal(state.start_datetime),
       end_datetime: toDatetimeLocal(state.end_datetime),
       operational_grid: state.operational_grid,
-      coordinates: state.coordinates,
+      coordinates: state.is_major ? null : state.coordinates,
       common_place: state.common_place,
       address: state.address,
       parish: state.parish,
@@ -283,7 +283,7 @@ const fetchIncident = async () => {
   if (data.is_major && data.children_incidents?.length) {
     incidents.prependSelected(data.children_incidents.map((i: any) => ({
       id: i.id,
-      name: `(Major ${data.identifier}) ${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
+      name: incidentDisplayName(i)
     })))
   }
   else if (!data.is_major && data.parentIncident) {
@@ -291,10 +291,6 @@ const fetchIncident = async () => {
       id: data.parentIncident.id,
       name: data.parentIncident.identifier
     }])
-  }
-
-  if (data.is_major) {
-    state.coordinates = ''
   }
 
   if (data.incidentType) {
@@ -327,10 +323,8 @@ const fetchIncident = async () => {
     incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.type}`} : null,
     incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: `(Major ${data.identifier}) ${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
-    start_datetime: toDatetimeLocal(data.start_datetime),
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: incidentDisplayName(i)})) : data.parentIncident ? {id: data.parentIncident.id, name: incidentDisplayName(data.parentIncident)} : null,    start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    coordinates: data.is_major ? '' : data.coordinates,
   })
 
   await nextTick()
@@ -345,8 +339,16 @@ const showEndDateWarning = computed(() => {
   )
 })
 
+function shouldHaveOwnIdentifier() {
+  if (state.is_major) return true
+  return !state.incident_id
+}
+
 async function loadNextIdentifier() {
-  if (!state.is_major) return
+  if (!shouldHaveOwnIdentifier()) {
+    state.identifier = ''
+    return
+  }
 
   try {
     const { data } = await api.getNextIncidentIdentifier()
@@ -363,14 +365,17 @@ watch(() => state.is_major, async (isMajor, wasMajor) => {
 
   await incidents.reset(true)
 
-  if (isMajor) {
-    state.coordinates = ''
+  // Só gera/limpa identifier quando o tipo (major/minor) muda de facto.
+  // Se continuar minor (wasMajor === false && isMajor === false) mantém o identifier existente.
+  if (isMajor || wasMajor) {
+    await loadNextIdentifier()
+  }
+})
 
-    if (!wasMajor) {
-      await loadNextIdentifier()
-    }
-  } else {
-    state.identifier = ''
+watch(() => state.incident_id, async () => {
+  if (loadingIncident.value) return
+  if (!state.is_major) {
+    await loadNextIdentifier()
   }
 })
 
@@ -804,49 +809,50 @@ onMounted(async () => {
             <section class="space-y-2">
               <h2 class="font-bold">Dados Gerais</h2>
               <USwitch v-model="state.is_major" label="Ocorrência Major"/>
-              <UFormField v-if="state.is_major" label="Identificador" name="identifier">
+              <UFormField v-if="state.is_major || !state.incident_id" label="Identificador" name="identifier">
                 <UInput v-model="state.identifier" class="w-full" disabled />
               </UFormField>
               <UFormField label="Tipo de Ocorrência" name="incident_type_id" class="sm:col-span-2">
                 <USelectMenu
-                    ref="typeMenu"
-                    v-model="state.incident_type_id"
-                    v-model:search-term="types.search.value"
-                    :items="types.items.value"
-                    :loading="types.loading.value"
-                    label-key="name"
-                    ignore-filter
-                    class="w-full"
+                  ref="typeMenu"
+                  v-model="state.incident_type_id"
+                  v-model:search-term="types.search.value"
+                  :items="types.items.value"
+                  :loading="types.loading.value"
+                  label-key="name"
+                  ignore-filter
+                  class="w-full"
                 />
               </UFormField>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <UFormField label="Estado" name="incident_state_id">
                   <USelectMenu
-                      ref="stateMenu"
-                      v-model="state.incident_state_id"
-                      v-model:search-term="states.search.value"
-                      :items="states.items.value"
-                      :loading="states.loading.value"
-                      label-key="name"
-                      ignore-filter
-                      class="w-full"
+                    ref="stateMenu"
+                    v-model="state.incident_state_id"
+                    v-model:search-term="states.search.value"
+                    :items="states.items.value"
+                    :loading="states.loading.value"
+                    label-key="name"
+                    ignore-filter
+                    class="w-full"
                   />
                 </UFormField>
                 <UFormField label="Prioridade" name="incident_priority_id">
                   <USelectMenu
-                      ref="priorityMenu"
-                      v-model="state.incident_priority_id"
-                      v-model:search-term="priorities.search.value"
-                      :items="priorities.items.value"
-                      :loading="priorities.loading.value"
-                      label-key="name"
-                      ignore-filter
-                      class="w-full"
+                    ref="priorityMenu"
+                    v-model="state.incident_priority_id"
+                    v-model:search-term="priorities.search.value"
+                    :items="priorities.items.value"
+                    :loading="priorities.loading.value"
+                    label-key="name"
+                    ignore-filter
+                    class="w-full"
                   />
                 </UFormField>
               </div>
               <UFormField name="incident_id" label="Associar Evento:" class="sm:col-span-2">
-                <USelectMenu
+                <div class="flex gap-2">
+                  <USelectMenu
                     ref="incidentsMenu"
                     v-model="state.incident_id"
                     v-model:search-term="incidents.search.value"
@@ -857,7 +863,15 @@ onMounted(async () => {
                     :multiple="state.is_major"
                     class="w-full"
                     :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
-                />
+                  />
+                  <UButton
+                    v-if="!state.is_major && !!state.incident_id"
+                    icon="i-lucide-x"
+                    color="neutral"
+                    variant="ghost"
+                    @click="state.incident_id = null"
+                  />
+                </div>
               </UFormField>
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
@@ -917,11 +931,11 @@ onMounted(async () => {
                 <UInput v-model="state.common_place" class="w-full"/>
               </UFormField>
               <Map
-                  v-if="!state.is_major"
-                  :center="mapCenter"
-                  :zoom="13"
-                  class="w-full h-[400px] rounded-lg"
-                  @map-click="updateCoordinates"
+                v-if="!state.is_major"
+                :center="mapCenter"
+                :selected-coords="mapCenter"
+                :zoom="13"
+                @map-click="updateCoordinates"
               />
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
@@ -944,12 +958,12 @@ onMounted(async () => {
               </div>
             </section>
             <UButton
-                icon="i-lucide-save"
-                color="primary"
-                size="xl"
-                :loading="saving"
-                @click="handleSaveGeral"
-                class="fixed bottom-6 right-6 z-1000 rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
+              icon="i-lucide-save"
+              color="primary"
+              size="xl"
+              :loading="saving"
+              @click="handleSaveGeral"
+              class="fixed bottom-6 right-6 z-1000 rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
             />
           </div>
         </template>

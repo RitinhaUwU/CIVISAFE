@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { Map, Marker } from 'leaflet'
 import { useDebounceFn } from '@vueuse/core'
+import { incidentDisplayName } from "@/utils"
 
 const mapContainer = ref<HTMLElement | null>(null)
 
@@ -77,10 +78,10 @@ function renderMarkers(L: any) {
       .addTo(map)
       .bindPopup(`
         <div style="line-height: 1.8;">
-          <b>Identificador: </b><span>${incident.is_major ? incident.identifier : `${incident.parentIncident?.identifier ? `(Major ${incident.parentIncident.identifier}) ` : ''}${incident.incidentType?.type ?? 'Ocorrência'}${incident.address ? ` - ${incident.address}${incident.municipality ? `, ${incident.municipality}` : ''}` : ''}`}</span><br>
-          <b>Tipo: </b><span>${incident.incidentType?.code} - ${incident.incidentType?.species} - ${incident.incidentType?.type}</span><br>
-          <b>Estado: </b><span>${incident.incidentState?.name}</span><br>
-          <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
+            <b>Identificador: </b><span>${incidentDisplayName(incident)}</span><br>
+            <b>Tipo: </b><span>${incident.incidentType?.code} - ${incident.incidentType?.species} - ${incident.incidentType?.type}</span><br>
+            <b>Estado: </b><span>${incident.incidentState?.name}</span><br>
+            <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
         </div>
       `)
     markers.push(marker)

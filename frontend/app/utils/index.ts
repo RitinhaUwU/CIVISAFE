@@ -94,3 +94,18 @@ export const toDatetimeLocal = (value?: string | null) => {
 
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
+
+export function incidentDisplayName(incident: any): string {
+  // Ocorrência major
+  if (incident.is_major) {
+    return incident.identifier ?? 'Ocorrência'
+  }
+
+  // Ocorrência normal com identificador próprio
+  if (incident.identifier) {
+    return incident.identifier
+  }
+
+  // Ocorrência normal sem identificador próprio
+  return `${incident.parentIncident?.identifier ? `(Major ${incident.parentIncident.identifier}) ` : ''}${incident.incidentType?.type ?? 'Ocorrência'}${incident.address ? ` - ${incident.address}${incident.municipality ? `, ${incident.municipality}` : ''}` : ''}`
+}

@@ -14,6 +14,13 @@ class Incident extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
 
+    protected static function booted(): void
+    {
+        static::saving(function (Incident $incident) {
+            $incident->identifier = $incident->resolveIdentifier();
+        });
+    }
+
     public function incidentType(): BelongsTo
     {
         return $this->belongsTo(IncidentType::class, 'incident_type_id')->withTrashed();
@@ -58,8 +65,7 @@ class Incident extends Model
     {
         $year = now()->year;
 
-        $last = self::where('is_major', true)
-            ->where('identifier', 'like', "{$year}/%")
+        $last = self::where('identifier', 'like', "{$year}/%")
             ->lockForUpdate()
             ->orderByDesc('identifier')
             ->first();
@@ -71,6 +77,25 @@ class Incident extends Model
         [, $number] = explode('/', $last->identifier);
 
         return sprintf('%d/%04d', ((int) $year), ((int) $number) + 1);
+    }
+
+    /**
+     * Regras de negócio para o identificador:
+     * - Major: identificador obrigatório (mantém o que já tem, ou gera um novo se ainda não tiver).
+     * - Minor associada a uma major (incident_id definido): sem identificador.
+     * - Minor standalone (sem incident_id): identificador próprio (mantém ou gera um novo).
+     */
+    private function resolveIdentifier(): ?string
+    {
+        if ($this->is_major) {
+            return $this->identifier ?: self::nextIdentifier();
+        }
+
+        if (!empty($this->incident_id)) {
+            return null;
+        }
+
+        return $this->identifier ?: self::nextIdentifier();
     }
 
     protected $with = [

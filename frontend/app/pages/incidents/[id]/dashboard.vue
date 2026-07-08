@@ -2,7 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import { useAuthStore } from '@/stores/auth'
-import { formatTimeAgoIntl } from '@vueuse/core'
+import {incidentDisplayName} from '@/utils'
 import Map from '@/components/Map.vue'
 import moment from 'moment'
 import 'moment/locale/pt'
@@ -278,7 +278,7 @@ onMounted(async () => {
             <div>
               <p class="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Dashboard · Ocorrência</p>
               <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
-                {{ incident.is_major ? incident.identifier : `${incident.parentIncident?.identifier ? `(Major ${incident.parentIncident.identifier}) ` : ''}${incident.incidentType?.type ?? 'Ocorrência'}${incident.address ? ` - ${incident.address}${incident.municipality ? `, ${incident.municipality}` : ''}` : ''}`}}
+                {{ incidentDisplayName(incident) }}
               </h1>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
@@ -333,6 +333,7 @@ onMounted(async () => {
                 <span class="text-2xl font-semibold text-highlighted">{{ logisticTotals.total_humans }}</span>
               </div>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
@@ -352,6 +353,7 @@ onMounted(async () => {
                 <span class="text-2xl font-semibold text-highlighted">{{ logisticTotals.total_vehicles }}</span>
               </div>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
@@ -371,6 +373,7 @@ onMounted(async () => {
                 <span class="text-2xl font-semibold text-highlighted">{{ activePCOs.length }}</span>
               </div>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
@@ -419,6 +422,7 @@ onMounted(async () => {
                 Funções de Posto de Comando Ativos
               </h2>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
@@ -535,6 +539,7 @@ onMounted(async () => {
               Meios e Recursos
             </h2>
             <UButton
+              v-if="!incident.is_major"
               variant="ghost"
               size="xs"
               label="Ver todos"

@@ -2,7 +2,8 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '@/stores/api'
-import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
+import { incidentDisplayName } from '@/utils'
 
 const api = useApiStore()
 const open = ref(false)
@@ -46,7 +47,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
+    name: incidentDisplayName(i)
   })
 })
 

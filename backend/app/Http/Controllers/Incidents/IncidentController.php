@@ -69,7 +69,8 @@ class IncidentController extends Controller
 
                     [$west, $south, $east, $north] = array_map('floatval', $value);
 
-                    $query->whereRaw("split_part(coordinates, ',', 1)::float BETWEEN ? AND ?", [$south, $north])->whereRaw("split_part(coordinates, ',', 2)::float BETWEEN ? AND ?", [$west, $east]);
+                    $query->whereRaw("split_part(coordinates, ',', 1)::float BETWEEN ? AND ?", [$south, $north])
+                        ->whereRaw("split_part(coordinates, ',', 2)::float BETWEEN ? AND ?", [$west, $east]);
                 }),
             )
             ->orderBy('id')
@@ -105,20 +106,17 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request) {
 
             $data = $request->validated();
-
-            if ($data['is_major']) {
-                $data['identifier'] = Incident::nextIdentifier();
-            }
+            $children = $data['children_incidents'] ?? [];
+            unset($data['children_incidents']);
 
             $this->applyEndDatetimeRule($data);
-            $children = $data['children_incidents'] ?? [];
-
-            unset($data['children_incidents']);
 
             $incident = Incident::create($data);
 
             if ($incident->is_major && !empty($children)) {
-                Incident::whereIn('id', $children)->update(['incident_id' => $incident->id]);
+                foreach (Incident::whereIn('id', $children)->get() as $child) {
+                    $child->update(['incident_id' => $incident->id]);
+                }
             }
 
             return new IncidentResource(
@@ -153,26 +151,19 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
-
-            if ($data['is_major'] && !$incident->is_major) {
-                $data['identifier'] = Incident::nextIdentifier();
-            }
-
-            if (!$data['is_major']) {
-                $data['identifier'] = null;
-            }
+            $children = $data['children_incidents'] ?? [];
+            unset($data['children_incidents']);
 
             $this->applyEndDatetimeRule($data);
-            $children = $data['children_incidents'] ?? [];
-
-            unset($data['children_incidents']);
 
             $incident->update($data);
 
-            Incident::where('incident_id', $incident->id)->update(['incident_id' => null]);
+            Incident::where('incident_id', $incident->id)->whereNotIn('id', $children)->get()->each(fn ($child) => $child->update(['incident_id' => null]));
 
             if ($incident->is_major && !empty($children)) {
-                Incident::whereIn('id', $children)->update(['incident_id' => $incident->id]);
+                foreach (Incident::whereIn('id', $children)->get() as $child) {
+                    $child->update(['incident_id' => $incident->id]);
+                }
             }
 
             return new IncidentResource(
