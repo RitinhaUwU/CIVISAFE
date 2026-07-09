@@ -221,8 +221,9 @@ const getSourceIncidentLabel = (id?: number) => {
   return `${majorPrefix}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
 }
 
-const subtotal = (items: { vehicles: number; humans: number }[], key: 'vehicles' | 'humans') =>
-  items.reduce((sum, i) => sum + (i[key] ?? 0), 0)
+const subtotal = (items: { vehicles: number; humans: number }[], key: 'vehicles' | 'humans') => items.reduce((sum, i) => sum + (i[key] ?? 0), 0)
+
+const goToIncidents = () => router.push(`/incidents/${incidentId.value}`)
 
 onMounted(async () => {
   if (!authStore.hasPermission('INCIDENTS_LIST')) {
@@ -338,6 +339,7 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
+                @click="goToIncidents"
               />
             </div>
           </UPageCard>
@@ -358,6 +360,7 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
+                @click="goToIncidents"
               />
             </div>
           </UPageCard>
@@ -378,6 +381,7 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
+                @click="goToIncidents"
               />
             </div>
           </UPageCard>
@@ -427,6 +431,7 @@ onMounted(async () => {
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
+                @click="goToIncidents"
               />
             </div>
             <div v-if="activePCOs.length" class="space-y-5 px-5 py-4">
@@ -544,6 +549,7 @@ onMounted(async () => {
               size="xs"
               label="Ver todos"
               trailing-icon="i-lucide-arrow-right"
+              @click="goToIncidents"
             />
           </div>
           <div v-if="groupedLogistics.some(g => g.items.length > 0)" class="divide-y divide-stone-100 dark:divide-stone-800">
