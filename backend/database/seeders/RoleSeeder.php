@@ -36,6 +36,7 @@ class RoleSeeder extends Seeder
             PermissionsEnum::INCIDENT_TYPES_LIST->value,
             PermissionsEnum::ENTITIES_LIST->value,
             PermissionsEnum::ENTITY_TYPES_LIST->value,
+            PermissionsEnum::FACILITIES_LIST->value,
         ]);
 
         Role::firstOrCreate(['name' => RolesEnum::MODULE_VOLUNTEERS->value])->syncPermissions([
