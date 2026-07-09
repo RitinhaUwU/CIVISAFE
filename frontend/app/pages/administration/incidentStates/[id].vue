@@ -140,8 +140,8 @@ onMounted(fetchEntity)
         <div class="space-y-6">
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Nome" class="sm:col-span-2">
+            <div class="grid grid-cols-1 gap-4">
+              <UFormField label="Nome">
                 <UInput v-model="state.name" class="w-full" />
               </UFormField>
               <USwitch

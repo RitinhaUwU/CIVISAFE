@@ -37,7 +37,14 @@ class IncidentController extends Controller
             ])
             ->allowedFilters(
                 AllowedFilter::callback('search', function (Builder $query, $value) {
-                    $query->where('identifier', 'ILIKE', "%{$value}%");
+                    $query->where(function (Builder $q) use ($value) {
+                        $q->where('identifier', 'ILIKE', "%{$value}%")
+                            ->orWhereHas('incidentType', function (Builder $type) use ($value) {
+                                $type->where('code', 'ILIKE', "%{$value}%")
+                                    ->orWhere('species', 'ILIKE', "%{$value}%")
+                                    ->orWhere('type', 'ILIKE', "%{$value}%");
+                            });
+                    });
                 }),
                 AllowedFilter::callback('state', function (Builder $query, $value) {
                     if ($value === 'all' || !$value) return;
@@ -50,6 +57,45 @@ class IncidentController extends Controller
                 AllowedFilter::callback('is_major', function (Builder $query, $value) {
                     if ($value === 'all' || $value === null) return;
                     $query->where('is_major', $value);
+                }),
+                AllowedFilter::callback('terminates_incident', function (Builder $query, $value) {
+                    if ($value === null) return;
+                    $query->where('is_major', $value)->whereHas('incidentState', function (Builder $q) {
+                        $q->where('terminates_incident', false);
+                    });
+                }),
+                // https://laravel.com/docs/13.x/queries#whereraw-orwhereraw
+                AllowedFilter::callback('bbox', function (Builder $query, $value) {
+                    if (!is_array($value) || count($value) !== 4) return;
+
+                    $coords = array_map(function ($v) {
+                        if (!is_numeric($v)) return null;
+                        return (float) $v;
+                    }, $value);
+
+                    if (in_array(null, $coords, true)) return;
+
+                    [$west, $south, $east, $north] = $coords;
+
+                    // Validação de intervalos geográficos válidos
+                    if ($south < -90 || $south > 90 || $north < -90 || $north > 90) return;
+                    if ($west < -180 || $west > 180 || $east < -180 || $east > 180) return;
+
+                    // Garantir que south <= north (latitude não cruza polos)
+                    if ($south > $north) return;
+                    // Filtro de latitude (sempre um intervalo simples)
+                    $query->whereRaw("NULLIF(split_part(coordinates, ',', 1), '')::float BETWEEN ? AND ?", [$south, $north]);
+
+                    // Filtro de longitude: lidar com bbox que cruza o antimeridiano (±180°)
+                    if ($west <= $east) {
+                        $query->whereRaw("NULLIF(split_part(coordinates, ',', 2), '')::float BETWEEN ? AND ?", [$west, $east]);
+                    } else {
+                        // bbox cruza a linha de mudança de data: dividir em duas condições (OR)
+                        $query->where(function (Builder $q) use ($west, $east) {
+                            $q->whereRaw("NULLIF(split_part(coordinates, ',', 2), '')::float >= ?", [$west])
+                                ->orWhereRaw("NULLIF(split_part(coordinates, ',', 2), '')::float <= ?", [$east]);
+                        });
+                    }
                 }),
             )
             ->orderBy('id')
@@ -67,7 +113,17 @@ class IncidentController extends Controller
 
         $state = IncidentState::find($data['incident_state_id']);
 
-        $data['end_datetime'] = $state?->terminates_incident ? now()->toIso8601String() : null;
+        if ($state?->terminates_incident && empty($data['end_datetime'])) {
+            $data['end_datetime'] = now()->toIso8601String();
+        }
+    }
+
+    // Dá preview do próximo identificador
+    public function nextIdentifier()
+    {
+        return response()->json([
+            'identifier' => Incident::nextIdentifier()
+        ]);
     }
 
     public function store(IncidentRequest $request)
@@ -75,15 +131,17 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request) {
 
             $data = $request->validated();
-            $this->applyEndDatetimeRule($data);
             $children = $data['children_incidents'] ?? [];
-
             unset($data['children_incidents']);
+
+            $this->applyEndDatetimeRule($data);
 
             $incident = Incident::create($data);
 
             if ($incident->is_major && !empty($children)) {
-                Incident::whereIn('id', $children)->update(['incident_id' => $incident->id]);
+                foreach (Incident::whereIn('id', $children)->get() as $child) {
+                    $child->update(['incident_id' => $incident->id]);
+                }
             }
 
             return new IncidentResource(
@@ -118,17 +176,19 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
-            $this->applyEndDatetimeRule($data);
             $children = $data['children_incidents'] ?? [];
-
             unset($data['children_incidents']);
+
+            $this->applyEndDatetimeRule($data);
 
             $incident->update($data);
 
-            Incident::where('incident_id', $incident->id)->update(['incident_id' => null]);
+            Incident::where('incident_id', $incident->id)->whereNotIn('id', $children)->get()->each(fn ($child) => $child->update(['incident_id' => null]));
 
             if ($incident->is_major && !empty($children)) {
-                Incident::whereIn('id', $children)->update(['incident_id' => $incident->id]);
+                foreach (Incident::whereIn('id', $children)->get() as $child) {
+                    $child->update(['incident_id' => $incident->id]);
+                }
             }
 
             return new IncidentResource(

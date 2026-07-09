@@ -50,8 +50,7 @@ test('create incident successfully', async ({ page }) => {
 
   createdIdentifier = uniqueIdentifier()
 
-  await page.getByLabel('Nº Ocorrência:').fill(createdIdentifier)
-  await page.getByLabel('Data Alerta:').fill('2024-06-01T10:00')
+  await page.getByLabel('Data Alerta').fill('2024-06-01T10:00')
 
   await page.locator('[placeholder="Selecionar estado"], button:has-text("Selecionar estado")').first().click()
   await page.waitForTimeout(500)
@@ -65,7 +64,7 @@ test('create incident successfully', async ({ page }) => {
   await page.locator('[role="option"]').first().click()
   await page.waitForTimeout(300)
 
-  await page.locator('[placeholder="Selecionar tipo"], button:has-text("Selecionar tipo")').first().click()
+  await page.locator('[placeholder="Selecionar tipo de ocorrência"], button:has-text("Selecionar tipo de ocorrência")').first().click()
   await page.waitForTimeout(500)
   await expect(page.locator('[role="option"]').first()).toBeVisible({ timeout: 10000 })
   await page.locator('[role="option"]').first().click()
@@ -78,33 +77,18 @@ test('create incident successfully', async ({ page }) => {
   ).toBeVisible({ timeout: 20000 })
 })
 
-test('create incident fails without required fields', async ({ page }) => {
-  await page.goto('http://localhost:3000/incidents')
-
-  await page.getByRole('button', { name: 'Nova Ocorrência' }).click()
-
-  await page.getByRole('button', { name: 'Guardar' }).click()
-
-  await expect(
-    page.getByText('O nº de identificação de ocorrência é obrigatório')
-  ).toBeVisible({ timeout: 10000 })
-})
-
 test('create incident fails with invalid phone number', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
 
   await page.getByRole('button', { name: 'Nova Ocorrência' }).click()
 
-  await page.getByLabel('Nº Ocorrência:').fill(uniqueIdentifier())
-  await page.getByLabel('Data Alerta:').fill('2024-06-01T10:00')
+  await page.getByLabel('Data Alerta').fill('2024-06-01T10:00')
 
-  await page.getByLabel('Tlf. Contacto:').fill('numero-invalido')
+  await page.getByLabel('Tlf. Contacto').fill('numero-invalido')
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
-  await expect(
-    page.getByText('Insira apenas números ou formato +000 000000000')
-  ).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText('Insira apenas números ou formato +000 000000000')).toBeVisible({ timeout: 10000 })
 })
 
 test('cancel creation closes modal without creating incident', async ({ page }) => {
@@ -144,84 +128,67 @@ test('filter by major incident updates list', async ({ page }) => {
   await expect(page.locator('table')).toBeVisible()
 })
 
-test('edit incident identifier successfully', async ({ page }) => {
+test('edit incident successfully', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
+
   await page.getByRole('button', { name: 'Nova Ocorrência' }).click()
   await expect(page.getByText('Registo Ocorrência')).toBeVisible({ timeout: 10000 })
 
-  const identifier = uniqueIdentifier()
-
-  await page.getByLabel('Nº Ocorrência:').fill(identifier)
-  await page.getByLabel('Data Alerta:').fill('2024-06-01T10:00')
+  await page.getByLabel('Data Alerta').fill('2024-06-01T10:00')
 
   await page.locator('[placeholder="Selecionar estado"], button:has-text("Selecionar estado")').first().click()
-  await page.waitForTimeout(500)
-  await expect(page.locator('[role="option"]').first()).toBeVisible({ timeout: 10000 })
+  await expect(page.locator('[role="option"]').first()).toBeVisible()
   await page.locator('[role="option"]').first().click()
-  await page.waitForTimeout(300)
 
   await page.locator('[placeholder="Selecionar prioridade"], button:has-text("Selecionar prioridade")').first().click()
-  await page.waitForTimeout(500)
-  await expect(page.locator('[role="option"]').first()).toBeVisible({ timeout: 10000 })
+  await expect(page.locator('[role="option"]').first()).toBeVisible()
   await page.locator('[role="option"]').first().click()
-  await page.waitForTimeout(300)
 
-  await page.locator('[placeholder="Selecionar tipo"], button:has-text("Selecionar tipo")').first().click()
-  await page.waitForTimeout(500)
-  await expect(page.locator('[role="option"]').first()).toBeVisible({ timeout: 10000 })
+  await page.locator('[placeholder="Selecionar tipo de ocorrência"], button:has-text("Selecionar tipo de ocorrência")').first().click()
+  await expect(page.locator('[role="option"]').first()).toBeVisible()
   await page.locator('[role="option"]').first().click()
-  await page.waitForTimeout(300)
 
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  const [response] = await Promise.all([
+    page.waitForResponse(resp =>
+      resp.request().method() === 'POST' &&
+      resp.url().includes('/incidents')
+    ),
+    page.getByRole('button', { name: 'Guardar' }).click()
+  ])
+
   await expect(page.getByText('Ocorrência criada com sucesso', { exact: true })).toBeVisible({ timeout: 20000 })
 
-  await expect(page.getByText('Registo Ocorrência')).not.toBeVisible({ timeout: 10000 })
+  const body = await response.json()
+  const incidentId = body.data.id
 
-  const input = page.getByPlaceholder('Filtrar ocorrências...')
-  await input.click()
-  await input.clear()
-  await input.pressSequentially(identifier, { delay: 100 })
-  await page.waitForTimeout(1500)
+  await page.goto(`http://localhost:3000/incidents/${incidentId}`)
 
-  const row = page.locator('tbody tr').filter({ hasText: identifier }).first()
-  await expect(row).toBeVisible({ timeout: 20000 })
-  await row.getByRole('button').first().click()
+  await page.waitForLoadState('networkidle')
 
-  await page.waitForURL('**/incidents/**')
-  await page.waitForTimeout(12000)
-  await expect(page.getByLabel('Identificador')).not.toHaveValue('', { timeout: 20000 })
+  const obs = page.locator('#obs')
+  await expect(obs).toBeVisible({ timeout: 20000 })
 
-  const newIdentifier = `${identifier}-EDIT`
-  await page.getByLabel('Identificador').fill(newIdentifier)
-  createdIdentifier = newIdentifier
+  const newObs = `Observação editada ${Date.now()}`
+  await obs.fill(newObs)
 
   await page.locator('button.fixed.bottom-6.right-6').click()
 
   await expect(page.getByText('Ocorrência atualizada', { exact: true })).toBeVisible({ timeout: 20000 })
-})
 
-test('save incident without identifier shows validation error', async ({ page }) => {
-  await page.goto('http://localhost:3000/incidents')
-  await page.waitForSelector('table')
-
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
-  await page.waitForURL('**/incidents/**')
-
-  await expect(page.getByLabel('Identificador')).not.toHaveValue('', { timeout: 20000 })
-
-  await page.getByLabel('Identificador').fill('')
-  await page.locator('button.fixed.bottom-6.right-6').click()
-
-  await expect(page.getByText('O nº de identificação de ocorrência é obrigatório', { exact: true })).toBeVisible({ timeout: 10000 })
+  await expect(obs).toHaveValue(newObs)
 })
 
 test('add PCO function successfully', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
+
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
   await page.waitForURL('**/incidents/**')
 
   await page.getByRole('tab', { name: 'Posto de Comando' }).click()
@@ -246,8 +213,13 @@ test('add PCO function fails without required fields', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
+
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
   await page.waitForURL('**/incidents/**')
 
   await page.getByRole('tab', { name: 'Posto de Comando' }).click()
@@ -262,8 +234,13 @@ test('cancel PCO function creation closes modal', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
+
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
   await page.waitForURL('**/incidents/**')
 
   await page.getByRole('tab', { name: 'Posto de Comando' }).click()
@@ -280,8 +257,13 @@ test('add logistics team successfully', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
+
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
   await page.waitForURL('**/incidents/**')
 
   await page.getByRole('tab', { name: 'Meios e Recursos' }).click()
@@ -296,23 +278,28 @@ test('add logistics team successfully', async ({ page }) => {
   await page.getByLabel('Nº de Veículos').fill('3')
   await page.getByLabel('Nº de Operacionais').fill('12')
 
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Adicionar' }).click()
 
-  await expect(page.getByText('Recurso guardada', { exact: true })).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText('Recurso guardado', { exact: true })).toBeVisible({ timeout: 20000 })
 })
 
 test('add logistics team fails without entity', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
+
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
   await page.waitForURL('**/incidents/**')
 
   await page.getByRole('tab', { name: 'Meios e Recursos' }).click()
   await page.getByRole('button', { name: 'Novo Recurso' }).click()
 
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Adicionar' }).click()
 
   await expect(page.getByText('A entidade é obrigatória', { exact: true })).toBeVisible({ timeout: 10000 })
 })
@@ -321,10 +308,14 @@ test('edit PCO function successfully', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
-  await page.waitForURL('**/incidents/**')
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
 
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
+  await page.waitForURL('**/incidents/**')
   await page.getByRole('tab', { name: 'Posto de Comando' }).click()
 
   await expect(page.locator('[data-testid="edit-pco"]').first()).toBeVisible({ timeout: 10000 }).catch(() => {})
@@ -343,8 +334,13 @@ test('edit logistics team successfully', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const firstInfoButton = page.locator('tbody tr').nth(0).getByRole('button').first()
-  await firstInfoButton.click()
+  await page.getByRole('combobox').first().click()
+  await page.getByRole('option', { name: 'Não' }).click()
+
+  await page.waitForTimeout(1000)
+
+  await page.locator('tbody tr').first().getByRole('button').nth(1).click()
+
   await page.waitForURL('**/incidents/**')
 
   await page.getByRole('tab', { name: 'Meios e Recursos' }).click()
@@ -359,23 +355,19 @@ test('edit logistics team successfully', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
-  await expect(page.getByText('Recurso guardada', { exact: true })).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText('Recurso guardado', { exact: true })).toBeVisible({ timeout: 20000 })
 })
 
 test('cancel delete keeps incident', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const input = page.getByPlaceholder('Filtrar ocorrências...')
-  await input.click()
-  await input.clear()
-  await input.pressSequentially(createdIdentifier, { delay: 100 })
-  await page.waitForTimeout(1500)
+  const row = page.locator('tbody tr').first()
+  const identifier = (await row.locator('td').first().textContent())?.trim()
 
-  const row = page.locator('tbody tr').filter({ hasText: createdIdentifier }).first()
-  await expect(row).toBeVisible({ timeout: 20000 })
+  expect(identifier).toBeTruthy()
 
-  await row.getByRole('button').nth(1).click()
+  await row.getByRole('button').nth(2).click()
 
   await expect(page.getByText(/Eliminar ocorrência:/)).toBeVisible({ timeout: 10000 })
 
@@ -389,16 +381,12 @@ test('delete incident successfully', async ({ page }) => {
   await page.goto('http://localhost:3000/incidents')
   await page.waitForSelector('table')
 
-  const input = page.getByPlaceholder('Filtrar ocorrências...')
-  await input.click()
-  await input.clear()
-  await input.pressSequentially(createdIdentifier, { delay: 100 })
-  await page.waitForTimeout(1500)
+  const row = page.locator('tbody tr').first()
+  const identifier = (await row.locator('td').first().textContent())?.trim()
 
-  const row = page.locator('tbody tr').filter({ hasText: createdIdentifier }).first()
-  await expect(row).toBeVisible({ timeout: 20000 })
+  expect(identifier).toBeTruthy()
 
-  await row.getByRole('button').nth(1).click()
+  await row.getByRole('button').nth(2).click()
 
   await page.getByRole('button', { name: 'Eliminar' }).click()
 

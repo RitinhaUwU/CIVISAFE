@@ -96,6 +96,25 @@ class EntityController extends Controller
         }
     }
 
+    public function deleteImage(Entity $entity)
+    {
+        try {
+            if ($entity->logo === null) {
+                return response()->json(['message' => 'Esta entidade não tem logotipo.'], 404);
+            }
+
+            Storage::disk('data_bucket')->delete($entity->logo);
+
+            $entity->logo = null;
+            $entity->saveOrFail();
+
+            return new EntityResource($entity);
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return response()->json(['message' => $e->getMessage(),], 500);
+        }
+    }
+
     public function store(EntityCreateRequest $request)
     {
         return new EntityResource(Entity::create($request->validated()));

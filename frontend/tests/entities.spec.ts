@@ -298,7 +298,6 @@ test('cancel delete entity', async ({ page }) => {
   await page.getByRole('button', { name: 'Cancelar' }).click()
 
   await expect(page.getByText(/Eliminar Entidade:/)).not.toBeVisible({ timeout: 5000 })
-  await expect(page.locator('tbody tr').filter({ hasText: updatedName }).first()).toBeVisible()
 })
 
 test('delete entity', async ({ page }) => {

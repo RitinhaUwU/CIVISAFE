@@ -15,19 +15,45 @@ const saving = ref(false)
 const schema = z.object({
   name: z.string().min(2, 'Nome demasiado curto'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
-  password_confirmation: z.string(),
+  password: z.string().min(8, 'Mínimo 8 caracteres').or(z.literal('')),
+  password_confirmation: z.string().or(z.literal('')),
+  current_password: z.string().or(z.literal('')),
   mobile: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
   locked: z.boolean(),
   role: z.enum(['admin', 'user'], { message: 'Selecione uma opção' }),
   module_incidents: z.boolean().optional(),
   module_volunteers: z.boolean().optional(),
   module_donations: z.boolean().optional()
+}).superRefine((data, ctx) => {
+  if (data.password !== '') {
+    if (data.password.length < 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['password'],
+        message: 'Mínimo 8 caracteres'
+      })
+    }
+
+    if (data.password !== data.password_confirmation) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['password_confirmation'],
+        message: 'As palavras-passe não coincidem.'
+      })
+    }
+
+    if (
+      auth.currentUserID === Number(route.params.id) &&
+      data.current_password === ''
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['current_password'],
+        message: 'Introduza a palavra-passe atual.'
+      })
+    }
+  }
 })
-  .refine((data) => data.password === data.password_confirmation, {
-    message: 'Passwords não coincidem',
-    path: ['password_confirmation']
-  })
 
 type Schema = z.output<typeof schema>
 
@@ -36,6 +62,7 @@ const state = reactive<Partial<Schema>>({
   email: '',
   password: '',
   password_confirmation: '',
+  current_password: '',
   mobile: '',
   locked: false,
   role: undefined,
@@ -84,16 +111,27 @@ const handleSave = async () => {
     if (state.password) {
       payload.password = state.password
       payload.password_confirmation = state.password_confirmation
+
+      if (auth.currentUserID === Number(route.params.id)) {
+        payload.current_password = state.current_password
+      }
     }
 
     await api.updateUser(parseInt(<string>route.params.id), payload)
+
+    state.current_password = ''
+    state.password = ''
+    state.password_confirmation = ''
 
     toast.add({
       title: 'Sucesso',
       description: 'Utilizador atualizado',
       color: 'success'
     })
-  } catch (e) {
+  } catch (e: any) {
+    console.log(e.response?.status)
+    console.log(e.response?.data)
+
     toast.add({
       title: 'Erro',
       description: 'Erro ao atualizar',
@@ -135,6 +173,7 @@ const fetchUser = async () => {
     email: data.email,
     password: '',
     password_confirmation: '',
+    current_password: '',
     mobile: data.mobile,
     locked: data.locked,
     role: data.roles?.[0],
@@ -271,6 +310,15 @@ onMounted(async () => {
       </section>
       <section class="space-y-3">
         <h2 class="font-bold">Alterar Palavra-Passe</h2>
+        <div class="gap-4">
+          <UFormField v-if="auth.currentUserID === Number(route.params.id)" label="Palavra-Passe Atual">
+            <UInput
+              v-model="state.current_password"
+              type="password"
+              class="w-full"
+            />
+          </UFormField>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField label="Nova Palavra-Passe">
             <UInput v-model="state.password" type="password" class="w-full"/>

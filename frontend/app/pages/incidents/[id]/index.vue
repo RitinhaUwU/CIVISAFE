@@ -13,7 +13,7 @@ import LogisticFormModal from '@/components/incidents/LogisticFormModal.vue'
 import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
 import PCOFormModal from '@/components/incidents/PCOFormModal.vue'
 import ConflictPCOModal from '@/components/incidents/ConflictPCOModal.vue'
-import {toDatetimeLocal} from "@/utils";
+import {toDatetimeLocal, incidentDisplayName} from "@/utils";
 import moment from "moment";
 
 const router = useRouter()
@@ -34,7 +34,7 @@ const types = usePaginatedSelect({
   menuRef: typeMenu,
   map: (t: any) => ({
     id: t.id,
-    name: `${t.code} - ${t.species} - ${t.type}`
+    name: `${t.code} - ${t.type}`
   })
 })
 
@@ -60,32 +60,44 @@ const priorities = usePaginatedSelect({
 const incidents = usePaginatedSelect({
   fetcher: api.getIncidents,
   menuRef: incidentsMenu,
-  filters: () => ({is_major: !state.is_major}),
-  map: (i: any) => ({id: i.id, name: i.identifier})
+  filters: () => ({
+    terminates_incident: !state.is_major
+  }),
+  map: (i: any) => ({
+    id: i.id,
+    name: incidentDisplayName(i)
+  })
 })
 
-const tabs = [
-  {
-    label: 'Geral',
-    slot: 'geral',
-    icon: 'i-lucide-users'
-  },
-  {
-    label: 'Posto de Comando',
-    slot: 'posto',
-    icon: 'i-lucide-satellite-dish',
-  },
-  {
-    label: 'Meios e Recursos',
-    slot: 'logistica',
-    icon: 'i-lucide-ambulance'
-  },
-  {
+const tabs = computed(() => {
+  const items = [
+    {
+      label: 'Geral',
+      slot: 'geral',
+      icon: 'i-lucide-users'
+    }
+  ]
+  if (!state.is_major) {
+    items.push(
+      {
+        label: 'Posto de Comando',
+        slot: 'posto',
+        icon: 'i-lucide-satellite-dish'
+      },
+      {
+        label: 'Meios e Recursos',
+        slot: 'logistica',
+        icon: 'i-lucide-ambulance'
+      }
+    )
+  }
+  items.push({
     label: 'Fita de Tempo',
     slot: 'timeline',
     icon: 'i-lucide-history'
-  }
-]
+  })
+  return items
+})
 
 const items = ref<BreadcrumbItem[]>([
   {
@@ -106,7 +118,7 @@ const selectOptionSchema = z.object({
 
 const schema = z.object({
   is_major: z.boolean(),
-  identifier: z.string().min(1, 'O nº de identificação de ocorrência é obrigatório'),
+  identifier: z.string().optional().nullable(),
   user_id: z.number(),
   start_datetime: z.string().min(1, 'A data de alerta é obrigatória'),
   end_datetime: z.string().optional().nullable(),
@@ -118,6 +130,7 @@ const schema = z.object({
   alert_source_relationship: z.string().optional().nullable(),
   alert_source_name: z.string().optional().nullable(),
   alert_source_contact: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000').optional().nullable(),
+  operational_grid: z.string().optional().nullable(),
   coordinates: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   district: z.string().optional().nullable(),
@@ -127,6 +140,14 @@ const schema = z.object({
   obs: z.string().optional().nullable(),
   coordinates_pco: z.string().optional().nullable(),
   name_pco: z.string().nullable().optional(),
+}).superRefine((data, ctx) => {
+  if (data.is_major && !data.identifier?.trim()) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'O nº de identificação de ocorrência é obrigatório',
+      path: ['identifier']
+    })
+  }
 })
 
 type Schema = z.output<typeof schema>
@@ -141,6 +162,7 @@ const state = reactive<Partial<Schema>>({
   user: null as any,
   start_datetime: '',
   end_datetime: '',
+  operational_grid: '',
   coordinates: '',
   common_place: '',
   address: '',
@@ -202,7 +224,8 @@ const handleSaveGeral = async () => {
       identifier: state.identifier,
       start_datetime: state.start_datetime != '' ? moment(state.start_datetime).toISOString() : '',
       end_datetime: state.end_datetime != '' ? moment(state.end_datetime).toISOString() : '',
-      coordinates: state.coordinates,
+      operational_grid: state.operational_grid,
+      coordinates: state.is_major ? null : state.coordinates,
       common_place: state.common_place,
       address: state.address,
       parish: state.parish,
@@ -250,7 +273,7 @@ const fetchIncident = async () => {
   if (data.is_major && data.children_incidents?.length) {
     incidents.prependSelected(data.children_incidents.map((i: any) => ({
       id: i.id,
-      name: i.identifier
+      name: incidentDisplayName(i)
     })))
   }
   else if (!data.is_major && data.parentIncident) {
@@ -260,14 +283,10 @@ const fetchIncident = async () => {
     }])
   }
 
-  if (data.is_major) {
-    state.coordinates = ''
-  }
-
   if (data.incidentType) {
     types.prependSelected([{
       id: data.incidentType.id,
-      name: `${data.incidentType.code} - ${data.incidentType.species} - ${data.incidentType.types}`
+      name: `${data.incidentType.code} - ${data.incidentType.type}`
     }])
   }
 
@@ -291,19 +310,68 @@ const fetchIncident = async () => {
     ...data,
     user_id: data.user?.id,
     user: data.user,
-    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.species} - ${data.incidentType.types}`} : null,
+    incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.type}`} : null,
     incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
-    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: i.identifier})) : data.parentIncident ? {id: data.parentIncident.id, name: data.parentIncident.identifier} : null,
-    start_datetime: toDatetimeLocal(data.start_datetime),
+    incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: incidentDisplayName(i)})) : data.parentIncident ? {id: data.parentIncident.id, name: incidentDisplayName(data.parentIncident)} : null,    start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    coordinates: data.is_major ? '' : data.coordinates,
   })
+
+  await nextTick()
 
   loadingIncident.value = false
 }
 
+const showEndDateWarning = computed(() => {
+  return (
+    !!state.end_datetime &&
+    !state.incident_state_id?.terminates_incident
+  )
+})
+
+function shouldHaveOwnIdentifier() {
+  if (state.is_major) return true
+  return !state.incident_id
+}
+
+async function loadNextIdentifier() {
+  if (!shouldHaveOwnIdentifier()) {
+    state.identifier = ''
+    return
+  }
+
+  try {
+    const { data } = await api.getNextIncidentIdentifier()
+    state.identifier = data.identifier
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+watch(() => state.is_major, async (isMajor, wasMajor) => {
+  if (loadingIncident.value) return
+
+  state.incident_id = isMajor ? [] : null
+
+  await incidents.reset(true)
+
+  // Só gera/limpa identifier quando o tipo (major/minor) muda de facto.
+  // Se continuar minor (wasMajor === false && isMajor === false) mantém o identifier existente.
+  if (isMajor || wasMajor) {
+    await loadNextIdentifier()
+  }
+})
+
+watch(() => state.incident_id, async () => {
+  if (loadingIncident.value) return
+  if (!state.is_major) {
+    await loadNextIdentifier()
+  }
+})
+
 watch(() => state.incident_state_id, (newState) => {
+  if (loadingIncident.value) return
+
   if (newState?.terminates_incident) {
     state.end_datetime = toDatetimeLocal(moment().toISOString())
   } else {
@@ -449,9 +517,25 @@ const editLogistic = (item: any) => {
 
 const saveLogistic = async (payload: any) => {
   try {
+    const existing = !editingLogistic.value?.id ? logistics.value.find(l => l.entity_id === payload.entity_id) : null
+
     if (editingLogistic.value?.id) {
       await api.updateIncidentLogistic(incidentID, editingLogistic.value.id, payload)
-    } else {
+    }
+    else if (existing){
+      await api.updateIncidentLogistic(incidentID, existing.id, {
+        entity_id: existing.entity_id,
+        vehicle_count: (existing.vehicle_count ?? 0) + (payload.vehicle_count ?? 0),
+        human_count: (existing.human_count ?? 0) + (payload.human_count ?? 0),
+      })
+
+      toast.add({
+        title: 'Recurso atualizado',
+        description: 'Esta entidade já tinha um registo — os valores foram somados.',
+        color: 'info'
+      })
+    }
+    else {
       await api.createIncidentLogistic(incidentID, payload)
     }
 
@@ -544,49 +628,50 @@ onMounted(async () => {
             <section class="space-y-2">
               <h2 class="font-bold">Dados Gerais</h2>
               <USwitch v-model="state.is_major" label="Ocorrência Major"/>
-              <UFormField label="Identificador" name="identifier">
-                <UInput v-model="state.identifier" class="w-full"/>
+              <UFormField v-if="state.is_major || !state.incident_id" label="Identificador" name="identifier">
+                <UInput v-model="state.identifier" class="w-full" disabled />
               </UFormField>
               <UFormField label="Tipo de Ocorrência" name="incident_type_id" class="sm:col-span-2">
                 <USelectMenu
-                    ref="typeMenu"
-                    v-model="state.incident_type_id"
-                    v-model:search-term="types.search.value"
-                    :items="types.items.value"
-                    :loading="types.loading.value"
-                    label-key="name"
-                    ignore-filter
-                    class="w-full"
+                  ref="typeMenu"
+                  v-model="state.incident_type_id"
+                  v-model:search-term="types.search.value"
+                  :items="types.items.value"
+                  :loading="types.loading.value"
+                  label-key="name"
+                  ignore-filter
+                  class="w-full"
                 />
               </UFormField>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <UFormField label="Estado" name="incident_state_id">
                   <USelectMenu
-                      ref="stateMenu"
-                      v-model="state.incident_state_id"
-                      v-model:search-term="states.search.value"
-                      :items="states.items.value"
-                      :loading="states.loading.value"
-                      label-key="name"
-                      ignore-filter
-                      class="w-full"
+                    ref="stateMenu"
+                    v-model="state.incident_state_id"
+                    v-model:search-term="states.search.value"
+                    :items="states.items.value"
+                    :loading="states.loading.value"
+                    label-key="name"
+                    ignore-filter
+                    class="w-full"
                   />
                 </UFormField>
                 <UFormField label="Prioridade" name="incident_priority_id">
                   <USelectMenu
-                      ref="priorityMenu"
-                      v-model="state.incident_priority_id"
-                      v-model:search-term="priorities.search.value"
-                      :items="priorities.items.value"
-                      :loading="priorities.loading.value"
-                      label-key="name"
-                      ignore-filter
-                      class="w-full"
+                    ref="priorityMenu"
+                    v-model="state.incident_priority_id"
+                    v-model:search-term="priorities.search.value"
+                    :items="priorities.items.value"
+                    :loading="priorities.loading.value"
+                    label-key="name"
+                    ignore-filter
+                    class="w-full"
                   />
                 </UFormField>
               </div>
               <UFormField name="incident_id" label="Associar Evento:" class="sm:col-span-2">
-                <USelectMenu
+                <div class="flex gap-2">
+                  <USelectMenu
                     ref="incidentsMenu"
                     v-model="state.incident_id"
                     v-model:search-term="incidents.search.value"
@@ -597,7 +682,15 @@ onMounted(async () => {
                     :multiple="state.is_major"
                     class="w-full"
                     :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
-                />
+                  />
+                  <UButton
+                    v-if="!state.is_major && !!state.incident_id"
+                    icon="i-lucide-x"
+                    color="neutral"
+                    variant="ghost"
+                    @click="state.incident_id = null"
+                  />
+                </div>
               </UFormField>
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
@@ -608,7 +701,16 @@ onMounted(async () => {
                   <UInput type="datetime-local" v-model="state.start_datetime" class="w-full"/>
                 </UFormField>
                 <UFormField label="Data Fim:" name="end_datetime">
-                  <UInput type="datetime-local" v-model="state.end_datetime" class="w-full"/>
+                  <UInput type="datetime-local" v-model="state.end_datetime" class="w-full" />
+                  <UAlert
+                    v-if="showEndDateWarning"
+                    class="mt-2"
+                    color="warning"
+                    variant="soft"
+                    icon="i-lucide-triangle-alert"
+                    title="Estado e data de fim inconsistentes"
+                    description="Foi definida uma data de fim, mas o estado selecionado não indica que a ocorrência está terminada. Esta informação será guardada, mas poderá representar uma inconsistência nos dados."
+                  />
                 </UFormField>
                 <UFormField label="Fonte de Alerta:" name="alert_source_relationship">
                   <UInput v-model="state.alert_source_relationship" class="w-full"/>
@@ -626,6 +728,9 @@ onMounted(async () => {
               <h2 class="font-bold">Localização</h2>
               <UFormField v-if="!state.is_major" label="Coordenadas" name="coordenates">
                 <UInput v-model="state.coordinates" class="w-full"/>
+              </UFormField>
+              <UFormField label="Grelha Operacional" name="operational_grid">
+                <UInput v-model="state.operational_grid" class="w-full"/>
               </UFormField>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <UFormField label="Morada" name="address">
@@ -645,11 +750,11 @@ onMounted(async () => {
                 <UInput v-model="state.common_place" class="w-full"/>
               </UFormField>
               <Map
-                  v-if="!state.is_major"
-                  :center="mapCenter"
-                  :zoom="13"
-                  class="w-full h-[400px] rounded-lg"
-                  @map-click="updateCoordinates"
+                v-if="!state.is_major"
+                :center="mapCenter"
+                :selected-coords="mapCenter"
+                :zoom="13"
+                @map-click="updateCoordinates"
               />
             </section>
             <div class="h-px border-t border-stone-200 dark:border-stone-800"/>
@@ -672,12 +777,12 @@ onMounted(async () => {
               </div>
             </section>
             <UButton
-                icon="i-lucide-save"
-                color="primary"
-                size="xl"
-                :loading="saving"
-                @click="handleSaveGeral"
-                class="fixed bottom-6 right-6 z-1000 rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
+              icon="i-lucide-save"
+              color="primary"
+              size="xl"
+              :loading="saving"
+              @click="handleSaveGeral"
+              class="fixed bottom-6 right-6 z-1000 rounded-full w-16 h-16 shadow-lg flex items-center justify-center"
             />
           </div>
         </template>
@@ -750,8 +855,8 @@ onMounted(async () => {
               :data="logistics"
               :columns="[
                 { accessorKey: 'entity.name', header: 'Entidade' },
-                { accessorKey: 'vehicle_count', header: 'Veículos' },
-                { accessorKey: 'human_count', header: 'Humanos' },
+                { accessorKey: 'vehicle_count', header: 'Nº de Veículos' },
+                { accessorKey: 'human_count', header: 'Nº de Operacionais' },
                 { id: 'actions', header: '' },
               ]"
             >

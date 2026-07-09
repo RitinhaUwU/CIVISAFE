@@ -201,6 +201,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || entities.length > 0"
           :data="entities"
           :columns="columns"
           :loading="loading"
@@ -214,6 +215,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de entidades encontrado.
+        </div>
       </div>
       <EntitiesDeleteModal
         v-if="selectedEntityById"

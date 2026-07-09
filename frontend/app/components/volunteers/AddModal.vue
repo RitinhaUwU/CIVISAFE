@@ -2,6 +2,7 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '@/stores/api'
+import { incidentDisplayName } from '@/utils'
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import moment from "moment";
 
@@ -20,7 +21,7 @@ const selectOptionSchema = z.object({
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
-  email: z.string().email('Email inválido'),
+  email: z.preprocess((value) => value === '' ? undefined : value, z.string().email('Email inválido').optional()),
   classification: z.enum(['single', 'org', 'misc']),
   num_elements: z.number().min(1),
   mission: z.string().nullable().optional(),
@@ -47,7 +48,7 @@ const incidents = usePaginatedSelect({
   }),
   map: (i: any) => ({
     id: i.id,
-    name: i.identifier
+    name: incidentDisplayName(i)
   })
 })
 
@@ -138,7 +139,7 @@ onMounted(async() => {
           <UFormField label="Contacto" name="contact" required>
             <UInput v-model="state.contact" class="w-full" />
           </UFormField>
-          <UFormField label="Email" name="email" required>
+          <UFormField label="Email" name="email">
             <UInput v-model="state.email" class="w-full" />
           </UFormField>
         </div>
@@ -221,11 +222,11 @@ onMounted(async() => {
         <div class="h-px border-t border-stone-200 dark:border-stone-800" />
         <h3 class="text-sm font-semibold text-muted">Período</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <UFormField label="Entrada" name="start_datetime">
-            <UInput type="datetime-local" v-model="state.start_datetime" />
+          <UFormField label="Entrada" name="start_datetime" required>
+            <UInput type="datetime-local" v-model="state.start_datetime" class="w-full" />
           </UFormField>
           <UFormField label="Saída" name="end_datetime">
-            <UInput type="datetime-local" v-model="state.end_datetime" />
+            <UInput type="datetime-local" v-model="state.end_datetime" class="w-full" />
           </UFormField>
         </div>
         <div class="flex justify-between gap-3 pt-2">

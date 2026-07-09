@@ -163,6 +163,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || incidentTypes.length > 0"
           :data="incidentTypes"
           :columns="columns"
           :loading="loading"
@@ -176,6 +177,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo dos tipos de ocorrência encontrado.
+        </div>
       </div>
     </template>
   </UDashboardPanel>
