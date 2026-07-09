@@ -64,10 +64,21 @@ class IncidentController extends Controller
                         $q->where('terminates_incident', false);
                     });
                 }),
+                // https://laravel.com/docs/13.x/queries#whereraw-orwhereraw
                 AllowedFilter::callback('bbox', function (Builder $query, $value) {
                     if (!is_array($value) || count($value) !== 4) return;
 
-                    [$west, $south, $east, $north] = array_map('floatval', $value);
+                    $coords = array_map(function ($v) {
+                        if (!is_numeric($v)) return null;
+                        return (float) $v;
+                    }, $value);
+
+                    if (in_array(null, $coords, true)) return;
+
+                    [$west, $south, $east, $north] = $coords;
+
+                    if ($south < -90 || $south > 90 || $north < -90 || $north > 90) return;
+                    if ($west < -180 || $west > 180 || $east < -180 || $east > 180) return;
 
                     $query->whereRaw("split_part(coordinates, ',', 1)::float BETWEEN ? AND ?", [$south, $north])
                         ->whereRaw("split_part(coordinates, ',', 2)::float BETWEEN ? AND ?", [$west, $east]);

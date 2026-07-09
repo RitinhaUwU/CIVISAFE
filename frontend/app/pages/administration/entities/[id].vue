@@ -140,7 +140,7 @@ const handleSave = async () => {
 
     await api.updateEntityLogo(parseInt(<string>route.params.id), uploadURL.data.key)
   }
-  else {
+  else if (imageRemoved.value) {
     try {
       await api.deleteEntityLogo(state.id)
       imageRemoved.value = false

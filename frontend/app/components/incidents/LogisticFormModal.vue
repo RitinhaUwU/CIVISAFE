@@ -119,7 +119,7 @@ onMounted(async () => {
             @click="emit('update:open', false)"
           />
           <UButton
-            :label="isEditing ? 'Atualizar' : 'Guardar'"
+            :label="isEditing ? 'Guardar' : 'Adicionar'"
             color="primary"
             type="submit"
             class="flex-1 justify-center"

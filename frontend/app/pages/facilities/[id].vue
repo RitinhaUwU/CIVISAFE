@@ -167,7 +167,7 @@ const handleSave = async () => {
 
     await api.updateFacilityImage(parseInt(<string>route.params.id), uploadURL.data.key)
   }
-  else {
+  else if (imageRemoved.value) {
     try {
       await api.deleteFacilityImage(state.id)
       imageRemoved.value = false

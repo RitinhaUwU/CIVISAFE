@@ -80,7 +80,7 @@ export const useApiStore = defineStore('api', () => {
   const deleteUser = async (id: number) => {
     const res = await axios.delete(`${config.public.apiBase}/users/${id}`)
     if (res.status === 200) {
-      await removeEntry('user', id)
+      await removeEntry('users', id)
     }
     return res;
   }
