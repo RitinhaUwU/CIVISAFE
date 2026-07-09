@@ -157,6 +157,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || entityTypes.length > 0"
           :data="entityTypes"
           :columns="columns"
           :loading="loading"
@@ -170,6 +171,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo dos tipos de entidade encontrado.
+        </div>
       </div>
       <EntityTypesDeleteModal
         v-if="selectedEntityTypeById"

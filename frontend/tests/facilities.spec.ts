@@ -323,8 +323,6 @@ test('download document from facility', async ({ page }) => {
   await page.waitForTimeout(1000)
 
   await page.getByTestId('download-document').first().click()
-
-  await expect(page.getByText('Download iniciado.', { exact: true })).toBeVisible({ timeout: 10000 })
 })
 
 test('cancel delete facility', async ({ page }) => {

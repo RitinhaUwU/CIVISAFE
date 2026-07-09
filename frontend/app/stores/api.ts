@@ -80,7 +80,7 @@ export const useApiStore = defineStore('api', () => {
   const deleteUser = async (id: number) => {
     const res = await axios.delete(`${config.public.apiBase}/users/${id}`)
     if (res.status === 200) {
-      await removeEntry('user', id)
+      await removeEntry('users', id)
     }
     return res;
   }
@@ -172,6 +172,10 @@ export const useApiStore = defineStore('api', () => {
     return axios.post(`${config.public.apiBase}/entities/${entityId}/upload`, {key: key})
   }
 
+  const deleteEntityLogo = (entityId: number | string) => {
+    return axios.delete(`${config.public.apiBase}/entities/${entityId}/image`)
+  }
+
   /*************************
    *
    *  EntityTypes
@@ -242,6 +246,10 @@ export const useApiStore = defineStore('api', () => {
       console.debug("OFFLINE DATA")
       return await retrieveData('incidents', id);
     }
+  }
+
+  const getNextIncidentIdentifier = () => {
+    return axios.get(`${config.public.apiBase}/incidents/next-identifier`)
   }
 
   const createIncident = async (params: any) => {
@@ -501,6 +509,10 @@ export const useApiStore = defineStore('api', () => {
     return axios.post(`${config.public.apiBase}/facilities/${facilityId}/upload`, {key: key})
   }
 
+  const deleteFacilityImage = (facilityId: number | string)=> {
+    return axios.delete(`${config.public.apiBase}/facilities/${facilityId}/image`)
+  }
+
   // Facilities - Documentos
   const uploadFacilityDocuments = (facilityId: number, files: File[]) => {
     const form = new FormData()
@@ -725,6 +737,7 @@ export const useApiStore = defineStore('api', () => {
     createEntity,
     requestEntitySignedUrl,
     updateEntityLogo,
+    deleteEntityLogo,
     getEntityTypes,
     getEntityType,
     updateEntityType,
@@ -732,6 +745,7 @@ export const useApiStore = defineStore('api', () => {
     createEntityType,
     getIncidents,
     getIncident,
+    getNextIncidentIdentifier,
     updateIncident,
     createIncident,
     deleteIncident,
@@ -766,6 +780,7 @@ export const useApiStore = defineStore('api', () => {
     createFacility,
     requestFacilitySignedUrl,
     updateFacilityImage,
+    deleteFacilityImage,
     uploadFacilityDocuments,
     downloadFacilityDocument,
     deleteFacilityDocument,

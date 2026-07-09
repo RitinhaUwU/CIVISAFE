@@ -62,7 +62,7 @@ class IncidentTimelineController extends Controller
                 'comment_id' => $comment->id,
             ]);
 
-        $timeline = $logs->concat($comments)->sortByDesc('date')->values();
+        $timeline = $logs->concat($comments)->sortBy([['date', 'desc'], ['id', 'desc'],])->values();
 
         return response()->json($timeline);
     }

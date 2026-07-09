@@ -56,18 +56,22 @@ class DatabaseSeeder extends Seeder
         });
 
         Entity::factory(30)->create();
-        Incident::factory(600)->create();
+
+        Incident::factory()->count(5)->major()->create()->each(function ($incident) {
+            $incident->identifier = Incident::nextIdentifier();
+            $incident->saveQuietly();
+        });
+
+        Incident::factory()->count(100)->create()->each(function ($incident) {
+            if ($incident->is_major || empty($incident->incident_id)) {
+                $incident->identifier = Incident::nextIdentifier();
+                $incident->saveQuietly();
+            }
+        });
+
         Volunteer::factory(100)->create();
         Facility::factory(30)->create();
         IncidentPCO::factory(60)->create();
-
-        for ($i = 0; $i <= 100; $i++) {
-            Incident::factory()->create([
-                'is_major' => false,
-                'incident_id' => Incident::where(['is_major' => true])->inRandomOrder()->first()->id,
-            ]);
-        }
-
         IncidentParty::factory(500)->create();
 
         DonationLog::factory(70)

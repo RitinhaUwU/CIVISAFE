@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 import { useApiStore } from '@/stores/api'
+import z from "zod";
 
 const auth = useAuthStore()
 const api = useApiStore()
 const toast = useToast()
 
+const schema = z.object({
+  current_password: z.string().min(1, 'Introduza a palavra-passe atual'),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password_confirmation: z.string()
+}).refine((data) => data.password === data.password_confirmation, {
+    message: 'As palavras-passe não coincidem.',
+    path: ['password_confirmation']
+  }
+)
+
+type Schema = z.infer<typeof schema>
+
 const saving = ref(false)
 
 const state = reactive({
-  name: '',
-  email: '',
-  mobile: '',
-  locked: false,
-  role: '',
+  current_password: '',
   password: '',
   password_confirmation: ''
 })
@@ -26,11 +35,7 @@ onMounted(async () => {
   const user = auth.currentUser
 
   Object.assign(state, {
-    name: user?.name,
-    email: user?.email,
-    mobile: user?.mobile,
-    locked: user?.locked,
-    role: user?.roles?.[0] ?? '',
+    current_password: '',
     password: '',
     password_confirmation: ''
   })
@@ -53,15 +58,10 @@ const handleSave = async () => {
   saving.value = true
 
   try {
-    const payload: any = {
-      name: state.name,
-      email: state.email,
-      mobile: state.mobile
-    }
-
-    if (state.password) {
-      payload.password = state.password
-      payload.password_confirmation = state.password_confirmation
+    const payload = {
+      current_password: state.current_password,
+      password: state.password,
+      password_confirmation: state.password_confirmation
     }
 
     await api.patchUser(user.value.id, payload)
@@ -73,9 +73,18 @@ const handleSave = async () => {
       color: 'success'
     })
 
+    state.current_password = ''
     state.password = ''
     state.password_confirmation = ''
-  } catch (e) {
+  } catch (e: any) {
+    if (e.response?.data?.errors?.current_password) {
+      toast.add({
+        title: 'A palavra-passe atual está incorreta.',
+        color: 'error'
+      })
+      return
+    }
+
     toast.add({
       title: 'Erro ao atualizar perfil',
       color: 'error'
@@ -96,26 +105,31 @@ const handleSave = async () => {
               <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
                 Alterar Palavra-Passe
               </h1>
-              <div class="flex items-center gap-2">
-                <UButton
-                  label="Guardar"
-                  color="primary"
-                  :loading="saving"
-                  @click="handleSave"
-                  :disabled="!auth.hasPermission('USERS_UPDATE_OWN')"
-                />
-              </div>
             </div>
           </div>
         </header>
-        <div class="px-6 sm:px-8 py-8 space-y-8">
-          <UFormField label="Nova Palavra-Passe">
-            <UInput v-model="state.password" type="password" class="w-full" />
-          </UFormField>
-          <UFormField label="Confirmar Palavra-Passe">
-            <UInput v-model="state.password_confirmation" type="password" class="w-full" />
-          </UFormField>
-        </div>
+        <UForm :schema="schema" :state="state" @submit="handleSave">
+          <div class="px-6 sm:px-8 py-8 space-y-8">
+            <UFormField label="Palavra-Passe Atual">
+              <UInput v-model="state.current_password" type="password" class="w-full" />
+            </UFormField>
+            <UFormField label="Nova Palavra-Passe">
+              <UInput v-model="state.password" type="password" class="w-full" />
+            </UFormField>
+            <UFormField label="Confirmar Palavra-Passe">
+              <UInput v-model="state.password_confirmation" type="password" class="w-full" />
+            </UFormField>
+          </div>
+          <div class="px-6 sm:px-8 space-y-8 flex justify-end">
+            <UButton
+              type="submit"
+              label="Guardar"
+              color="primary"
+              :loading="saving"
+              :disabled="!auth.hasPermission('USERS_UPDATE_OWN')"
+            />
+          </div>
+        </UForm>
       </div>
     </UPageCard>
   </UDashboardPanel>

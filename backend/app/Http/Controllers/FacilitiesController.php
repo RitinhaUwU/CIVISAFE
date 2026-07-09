@@ -80,9 +80,26 @@ class FacilitiesController extends Controller
             return new FacilityResource($facility);
         } catch (\Throwable $e) {
             Log::error($e);
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(['message' => $e->getMessage(),], 500);
+        }
+    }
+
+    public function deleteImage(Facility $facility)
+    {
+        try {
+            if ($facility->image === null) {
+                return response()->json(['message' => 'Esta instalação não tem imagem.'], 404);
+            }
+
+            Storage::disk('data_bucket')->delete($facility->image);
+
+            $facility->image = null;
+            $facility->saveOrFail();
+
+            return new FacilityResource($facility);
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 

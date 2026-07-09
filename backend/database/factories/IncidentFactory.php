@@ -17,18 +17,16 @@ class IncidentFactory extends Factory
     public function definition(): array
     {
         $is_major = $this->faker->boolean(20);
-        $major_id = $is_major ? Incident::inRandomOrder()->value('id') : null;
-
+        $major_id = !$is_major ? Incident::where('is_major', true)->inRandomOrder()->value('id') : null;
         $incidentState = IncidentState::inRandomOrder()->first();
 
         $start = $this->faker->dateTimeBetween('-1 week', 'now');
-
         $end = $incidentState->terminates_incident ? $this->faker->dateTimeBetween($start, 'now') : null;
 
         return [
-            'identifier' => date('Y') . "/" . $this->faker->unique()->randomNumber(4),
             'start_datetime' => $start,
             'end_datetime' => $end,
+            'operational_grid' => $this->faker->word(),
             'coordinates' => implode(", ", $this->faker->localCoordinates()),
             'common_place' => $this->faker->words(2, true),
             'address' => $this->faker->streetAddress(),
@@ -51,5 +49,20 @@ class IncidentFactory extends Factory
             'incident_priority_id' => IncidentPriority::inRandomOrder()->first()->id,
             'incident_id' => $major_id,
         ];
+    }
+
+    public function major(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_major' => true,
+            'incident_id' => null,
+        ]);
+    }
+
+    public function minor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_major' => false,
+        ]);
     }
 }

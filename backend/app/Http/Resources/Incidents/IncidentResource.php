@@ -17,6 +17,7 @@ class IncidentResource extends JsonResource
             'identifier' => $this->identifier,
             'start_datetime' => $this->start_datetime,
             'end_datetime' => $this->end_datetime,
+            'operational_grid' => $this->operational_grid,
             'coordinates' => $this->coordinates,
             'common_place' => $this->common_place,
             'address' => $this->address,

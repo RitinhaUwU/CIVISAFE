@@ -10,8 +10,9 @@ http:
     type: json
     data: |-
       {
-        "identifier": "2026/2025",
+        "identifier": "2026/2026",
         "start_datetime": "2026-05-18 10:00:00",
+        "operational_grid": "At repellendus eum dolorem cumque similique deleniti ullam.",
         "coordinates": "-21.779066, -49.139885",
         "common_place": "vero dicta",
         "address": "Tv. São. Sofia",

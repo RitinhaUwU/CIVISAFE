@@ -161,54 +161,43 @@ onMounted(fetchGoodType)
         <div class="space-y-6">
           <section class="space-y-2">
             <h2 class="font-bold">Dados Gerais</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Nome" class="sm:col-span-2">
+            <div class="grid grid-cols-1 gap-4">
+              <UFormField label="Nome">
                 <UInput v-model="state.name" class="w-full"/>
               </UFormField>
-              <UFormField
-                label="Tem Unidade Associada?"
-                description="Se o Tipo de Bem é quantificável/medível"
-                name="is_type_countable">
+              <UFormField label="Tem Unidade Associada?" description="Se o Tipo de Bem é quantificável/medível" name="is_type_countable">
                 <div class="flex items-center gap-3">
-                  <USwitch
-                    v-model="state.is_type_countable"
-                    checked-icon="i-lucide-check"
-                    unchecked-icon="i-lucide-x"
-                  />
+                  <USwitch v-model="state.is_type_countable" checked-icon="i-lucide-check" unchecked-icon="i-lucide-x"/>
                   <span class="text-sm font-medium">{{ state.is_type_countable ? 'Sim' : 'Não' }}</span>
                 </div>
               </UFormField>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <template v-if="state.is_type_countable">
-                  <UFormField label="Unidade">
-                    <USelect
-                      v-model="state.unit"
-                      class="w-full"
-                      :items="[
+              <div v-if="state.is_type_countable" class="grid grid-cols-1 gap-4">
+                <UFormField label="Unidade">
+                  <USelect
+                    v-model="state.unit"
+                    class="w-full"
+                    :items="[
                       { label: 'Litros', value: 'liters' },
                       { label: 'Quilos', value: 'kilos' },
                       { label: 'Unidades', value: 'units' },
                       { label: 'Metros', value: 'linear_meters' },
                       { label: 'Metros Quadrados', value: 'squared_meters' }
                     ]"
-                    />
-                  </UFormField>
-
-                  <UFormField
-                    label="Número mínimo"
-                    description="(Opcional) Quantidade crítica para mostrar alertas na dashboard"
-                    name="danger_level"
-                  >
-                    <UInputNumber v-model="state.danger_level" class="w-full" min="1" />
+                  />
+                </UFormField>
+                <UFormField label="Número mínimo" description="(Opcional) Quantidade crítica para mostrar alertas na dashboard" name="danger_level">
+                  <div class="flex flex-row gap-2">
+                    <UInputNumber v-model="state.danger_level" class="w-full" :min="1" />
                     <UButton label="Limpar" @click="state.danger_level=null"></UButton>
-                  </UFormField>
-
-                </template>
+                  </div>
+                </UFormField>
               </div>
             </div>
-            Última Atualização: {{ new Date(state.updated_at).toLocaleString('pt-PT') }}
           </section>
         </div>
+        <p class="text-xs text-stone-400 dark:text-stone-500 flex justify-end">
+          Última atualização: {{ state.updated_at ? new Date(state.updated_at).toLocaleString('pt-PT') : '—' }}
+        </p>
       </div>
     </div>
   </div>

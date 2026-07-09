@@ -36,9 +36,6 @@ async function handleLogin() {
           <label class="mb-1">Palavra-Passe</label>
           <UInput v-model="credentials.password" type="password" placeholder="••••••" required />
         </div>
-        <NuxtLink to="#" class="text-sm cursor-pointer text-blue-500 hover:underline">
-          Esqueci-me da palavra-passe
-        </NuxtLink>
         <UButton block class="mt-4 cursor-pointer" type="submit">
           Entrar
         </UButton>

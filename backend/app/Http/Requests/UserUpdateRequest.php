@@ -11,7 +11,7 @@ class UserUpdateRequest extends FormRequest
     {
         $is_patch = $this->isMethod('PATCH');
 
-        return [
+        $rules = [
             'name' => [$is_patch ? 'sometimes' : 'required', 'min:1'],
             'email' => [$is_patch ? 'sometimes' : 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
             'password' => [$is_patch ? 'sometimes' : 'nullable', 'string', 'min:8', 'confirmed'],
@@ -19,6 +19,12 @@ class UserUpdateRequest extends FormRequest
             'locked' => [$is_patch ? 'sometimes' : 'required', 'boolean'],
             'role' => [$is_patch ? 'sometimes' : 'required', 'string', 'exists:roles,name'],
         ];
+
+        if (auth()->id() == $this->route('user')->id) {
+            $rules['current_password'] = ['required_with:password', 'current_password'];
+        }
+
+        return $rules;
     }
 
     public function authorize(): bool

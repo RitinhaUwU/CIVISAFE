@@ -12,6 +12,12 @@ const openModal = ref(false)
 const openSlideover = ref(false)
 
 const incidents = ref<Incident[]>([])
+const mapIncidents = ref<Incident[]>([])
+
+const majorIncidents = ref<Incident[]>([])
+const majorNextCursor = ref<string | null>(null)
+const majorLoading = ref(false)
+const majorScrollContainer = ref<HTMLElement | null>(null)
 
 async function handleMapClick(coords: { lat: number, lng: number }) {
   if(!useAuthStore().hasPermission('INCIDENTS_CREATE'))
@@ -28,29 +34,89 @@ async function handleMapClick(coords: { lat: number, lng: number }) {
   openModal.value = true
 }
 
-const majorIncidents = computed(() =>
-  incidents.value.filter(incident =>
-    incident.is_major &&
-    incident.incidentState?.terminates_incident !== true
-  )
-)
+async function fetchMajorIncidents(loadMore = false) {
+  if (majorLoading.value) return
+  if (loadMore && !majorNextCursor.value) return
 
-const incidentsMap = computed(() =>
-  incidents.value.filter(incident =>
-    !incident.is_major &&
-    incident.incidentState?.terminates_incident !== true
+  majorLoading.value = true
+
+  try {
+    const res = await api.getIncidents({
+      per_page: 10,
+      filter: { is_major: true },
+      ...(loadMore && majorNextCursor.value ? { cursor: majorNextCursor.value } : {})
+    })
+
+    const newIncidents = res.data.data.filter(
+      (i: Incident) => i.incidentState?.terminates_incident !== true
+    )
+
+    if (loadMore) {
+      const existing = new Set(majorIncidents.value.map(i => i.id))
+      majorIncidents.value.push(...newIncidents.filter(i => !existing.has(i.id)))
+    } else {
+      majorIncidents.value = newIncidents
+    }
+
+    majorNextCursor.value = res.data.meta?.next_cursor
+  } finally {
+    majorLoading.value = false
+  }
+}
+
+const lastBounds = ref<string | null>(null)
+
+const loadedIncidentIds = new Set<number>()
+
+async function refreshMapIncidents(bbox: string, cursor: string | null = null): Promise<void> {
+  const res = await api.getIncidents({
+    per_page: 10,
+    filter: { bbox },
+    ...(cursor ? { cursor } : {})
+  })
+
+  const newIncidents = res.data.data.filter((i: Incident) =>
+    !i.is_major &&
+    i.incidentState?.terminates_incident !== true &&
+    !loadedIncidentIds.has(i.id)
   )
-)
+
+  newIncidents.forEach((i: Incident) => loadedIncidentIds.add(i.id))
+  mapIncidents.value.push(...newIncidents)
+
+  const nextCursor = res.data.meta?.next_cursor ?? null
+
+  if (nextCursor) {
+    await refreshMapIncidents(bbox, nextCursor)
+  }
+}
+
+function handleBoundsChange(bbox: string) {
+  lastBounds.value = bbox
+  refreshMapIncidents(bbox)
+}
 
 async function refreshIncidents() {
-  const res = await api.getIncidents({ per_page: 1000 })
-  incidents.value = res.data.data
+  await fetchMajorIncidents()
+
+  if (lastBounds.value) {
+    await refreshMapIncidents(lastBounds.value)
+  }
 }
 
 onMounted(async () => {
-  if(useAuthStore().hasPermission('INCIDENTS_LIST'))
-  {
-    await refreshIncidents()
+  if(useAuthStore().hasPermission('INCIDENTS_LIST')){
+    await fetchMajorIncidents()
+
+    useInfiniteScroll(
+      majorScrollContainer,
+      () => fetchMajorIncidents(true),
+      {
+        distance: 200,
+        direction: 'right',
+        canLoadMore: () => !majorLoading.value && majorNextCursor.value != null
+      }
+    )
   }
 })
 </script>
@@ -77,31 +143,33 @@ onMounted(async () => {
     <template #body>
       <div class="flex flex-col h-full min-h-0 gap-4">
         <InicioFormRegisto v-model="openModal" :coords="selectedCoords" @created="refreshIncidents"/>
-        <UCard class="shrink-0 hidden lg:block">
+        <UCard v-if="majorIncidents.length" class="shrink-0 hidden lg:block">
           <template #header>
-            <h3 class="font-semibold">Incidentes Major Ativos</h3>
+            <h3 class="font-semibold">Ocorrências Major Ativas</h3>
           </template>
           <div class="flex gap-4 overflow-x-auto pb-2">
-            <div v-for="incident in majorIncidents" :key="incident.id" class="w-72 sm:w-80 shrink-0 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20 p-4 flex flex-col">
-              <div class="flex items-start justify-between">
-                <div class="font-semibold">{{ incident.identifier }}</div>
-                <UBadge color="primary" variant="soft">
-                  {{ incident.incidentState?.name }}
-                </UBadge>
+            <div ref="majorScrollContainer" class="flex gap-4 overflow-x-auto pb-2">
+              <div v-for="incident in majorIncidents" :key="incident.id" class="w-72 sm:w-80 shrink-0 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20 p-4 flex flex-col">
+                <div class="flex items-start justify-between">
+                  <div class="font-semibold">{{ incident.identifier }}</div>
+                  <UBadge color="primary" variant="soft">
+                    {{ incident.incidentState?.name }}
+                  </UBadge>
+                </div>
+                <div class="mt-4 space-y-2 text-sm flex-1">
+                  <div><span class="font-medium">Tipo:</span> {{ incident.incidentType?.code }}</div>
+                  <div><span class="font-medium">Espécie:</span> {{ incident.incidentType?.species }}</div>
+                  <div><span class="font-medium">Categoria:</span> {{ incident.incidentType?.type }}</div>
+                </div>
+                <footer class="pt-4 flex justify-end">
+                  <UButton
+                    :to="`/incidents/${incident.id}/dashboard`"
+                    size="sm"
+                    icon="i-lucide-arrow-right"
+                    label="Ver ocorrência"
+                  />
+                </footer>
               </div>
-              <div class="mt-4 space-y-2 text-sm flex-1">
-                <div><span class="font-medium">Tipo:</span> {{ incident.incidentType?.code }}</div>
-                <div><span class="font-medium">Espécie:</span> {{ incident.incidentType?.species }}</div>
-                <div><span class="font-medium">Categoria:</span> {{ incident.incidentType?.type }}</div>
-              </div>
-              <footer class="pt-4 flex justify-end">
-                <UButton
-                  :to="`/incidents/${incident.id}/dashboard`"
-                  size="sm"
-                  icon="i-lucide-arrow-right"
-                  label="Ver ocorrência"
-                />
-              </footer>
             </div>
           </div>
         </UCard>
@@ -112,8 +180,9 @@ onMounted(async () => {
         <div class="flex-1 min-h-[400px]">
           <Map
             class="w-full h-full"
-            :incidents="incidentsMap"
+            :incidents="mapIncidents"
             @map-click="handleMapClick"
+            @bounds-change="handleBoundsChange"
           />
         </div>
       </div>

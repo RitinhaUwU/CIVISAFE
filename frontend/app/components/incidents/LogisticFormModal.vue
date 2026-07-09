@@ -103,10 +103,10 @@ onMounted(async () => {
           </UFormField>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <UFormField label="Nº de Veículos" name="vehicle_count" required>
-              <UInputNumber v-model="state.vehicle_count" class="w-full" />
+              <UInputNumber v-model="state.vehicle_count" class="w-full" :min="0" />
             </UFormField>
             <UFormField label="Nº de Operacionais" name="human_count" required>
-              <UInputNumber v-model="state.human_count" class="w-full" />
+              <UInputNumber v-model="state.human_count" class="w-full" :min="0" />
             </UFormField>
           </div>
         </div>
@@ -119,7 +119,7 @@ onMounted(async () => {
             @click="emit('update:open', false)"
           />
           <UButton
-            :label="isEditing ? 'Atualizar' : 'Guardar'"
+            :label="isEditing ? 'Guardar' : 'Adicionar'"
             color="primary"
             type="submit"
             class="flex-1 justify-center"

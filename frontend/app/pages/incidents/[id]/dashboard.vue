@@ -2,11 +2,12 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useApiStore } from '@/stores/api'
 import { useAuthStore } from '@/stores/auth'
-import { formatTimeAgoIntl } from '@vueuse/core'
+import {incidentDisplayName} from '@/utils'
 import Map from '@/components/Map.vue'
 import moment from 'moment'
 import 'moment/locale/pt'
 import type {TableColumn} from "@nuxt/ui";
+import {UButton} from "#components";
 
 moment.locale('pt')
 
@@ -23,7 +24,6 @@ const timeline       = ref<any[]>([])
 const loading        = ref(true)
 
 const activePCOs = computed(() => pcoList.value.filter(p => !p.end_pco_datetime))
-const mainActivePCO = computed(() => activePCOs.value[0] ?? null)
 
 const now = ref(Date.now())
 const isActive = computed(() => !incident.value?.end_datetime)
@@ -31,9 +31,7 @@ const isActive = computed(() => !incident.value?.end_datetime)
 let interval: ReturnType<typeof setInterval>
 
 onMounted(() => {
-  interval = setInterval(() => {
-    now.value = Date.now()
-  }, 60000) // Atualiza a cada minuto
+  interval = setInterval(() => {now.value = Date.now()}, 60000)
 })
 
 onUnmounted(() => {
@@ -61,77 +59,111 @@ const duration = computed(() => {
   return parts.join(', ')
 })
 
-const logisticsByEntity = computed(() => {
-  const map: Record<string, { name: string; vehicles: number; humans: number }> = {}
-  for (const item of logistics.value) {
-    const name = item.entity?.name ?? 'Desconhecido'
-    if (!map[name]) map[name] = { name, vehicles: 0, humans: 0 }
-    map[name].vehicles += item.vehicle_count ?? 0
-    map[name].humans   += item.human_count   ?? 0
+const groupedActivePCOs = computed(() => {
+  if (!incident.value?.is_major) {
+    return [{ sourceId: undefined, label: null, items: activePCOs.value }]
   }
-  return Object.values(map)
+
+  const groups: Record<number, any[]> = {}
+  for (const pco of activePCOs.value) {
+    const key = pco._sourceIncidentId
+    if (!groups[key]) groups[key] = []
+    groups[key].push(pco)
+  }
+
+  return Object.entries(groups).map(([sourceId, items]) => ({
+    sourceId: Number(sourceId),
+    label: getSourceIncidentLabel(Number(sourceId)),
+    items
+  }))
+})
+
+const groupedLogistics = computed(() => {
+  if (!incident.value?.is_major) {
+    const map: Record<string, { name: string; vehicles: number; humans: number }> = {}
+    for (const item of logistics.value) {
+      const name = item.entity?.name ?? 'Desconhecido'
+      if (!map[name]) map[name] = { name, vehicles: 0, humans: 0 }
+      map[name].vehicles += item.vehicle_count ?? 0
+      map[name].humans   += item.human_count   ?? 0
+    }
+    return [{ sourceId: undefined, label: null, items: Object.values(map) }]
+  }
+
+  const bySource: Record<number, any[]> = {}
+  for (const item of logistics.value) {
+    const key = item._sourceIncidentId
+    if (!bySource[key]) bySource[key] = []
+    bySource[key].push(item)
+  }
+
+  return Object.entries(bySource).map(([sourceId, items]) => {
+    const map: Record<string, { name: string; vehicles: number; humans: number }> = {}
+    for (const item of items) {
+      const name = item.entity?.name ?? 'Desconhecido'
+      if (!map[name]) map[name] = { name, vehicles: 0, humans: 0 }
+      map[name].vehicles += item.vehicle_count ?? 0
+      map[name].humans   += item.human_count   ?? 0
+    }
+    return {
+      sourceId: Number(sourceId),
+      label: getSourceIncidentLabel(Number(sourceId)),
+      items: Object.values(map)
+    }
+  })
 })
 
 const associatedIncidents = computed(() => {
   return incident.value?.children_incidents ?? []
 })
 
-const associatedIncidentColumns: TableColumn<any>[] = [
-  {
-    accessorKey: 'identifier',
-    header: 'Nº Ocorrência'
-  },
-  {
-    accessorKey: 'state',
-    header: () => h('div', { class: 'text-center w-full' }, 'Estado'),
-    meta: { class: 'text-center' },
-    cell: ({ row }) => {
-      const state = row.original.incidentState
-      return h(
-        'div',
-        { class: 'flex justify-center' },
-        h(
-          UBadge,
-          {class: 'capitalize rounded-full border', style: { backgroundColor: state?.hex_color }},
-          () => state?.name
-        )
-      )
-    }
-  },
-  {
-    header: 'Prioridade',
-    cell: ({ row }) => {
-      const p = row.original.incidentPriority
-      return h('div', { class: 'flex flex-col' }, [
-        h('p', { class: 'font-medium text-highlighted' }, p?.name ?? '—'),
-        h('p', { class: 'text-xs text-muted' }, p?.description ?? '—')
-      ])
-    }
-  },
-  {
-    header: 'Categoria',
-    cell: ({ row }) => {
-      const type = row.original.incidentType
-      return h('div', { class: 'flex flex-col' }, [
-        h(
-          'p',
-          { class: 'font-medium text-highlighted' },
-          type ? `${type.code} - ${type.species}` : '—'
-        ),
-        h(
-          'p',
-          { class: 'text-xs text-muted' },
-          type?.type ?? '—'
-        )
-      ])
-    }
-  },
-  {
-    accessorKey: 'start_datetime',
-    header: 'Data de Início',
-    cell: ({ row }) => { return formatDate(row.original.start_datetime)}
+const associatedIncidentColumns: TableColumn<any>[] = [{
+  accessorKey: 'state',
+  header: () => h('div', { class: 'text-center w-full' }, 'Estado'),
+  meta: { class: 'text-center' },
+  cell: ({ row }) => {
+    const state = row.original.incidentState
+    return h('div', { class: 'flex justify-center' },
+      h(UBadge, {class: 'capitalize rounded-full border', style: { backgroundColor: state?.hex_color }}, () => state?.name)
+    )
   }
-]
+}, {
+  header: 'Prioridade',
+  cell: ({ row }) => {
+    const p = row.original.incidentPriority
+    return h('div', { class: 'flex flex-col' }, [
+      h('p', { class: 'font-medium text-highlighted' }, p?.name ?? '—'),
+      h('p', { class: 'text-xs text-muted' }, p?.description ?? '—')
+    ])
+  }
+}, {
+  header: 'Categoria',
+  cell: ({ row }) => {
+    const type = row.original.incidentType
+    return h('div', { class: 'flex flex-col' }, [
+      h('p', { class: 'font-medium text-highlighted' }, type ? `${type.code} - ${type.species}` : '—'),
+      h('p', { class: 'text-xs text-muted' }, type?.type ?? '—')
+    ])
+  }
+}, {
+  accessorKey: 'start_datetime',
+  header: 'Data de Início',
+  cell: ({ row }) => { return formatDate(row.original.start_datetime)}
+}, {
+  id: 'actions',
+  cell: ({ row }) => {
+    return h('div', { class: 'text-right' },
+      h(UButton, {
+        icon: 'i-lucide-info',
+        color: 'info',
+        variant: 'ghost',
+        onClick: () => {
+          navigateTo(`/incidents/${row.original.id}`)
+        }
+      })
+    )
+  }
+}]
 
 const mapIncidents = computed(() => {
   if (incident.value?.is_major) {
@@ -172,8 +204,6 @@ const cardUi = {
   title: 'font-normal text-muted text-xs uppercase'
 }
 
-const recentTimeline = computed(() => timeline.value.slice(0, 5))
-
 const formatDate = (d: string) => {
   if (!d) return '—'
   return new Intl.DateTimeFormat('pt-PT', {
@@ -182,13 +212,18 @@ const formatDate = (d: string) => {
   }).format(new Date(d))
 }
 
-const timeAgo = (date: string) => formatTimeAgoIntl(new Date(date), { locale: 'pt-PT' })
+const incidentId = computed(() => Number(route.params.id))
 
-const goToTab = (tab: string) => {
-  router.push(`/incidents/${route.params.id}?tab=${tab}`)
+const getSourceIncidentLabel = (id?: number) => {
+  const i = associatedIncidents.value.find(x => x.id === id)
+  if (!i) return '—'
+  const majorPrefix = incident.value?.is_major && incident.value?.identifier ? `(Major ${incident.value.identifier}) ` : ''
+  return `${majorPrefix}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
 }
 
-const incidentId = computed(() => Number(route.params.id))
+const subtotal = (items: { vehicles: number; humans: number }[], key: 'vehicles' | 'humans') => items.reduce((sum, i) => sum + (i[key] ?? 0), 0)
+
+const goToIncidents = () => router.push(`/incidents/${incidentId.value}`)
 
 onMounted(async () => {
   if (!authStore.hasPermission('INCIDENTS_LIST')) {
@@ -197,17 +232,34 @@ onMounted(async () => {
   }
 
   try {
-    const [incRes, pcoRes, logRes, tlRes] = await Promise.all([
-      api.getIncident(incidentId.value),
-      api.getIncidentPCOs(incidentId.value),
-      api.getIncidentLogistics(incidentId.value),
+    const incRes = await api.getIncident(incidentId.value)
+    incident.value = incRes.data.data
+
+    const idsToFetch = incident.value.is_major ? (incident.value.children_incidents ?? []).map((i: any) => i.id) : [incidentId.value]
+
+    const [pcoSettled, logSettled, tlRes] = await Promise.all([
+      Promise.allSettled(idsToFetch.map((id: number) => api.getIncidentPCOs(id))),
+      Promise.allSettled(idsToFetch.map((id: number) => api.getIncidentLogistics(id))),
       api.getIncidentTimeline(incidentId.value),
     ])
 
-    incident.value = incRes.data.data
-    pcoList.value = pcoRes?.data?.data ?? []
-    logistics.value = logRes?.data?.data ?? []
-    logisticTotals.value = logRes?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
+    const pcoResults = pcoSettled.map(r => r.status === 'fulfilled' ? r.value : { data: { data: [] } })
+    const logResults = logSettled.map(r => r.status === 'fulfilled' ? r.value : { data: { data: [], meta: { total_vehicles: 0, total_humans: 0 } } })
+
+    pcoList.value = pcoResults.flatMap((r, idx) => (r?.data?.data ?? []).map((p: any) => ({ ...p, _sourceIncidentId: idsToFetch[idx] })))
+
+    logistics.value = logResults.flatMap((r, idx) => (r?.data?.data ?? []).map((l: any) => ({ ...l, _sourceIncidentId: idsToFetch[idx] })))
+
+    logisticTotals.value = logResults.reduce(
+      (acc, r) => {
+        const meta = r?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
+        acc.total_vehicles += meta.total_vehicles ?? 0
+        acc.total_humans += meta.total_humans ?? 0
+        return acc
+      },
+      { total_vehicles: 0, total_humans: 0 }
+    )
+
     timeline.value = tlRes.data ?? []
   } finally {
     loading.value = false
@@ -226,7 +278,9 @@ onMounted(async () => {
           <div class="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <p class="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1">Dashboard · Ocorrência</p>
-              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">{{ incident.identifier }}</h1>
+              <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+                {{ incidentDisplayName(incident) }}
+              </h1>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <UBadge
@@ -280,11 +334,12 @@ onMounted(async () => {
                 <span class="text-2xl font-semibold text-highlighted">{{ logisticTotals.total_humans }}</span>
               </div>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('logistica')"
+                @click="goToIncidents"
               />
             </div>
           </UPageCard>
@@ -300,11 +355,12 @@ onMounted(async () => {
                 <span class="text-2xl font-semibold text-highlighted">{{ logisticTotals.total_vehicles }}</span>
               </div>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('logistica')"
+                @click="goToIncidents"
               />
             </div>
           </UPageCard>
@@ -320,11 +376,12 @@ onMounted(async () => {
                 <span class="text-2xl font-semibold text-highlighted">{{ activePCOs.length }}</span>
               </div>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('posto')"
+                @click="goToIncidents"
               />
             </div>
           </UPageCard>
@@ -369,65 +426,71 @@ onMounted(async () => {
                 Funções de Posto de Comando Ativos
               </h2>
               <UButton
+                v-if="!incident.is_major"
                 variant="ghost"
                 size="xs"
                 label="Ver todos"
                 trailing-icon="i-lucide-arrow-right"
-                @click="goToTab('posto')"
+                @click="goToIncidents"
               />
             </div>
-            <div v-if="activePCOs.length" class="space-y-3 px-5 py-4">
-              <UCollapsible v-for="pco in activePCOs" :key="pco.id" class="border border-default rounded-lg">
-                <template #default="{ open }">
-                  <UButton class="w-full flex items-center justify-between px-4 py-3 text-left">
-                    <div class="flex items-center gap-2">
-                      <span class="font-medium">{{ pco.function_pco }}</span>
-                    </div>
-                    <UIcon name="i-lucide-chevron-down" class="size-4 transition-transform" :class="{ 'rotate-180': open }"/>
-                  </UButton>
-                </template>
-                <template #content>
-                  <div class="border-t border-default p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div v-if="pco.resp_pco" class="flex items-center gap-3">
-                        <UIcon name="i-lucide-user" class="size-4 mt-0.5 text-primary"/>
-                        <div>
-                          <p class="text-xs uppercase text-muted">Responsável</p>
-                          <p class="font-medium">{{ pco.resp_pco }}</p>
+            <div v-if="activePCOs.length" class="space-y-5 px-5 py-4">
+              <div v-for="group in groupedActivePCOs" :key="group.sourceId ?? 'single'">
+                <p v-if="group.label" class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">
+                  {{ group.label }}
+                </p>
+                <div class="space-y-3">
+                  <UCollapsible v-for="pco in group.items" :key="pco.id" class="border border-default rounded-lg">
+                    <template #default="{ open }">
+                      <UButton class="w-full flex items-center justify-between px-4 py-3 text-left">
+                        <span class="font-medium">{{ pco.function_pco }}</span>
+                        <UIcon name="i-lucide-chevron-down" class="size-4 transition-transform" :class="{ 'rotate-180': open }"/>
+                      </UButton>
+                    </template>
+                    <template #content>
+                      <div class="border-t border-default p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div v-if="pco.resp_pco" class="flex items-center gap-3">
+                            <UIcon name="i-lucide-user" class="size-4 mt-0.5 text-primary"/>
+                            <div>
+                              <p class="text-xs uppercase text-muted">Responsável</p>
+                              <p class="font-medium">{{ pco.resp_pco }}</p>
+                            </div>
+                          </div>
+                          <div v-if="pco.category_pco" class="flex items-center gap-3">
+                            <UIcon name="i-lucide-shield" class="size-4 mt-0.5 text-primary"/>
+                            <div>
+                              <p class="text-xs uppercase text-muted">Categoria</p>
+                              <p class="font-medium">{{ pco.category_pco }}</p>
+                            </div>
+                          </div>
+                          <div v-if="pco.contact1_pco" class="flex items-center gap-3">
+                            <UIcon name="i-lucide-phone" class="size-4 mt-0.5 text-primary"/>
+                            <div>
+                              <p class="text-xs uppercase text-muted">Contacto</p>
+                              <p class="font-medium">{{ pco.contact1_pco }}</p>
+                            </div>
+                          </div>
+                          <div v-if="pco.start_pco_datetime" class="flex items-center gap-3">
+                            <UIcon name="i-lucide-calendar" class="size-4 mt-0.5 text-primary"/>
+                            <div>
+                              <p class="text-xs uppercase text-muted">Ativado em</p>
+                              <p class="font-medium">{{ formatDate(pco.start_pco_datetime) }}</p>
+                            </div>
+                          </div>
+                          <div v-if="pco.localization_pco" class="md:col-span-2 flex items-center gap-3">
+                            <UIcon name="i-lucide-map-pin" class="size-4 mt-0.5 text-primary"/>
+                            <div>
+                              <p class="text-xs uppercase text-muted">Localização</p>
+                              <p class="font-medium">{{ pco.localization_pco }}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div v-if="pco.category_pco" class="flex items-center gap-3">
-                        <UIcon name="i-lucide-shield" class="size-4 mt-0.5 text-primary"/>
-                        <div>
-                          <p class="text-xs uppercase text-muted">Categoria</p>
-                          <p class="font-medium">{{ pco.category_pco }}</p>
-                        </div>
-                      </div>
-                      <div v-if="pco.contact1_pco" class="flex items-center gap-3">
-                        <UIcon name="i-lucide-phone" class="size-4 mt-0.5 text-primary"/>
-                        <div>
-                          <p class="text-xs uppercase text-muted">Contacto</p>
-                          <p class="font-medium">{{ pco.contact1_pco }}</p>
-                        </div>
-                      </div>
-                      <div v-if="pco.start_pco_datetime" class="flex items-center gap-3">
-                        <UIcon name="i-lucide-calendar" class="size-4 mt-0.5 text-primary"/>
-                        <div>
-                          <p class="text-xs uppercase text-muted">Ativado em</p>
-                          <p class="font-medium">{{ formatDate(pco.start_pco_datetime) }}</p>
-                        </div>
-                      </div>
-                      <div v-if="pco.localization_pco" class="md:col-span-2 flex items-center gap-3">
-                        <UIcon name="i-lucide-map-pin" class="size-4 mt-0.5 text-primary"/>
-                        <div>
-                          <p class="text-xs uppercase text-muted">Localização</p>
-                          <p class="font-medium">{{ pco.localization_pco }}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </UCollapsible>
+                    </template>
+                  </UCollapsible>
+                </div>
+              </div>
             </div>
             <div v-else class="px-5 py-8 text-center text-sm text-stone-400">
               Sem funções de posto de comando ativos
@@ -481,30 +544,44 @@ onMounted(async () => {
               Meios e Recursos
             </h2>
             <UButton
+              v-if="!incident.is_major"
               variant="ghost"
               size="xs"
               label="Ver todos"
               trailing-icon="i-lucide-arrow-right"
-              @click="goToTab('logistica')"
+              @click="goToIncidents"
             />
           </div>
-          <div v-if="logisticsByEntity.length > 0">
-            <UTable
-              :data="logisticsByEntity"
-              :columns="[
-                { accessorKey: 'name',     header: 'Entidade' },
-                { accessorKey: 'vehicles', header: 'Veículos' },
-                { accessorKey: 'humans',   header: 'Operacionais' },
-              ]"
-            >
-              <template #body-bottom>
-                <tr class="border-t-2 border-stone-300 dark:border-stone-600 font-semibold bg-stone-50 dark:bg-stone-800/50">
-                  <td class="px-4 py-3 text-sm text-stone-600 dark:text-stone-400">Total</td>
-                  <td class="px-4 py-3 text-sm">{{ logisticTotals.total_vehicles }}</td>
-                  <td class="px-4 py-3 text-sm">{{ logisticTotals.total_humans }}</td>
-                </tr>
-              </template>
-            </UTable>
+          <div v-if="groupedLogistics.some(g => g.items.length > 0)" class="divide-y divide-stone-100 dark:divide-stone-800">
+            <div v-for="group in groupedLogistics" :key="group.sourceId ?? 'single'" class="px-5 py-4">
+              <p v-if="group.label" class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">
+                {{ group.label }}
+              </p>
+              <UTable
+                v-if="group.items.length"
+                :data="group.items"
+                :columns="[
+                  { accessorKey: 'name',     header: 'Entidade' },
+                  { accessorKey: 'vehicles', header: 'Veículos' },
+                  { accessorKey: 'humans',   header: 'Operacionais' },
+                ]"
+              >
+                <template #body-bottom>
+                  <tr v-if="incident.is_major" class="border-t border-stone-200 dark:border-stone-700 font-medium">
+                    <td class="px-4 py-2 text-sm text-stone-500">Subtotal</td>
+                    <td class="px-4 py-2 text-sm">{{ subtotal(group.items, 'vehicles') }}</td>
+                    <td class="px-4 py-2 text-sm">{{ subtotal(group.items, 'humans') }}</td>
+                  </tr>
+                </template>
+              </UTable>
+              <p v-else class="text-sm text-stone-400">Sem meios registados</p>
+            </div>
+            <div class="px-5 py-4 flex justify-end">
+              <div class="flex items-center gap-6 text-sm font-semibold">
+                <span>Total Veículos: {{ logisticTotals.total_vehicles }}</span>
+                <span>Total Operacionais: {{ logisticTotals.total_humans }}</span>
+              </div>
+            </div>
           </div>
           <div v-else class="px-5 py-8 text-center text-sm text-stone-400">
             Sem meios registados
