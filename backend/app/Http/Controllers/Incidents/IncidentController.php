@@ -77,11 +77,25 @@ class IncidentController extends Controller
 
                     [$west, $south, $east, $north] = $coords;
 
+                    // Validação de intervalos geográficos válidos
                     if ($south < -90 || $south > 90 || $north < -90 || $north > 90) return;
                     if ($west < -180 || $west > 180 || $east < -180 || $east > 180) return;
 
-                    $query->whereRaw("split_part(coordinates, ',', 1)::float BETWEEN ? AND ?", [$south, $north])
-                        ->whereRaw("split_part(coordinates, ',', 2)::float BETWEEN ? AND ?", [$west, $east]);
+                    // Garantir que south <= north (latitude não cruza polos)
+                    if ($south > $north) return;
+                    // Filtro de latitude (sempre um intervalo simples)
+                    $query->whereRaw("NULLIF(split_part(coordinates, ',', 1), '')::float BETWEEN ? AND ?", [$south, $north]);
+
+                    // Filtro de longitude: lidar com bbox que cruza o antimeridiano (±180°)
+                    if ($west <= $east) {
+                        $query->whereRaw("NULLIF(split_part(coordinates, ',', 2), '')::float BETWEEN ? AND ?", [$west, $east]);
+                    } else {
+                        // bbox cruza a linha de mudança de data: dividir em duas condições (OR)
+                        $query->where(function (Builder $q) use ($west, $east) {
+                            $q->whereRaw("NULLIF(split_part(coordinates, ',', 2), '')::float >= ?", [$west])
+                                ->orWhereRaw("NULLIF(split_part(coordinates, ',', 2), '')::float <= ?", [$east]);
+                        });
+                    }
                 }),
             )
             ->orderBy('id')
