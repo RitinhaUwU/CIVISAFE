@@ -35,7 +35,21 @@ class IncidentPartyController extends Controller
         $data = $request->validated();
         $data['incident_id'] = $incidentId;
 
-        return new IncidentPartyResource(IncidentParty::create($data));
+        $existing = IncidentParty::where('incident_id', $incidentId)->where('entity_id', $data['entity_id'])->first();
+
+        $merged = (bool) $existing;
+
+        if ($existing) {
+            $existing->update([
+                'vehicle_count' => $existing->vehicle_count + ($data['vehicle_count'] ?? 0),
+                'human_count' => $existing->human_count + ($data['human_count'] ?? 0),
+            ]);
+            $party = $existing;
+        } else {
+            $party = IncidentParty::create($data);
+        }
+
+        return (new IncidentPartyResource($party)->additional(['meta' => ['merged' => $merged]]));
     }
 
     public function show(IncidentParty $incidentParty)

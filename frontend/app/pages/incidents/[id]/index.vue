@@ -517,32 +517,19 @@ const editLogistic = (item: any) => {
 
 const saveLogistic = async (payload: any) => {
   try {
-    const existing = !editingLogistic.value?.id ? logistics.value.find(l => l.entity_id === payload.entity_id) : null
+    let response
 
     if (editingLogistic.value?.id) {
-      await api.updateIncidentLogistic(incidentID, editingLogistic.value.id, payload)
-    }
-    else if (existing){
-      await api.updateIncidentLogistic(incidentID, existing.id, {
-        entity_id: existing.entity_id,
-        vehicle_count: (existing.vehicle_count ?? 0) + (payload.vehicle_count ?? 0),
-        human_count: (existing.human_count ?? 0) + (payload.human_count ?? 0),
-      })
-
-      toast.add({
-        title: 'Recurso atualizado',
-        description: 'Esta entidade já tinha um registo — os valores foram somados.',
-        color: 'info'
-      })
+      response = await api.updateIncidentLogistic(incidentID, editingLogistic.value.id, payload)
     }
     else {
-      await api.createIncidentLogistic(incidentID, payload)
+      response = await api.createIncidentLogistic(incidentID, payload)
     }
 
     toast.add({
-      title: 'Sucesso',
-      description: 'Recurso guardado',
-      color: 'success'
+      title: response?.data?.meta?.merged ? 'Recurso atualizado' : 'Sucesso',
+      description: response?.data?.meta?.merged ? 'Esta entidade já tinha um registo — os valores foram somados.' : 'Recurso guardado',
+      color: response?.data?.meta?.merged ? 'info' : 'success'
     })
     await fetchLogistics()
     logisticModalOpen.value = false
