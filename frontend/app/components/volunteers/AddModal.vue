@@ -2,7 +2,7 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '@/stores/api'
-import { incidentDisplayName } from '@/utils'
+import {incidentDisplayName, toDatetimeLocal} from '@/utils'
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import moment from "moment";
 
@@ -65,7 +65,7 @@ const state = reactive<Partial<Schema>>({
   has_meal: false,
   meal_notes: '',
   meal_location: '',
-  start_datetime: '',
+  start_datetime: toDatetimeLocal(new Date().toISOString()),
   end_datetime: '',
   incident_id: null as any,
 })
@@ -101,7 +101,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       has_meal: false,
       meal_notes: '',
       meal_location: '',
-      start_datetime: '',
+      start_datetime: toDatetimeLocal(new Date().toISOString()),
       end_datetime: '',
       incident_id: null,
     })
