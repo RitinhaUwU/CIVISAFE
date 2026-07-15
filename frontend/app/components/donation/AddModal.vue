@@ -56,6 +56,11 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('DONATION_LOG_CREATE')) {
+    await useRouter().push('/inicio');
+    return;
+  }
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',
@@ -97,6 +102,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 onMounted(async () => {
+  if (!useAuthStore().hasPermission('DONATION_GOODS_TYPES_LIST') || !useAuthStore().hasPermission('DONATION_LOG_CREATE')) {
+    await useRouter().push('/inicio');
+    return;
+  }
   goodCategories.value = (await apiStore.getAllDonationGoodTypes()).data.data;
 })
 </script>

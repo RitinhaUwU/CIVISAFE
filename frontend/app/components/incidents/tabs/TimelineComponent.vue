@@ -4,6 +4,7 @@ import {toDatetimeLocal} from "@/utils";
 import z from "zod";
 import moment from 'moment/min/moment-with-locales'
 import type {AuditLog} from "@/types";
+import {useAuthStore} from "~/stores/auth";
 
 moment.locale('pt');
 const {$echo} = useNuxtApp();
@@ -166,6 +167,8 @@ const cancelEditComment = () => {
 }
 
 const submitComment = async () => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!addCommentState.body?.trim() || savingComment.value) return
 
   savingComment.value = true
@@ -202,6 +205,8 @@ const submitComment = async () => {
 }
 
 const saveEditComment = async (item: any) => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',
@@ -284,6 +289,8 @@ const handleNewTimelineEvent = (event: any) => {
 }
 
 onMounted(async () => {
+  if (!useAuthStore().hasPermission('INCIDENTS_LIST')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

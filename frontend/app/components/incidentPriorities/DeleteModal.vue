@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useApiStore } from "@/stores/api"
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const toast = useToast()
@@ -18,6 +19,8 @@ const openModel = computed({
 })
 
 const onSubmit = async () => {
+  if (!useAuthStore().hasPermission('INCIDENT_PRIORITIES_DELETE')) return;
+
   if (!props.id) return
 
   if (!await checkServerAccess()) {

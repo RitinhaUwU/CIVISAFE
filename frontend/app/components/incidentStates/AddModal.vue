@@ -2,6 +2,7 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '@/stores/api'
+import {useAuthStore} from "~/stores/auth";
 
 const apiStore = useApiStore()
 const open = ref(false)
@@ -28,6 +29,8 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENT_STATES_CREATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

@@ -27,6 +27,11 @@ const state = reactive<Partial<Schema>>({
 })
 
 const handleSave = async (event: FormSubmitEvent<Schema>) => {
+  if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
+    await useRouter().push('/inicio');
+    throw new Error('User does not have access to the donations module');
+  }
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',
@@ -71,6 +76,11 @@ watch(open, () => {
 });
 
 onMounted(async () => {
+  if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
+    await useRouter().push('/inicio');
+    throw new Error('User does not have access to the donations module');
+  }
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

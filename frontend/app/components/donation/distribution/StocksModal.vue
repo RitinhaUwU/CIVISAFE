@@ -22,6 +22,10 @@ const stock_unlocked = defineModel('stockUnlocked', {
 })
 
 const handleStatusSwitch = async () => {
+  if (!useAuthStore().hasPermission('SETTING_DONATION_DISTRIBUTION_STOCK_UNLOCK')) {
+    return;
+  }
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

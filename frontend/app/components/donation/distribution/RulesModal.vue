@@ -71,6 +71,10 @@ const toolbarItems: EditorToolbarItem[][] = [
 ]
 
 const saveRules = async() => {
+  if (!useAuthStore().hasPermission('SETTING_DONATION_DISTRIBUTION_RULES_UPDATE')) {
+    return;
+  }
+
   if(!await checkServerAccess())
   {
     useToast().add({

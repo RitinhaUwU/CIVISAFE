@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {useApiStore} from '@/stores/api'
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const toast = useToast()
@@ -15,6 +16,8 @@ const files = ref<File[]>([])
  Upload da ficheiros
  ***/
 const onSubmit = async () => {
+  if (!useAuthStore().hasPermission('FACILITIES_FILES_UPLOAD')) return;
+
   if (!props.facilityId) return
 
   if (!await checkServerAccess()) {

@@ -4,6 +4,7 @@ import type {FormSubmitEvent} from '@nuxt/ui'
 import {useApiStore} from '~/stores/api'
 import {createBlobURL, formatBytes} from "~/utils";
 import {usePaginatedSelect} from "~/composables/usePaginatedSelect";
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const open = ref(false)
@@ -54,6 +55,8 @@ const state = reactive<Partial<Schema & { entity_type_id: number }>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('ENTITIES_CREATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

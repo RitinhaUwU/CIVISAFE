@@ -5,6 +5,7 @@ import { useApiStore } from '@/stores/api'
 import {incidentDisplayName, toDatetimeLocal} from '@/utils'
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import moment from "moment";
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const open = ref(false)
@@ -71,6 +72,8 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('VOLUNTEERS_CREATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

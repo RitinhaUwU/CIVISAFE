@@ -135,6 +135,12 @@ watchDebounced(searchBind, async () => {
 const scrollContainer = ref<HTMLElement | null>(null)
 
 onMounted(async () => {
+
+  if (!useAuthStore().hasPermission('DONATION_LOG_LIST')) {
+    await useRouter().push('/inicio');
+    return;
+  }
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

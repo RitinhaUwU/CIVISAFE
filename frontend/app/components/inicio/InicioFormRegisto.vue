@@ -147,6 +147,7 @@ function setDefaultIncidentState() {
 }
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENTS_CREATE')) return;
 
   if (!await checkServerAccess()) {
     useToast().add({

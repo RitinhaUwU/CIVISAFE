@@ -202,6 +202,8 @@ function updateCoordinates(coords: { lat: number, lng: number }) {
 const loadingIncident = ref(true)
 
 const handleSaveGeral = async () => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',
@@ -349,6 +351,15 @@ async function loadNextIdentifier() {
     return
   }
 
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar o identificador sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     const { data } = await api.getNextIncidentIdentifier()
     state.identifier = data.identifier
@@ -420,6 +431,8 @@ const findActiveConflict = (payload: any) => {
 }
 
 const savePCOFromModal = (payload: any) => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   const conflict = findActiveConflict(payload)
 
   if (conflict) {
@@ -433,6 +446,8 @@ const savePCOFromModal = (payload: any) => {
 }
 
 const confirmPCOConflict = async () => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!pendingPCOPayload.value || !conflictingPCO.value) return
 
   if (!await checkServerAccess()) {
@@ -469,6 +484,8 @@ const confirmPCOConflict = async () => {
 }
 
 const persistPCO = async (payload: any) => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',
@@ -543,6 +560,8 @@ const editLogistic = (item: any) => {
 }
 
 const saveLogistic = async (payload: any) => {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

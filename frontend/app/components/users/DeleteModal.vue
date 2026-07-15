@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+import {useAuthStore} from "~/stores/auth";
+
 const api = useApiStore()
 const toast = useToast()
 const props = defineProps<{
@@ -16,6 +18,8 @@ const openModel = computed({
 })
 
 const onSubmit = async () => {
+  if (!useAuthStore().hasPermission('USERS_DELETE')) return;
+
   if (!props.id) return
 
   if (!await checkServerAccess()) {

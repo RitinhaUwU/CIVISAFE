@@ -3,6 +3,7 @@ import * as z from 'zod'
 import { usePaginatedSelect } from '@/composables/usePaginatedSelect'
 import { useApiStore } from '@/stores/api'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import {useAuthStore} from "~/stores/auth";
 
 const props = defineProps<{
   open: boolean
@@ -66,6 +67,8 @@ watch(() => props.open, (open) => {
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
   if (!await checkServerAccess()) {
     useToast().add({
       title: 'Sem ligação à internet!',

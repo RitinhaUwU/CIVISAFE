@@ -4,6 +4,7 @@ import * as z from 'zod'
 import {toDatetimeLocal} from "@/utils"
 import type {FormSubmitEvent} from "@nuxt/ui";
 import moment from "moment/min/moment-with-locales";
+import {useAuthStore} from "~/stores/auth";
 
 const props = defineProps<{
   open: boolean
@@ -79,6 +80,7 @@ const formRef = ref()
 const close = () => emit('update:open', false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
 
   if (!await checkServerAccess()) {
     useToast().add({
