@@ -176,6 +176,7 @@ onMounted(async () => {
 
                 <UFormField :label="`Quantidade ${suffixForQuantityBox(goodCategories, state.goods[index].category_id)}`" :name="`goods.${index}.quantity`" required>
                   <UInputNumber
+                    data-testid="good-quantity-input"
                     v-model="item.quantity"
                     :min="0"
                     :step="suffixForQuantityBox(goodCategories, state.goods[index].category_id, true) === 'Unidades' ? 1 : 0.1"

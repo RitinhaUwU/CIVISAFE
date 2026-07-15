@@ -336,8 +336,13 @@ const calculateBoxMaxValue = (index: number) => {
                         </span>
                     </UFormField>
 
-                    <UButton v-if="distributionForm.goods.length > 1" icon="i-lucide-trash-2" class="w-fit h-fit"
-                             @click="removeGood(index)"/>
+                    <UButton
+                      v-if="distributionForm.goods.length > 1"
+                      data-testid="remove-good-row"
+                      icon="i-lucide-trash-2"
+                      class="w-fit h-fit"
+                      @click="removeGood(index)"
+                    />
                   </div>
 
                 </UCard>

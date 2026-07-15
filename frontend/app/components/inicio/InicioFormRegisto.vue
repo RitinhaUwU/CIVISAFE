@@ -78,7 +78,7 @@ type Schema = z.output<typeof schema>
 const state = reactive<Partial<Schema>>({
   is_major: false,
   identifier: '',
-  start_datetime: '',
+  start_datetime: toDatetimeLocal(new Date().toISOString()),
   end_datetime: '',
   incident_state_id: null as any,
   incident_priority_id: null as any,
@@ -150,7 +150,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const payload = {
       ...event.data,
-      start_datetime: event.data.start_datetime != '' ? moment(event.data.start_datetime).toISOString() : '',
+      start_datetime: moment(event.data.start_datetime).toISOString(),
       end_datetime: event.data.end_datetime != '' ? moment(event.data.end_datetime).toISOString() : '',
       user_id: authStore.currentUserID,
       incident_state_id: event.data.incident_state_id?.id,
@@ -175,7 +175,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     Object.assign(state, {
       is_major: false,
       identifier: '',
-      start_datetime: '',
+      start_datetime: toDatetimeLocal(new Date().toISOString()),
       end_datetime: '',
       incident_state_id: null,
       incident_priority_id: null,
