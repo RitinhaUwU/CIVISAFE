@@ -134,16 +134,16 @@ watchDebounced([search, typesFilter], async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('ENTITIES_LIST'))
   {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
-  entityTypes.fetchItems()
+  await fetch()
+  await entityTypes.fetchItems()
 
   // ----------
   // Filters

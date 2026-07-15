@@ -202,6 +202,15 @@ function updateCoordinates(coords: { lat: number, lng: number }) {
 const loadingIncident = ref(true)
 
 const handleSaveGeral = async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const result = schema.safeParse(state)
 
   if (!result.success) {
@@ -426,6 +435,15 @@ const savePCOFromModal = (payload: any) => {
 const confirmPCOConflict = async () => {
   if (!pendingPCOPayload.value || !conflictingPCO.value) return
 
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await api.updateIncidentPCO(incidentID, conflictingPCO.value.id, {
       ...conflictingPCO.value,
@@ -451,6 +469,15 @@ const confirmPCOConflict = async () => {
 }
 
 const persistPCO = async (payload: any) => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   savingPCO.value = true
 
   try {
@@ -516,6 +543,15 @@ const editLogistic = (item: any) => {
 }
 
 const saveLogistic = async (payload: any) => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     let response
 

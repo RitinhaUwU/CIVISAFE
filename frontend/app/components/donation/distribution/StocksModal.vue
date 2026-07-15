@@ -22,6 +22,16 @@ const stock_unlocked = defineModel('stockUnlocked', {
 })
 
 const handleStatusSwitch = async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    localSwitchStatus.value = !localSwitchStatus.value;
+    return;
+  }
+
   try
   {
     await useApiStore().updateStockUnlock(!localSwitchStatus.value);

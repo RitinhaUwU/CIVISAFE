@@ -66,6 +66,15 @@ watch(() => props.open, (open) => {
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const payload = {
     ...event.data,
     entity_id: event.data.entity_id?.id
@@ -75,6 +84,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   await entities.fetchItems()
 })
 </script>

@@ -202,6 +202,15 @@ const submitComment = async () => {
 }
 
 const saveEditComment = async (item: any) => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await useApiStore().updateTimelineComment(props.incidentID, item.comment_id, {
       body: editingCommentBody.value,
@@ -274,11 +283,20 @@ const handleNewTimelineEvent = (event: any) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar a Fita do Tempo sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   $echo.private('Incident.' + props.incidentID)
     .listen('.timeline.event', handleNewTimelineEvent)
 
-  fetchTimeline();
+  await fetchTimeline();
 
   useInfiniteScroll(
     scrollContainer,

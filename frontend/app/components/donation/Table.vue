@@ -134,14 +134,23 @@ watchDebounced(searchBind, async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const {$echo} = useNuxtApp();
 
   $echo.private('DonationStocks')
     .listen('.donation.created', handleDonationCreation)
     .listen('.donation.updated', handleDonationEdit)
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,

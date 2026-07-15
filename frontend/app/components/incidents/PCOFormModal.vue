@@ -74,12 +74,20 @@ watch(() => [props.modelValue, props.open], ([val, open]) => {
   }
 )
 
-const toast = useToast()
 const formRef = ref()
 
 const close = () => emit('update:open', false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
 
   emit('save', {
     ...event.data,

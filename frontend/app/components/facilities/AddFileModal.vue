@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import {createBlobURL, formatBytes} from '@/utils'
-import z from 'zod'
 import {useApiStore} from '@/stores/api'
 
 const api = useApiStore()
@@ -16,17 +14,17 @@ const files = ref<File[]>([])
 /***
  Upload da ficheiros
  ***/
-const ACCEPTED_TYPES = ['application/pdf', 'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',]
-
-const removeFile = (index: number) => {
-  files.value.splice(index, 1)
-}
-
 const onSubmit = async () => {
   if (!props.facilityId) return
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
 
   if (!files.value.length) {
     toast.add({

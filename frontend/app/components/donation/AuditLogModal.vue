@@ -125,6 +125,15 @@ const readableKey = (key: string) => {
 }
 
 onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   await fetchCategories();
 })
 </script>

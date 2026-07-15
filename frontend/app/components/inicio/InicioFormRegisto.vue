@@ -147,6 +147,16 @@ function setDefaultIncidentState() {
 }
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     const payload = {
       ...event.data,
@@ -285,6 +295,15 @@ watch(() => props.coords, (newCoords) => {
 }, { immediate: true })
 
 onMounted(async() => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   await Promise.all([
     states.fetchItems(),
     priorities.fetchItems(),

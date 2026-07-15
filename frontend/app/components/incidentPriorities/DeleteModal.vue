@@ -20,6 +20,15 @@ const openModel = computed({
 const onSubmit = async () => {
   if (!props.id) return
 
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await api.deleteIncidentPriority(props.id)
 

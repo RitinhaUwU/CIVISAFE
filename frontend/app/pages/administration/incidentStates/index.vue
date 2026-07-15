@@ -164,19 +164,19 @@ const fetch = async (loadMore = false) => {
 watchDebounced([search, statusFilter, terminatesFilter], async () => {
   nextCursor.value = null
   states.value = []
-  fetch(false)
+  await fetch(false)
 }, {debounce: 300})
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('INCIDENT_STATES_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,

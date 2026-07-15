@@ -5,7 +5,8 @@ import {
   clearTable,
   removeEntry,
   retrieveData,
-  retrieveDataPaginated, retrievePaginatedByIncident,
+  retrieveDataPaginated,
+  retrievePaginatedByIncident,
   storeData
 } from "@/composables/useIndexedDB";
 import type {QueryParams} from "@/types";
@@ -753,15 +754,9 @@ export const useApiStore = defineStore('api', () => {
 
   const getIncidentTimeline = async (incidentId: number, params: QueryParams) => {
     if (await checkServerAccess()) {
-      const res = await axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
-      // console.log(res);
-      // await storeData('incident_timeline', res.data.data);
-      return res;
+      return await axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
     } else {
       throw new Error('O Endpoint não é suportado no modo offline');
-
-      // console.debug("OFFLINE DATA")
-      // return await retrievePaginatedByIncident('incident_timeline', 'timeline', incidentId, params);
     }
   }
 

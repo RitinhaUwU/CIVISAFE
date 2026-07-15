@@ -17,8 +17,6 @@ const schema = z.object({
   }
 )
 
-type Schema = z.infer<typeof schema>
-
 const saving = ref(false)
 
 const state = reactive({
@@ -31,8 +29,6 @@ onMounted(async () => {
   if (!auth.currentUser) {
     await auth.getUser()
   }
-
-  const user = auth.currentUser
 
   Object.assign(state, {
     current_password: '',

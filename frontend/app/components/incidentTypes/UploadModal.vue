@@ -47,7 +47,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     emit('created')
   } catch (e: any) {
     console.error(e)
-    //const errors = e.response?.data?.errors
+    useToast().add({
+      title: 'Erro ao Carregar Ficheiro!',
+      description: 'Ocorreu um erro ao tentar carregar o ficheiro. Tente novamente mais tarde',
+      color: 'error'
+    });
   }
 }
 

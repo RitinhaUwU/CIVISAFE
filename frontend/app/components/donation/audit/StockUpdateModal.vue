@@ -27,6 +27,15 @@ const state = reactive<Partial<Schema>>({
 })
 
 const handleSave = async (event: FormSubmitEvent<Schema>) => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try
   {
     await useApiStore().postStockAudit(event.data)
@@ -62,6 +71,15 @@ watch(open, () => {
 });
 
 onMounted(async () => {
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   goodCategories.value = (await useApiStore().getAllDonationGoodTypes()).data.data;
 })
 </script>
