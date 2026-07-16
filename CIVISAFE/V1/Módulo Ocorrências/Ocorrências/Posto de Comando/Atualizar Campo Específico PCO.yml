@@ -1,0 +1,28 @@
+info:
+  name: Atualizar Campo Específico PCO
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/incidents/{{incident_id}}/pco/{{pco_id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "function_pco": "Oficial Operações Aérias"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: incident_id
+      value: ""
+    - name: pco_id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

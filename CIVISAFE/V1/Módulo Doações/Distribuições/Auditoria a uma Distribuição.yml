@@ -1,0 +1,20 @@
+info:
+  name: Auditoria a uma Distribuição
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/v1/donations/distributions/{{id}}/audit"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

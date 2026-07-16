@@ -163,7 +163,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       ...event.data,
       start_datetime: moment(event.data.start_datetime).toISOString(),
       end_datetime: event.data.end_datetime != '' ? moment(event.data.end_datetime).toISOString() : '',
-      user_id: authStore.currentUserID,
       incident_state_id: event.data.incident_state_id?.id,
       incident_priority_id: event.data.incident_priority_id?.id,
       incident_type_id: event.data.incident_type_id?.id,

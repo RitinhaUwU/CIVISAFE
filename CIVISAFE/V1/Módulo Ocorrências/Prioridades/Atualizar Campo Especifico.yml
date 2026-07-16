@@ -1,0 +1,26 @@
+info:
+  name: Atualizar Campo Especifico
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/incidentPriorities/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "hex_color": "#1F52A5"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

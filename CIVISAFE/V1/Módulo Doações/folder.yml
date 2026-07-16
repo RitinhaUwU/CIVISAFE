@@ -1,0 +1,7 @@
+info:
+  name: Módulo Doações
+  type: folder
+  seq: 8
+
+request:
+  auth: inherit

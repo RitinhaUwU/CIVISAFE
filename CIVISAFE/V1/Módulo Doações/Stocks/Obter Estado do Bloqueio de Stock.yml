@@ -1,0 +1,15 @@
+info:
+  name: Obter Estado do Bloqueio de Stock
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/v1/donations/stock/unlock"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

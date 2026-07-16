@@ -1,12 +1,17 @@
 info:
   name: Apagar Utilizador
   type: http
-  seq: 6
+  seq: 7
 
 http:
   method: DELETE
   url: "{{BASE_URL}}/api/v1/users/{{id}}"
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true

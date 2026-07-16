@@ -1,0 +1,35 @@
+info:
+  name: Criar Distribuição
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/donations/distributions/"
+  body:
+    type: json
+    data: |-
+      {
+        "date": "2026-07-10",
+        "name": "Ana Sofia",
+        "contact": "910123123",
+        "email": "optional@example.com",
+        "donor_type": "single",
+        "goods": [
+          {
+            "category_id": 1,
+            "quantity": 10
+          },
+          {
+            "category_id": 2,
+            "quantity": 7
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,28 @@
+info:
+  name: Atualizar Campo Específico Logística
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/incidents/{{incident_id}}/parties/{{party_id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "entity_id": 3
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: incident_id
+      value: ""
+    - name: party_id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

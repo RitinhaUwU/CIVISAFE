@@ -2,8 +2,6 @@
 import {useRoute, useRouter} from 'vue-router'
 import {useToast} from '@nuxt/ui/composables'
 import type {BreadcrumbItem} from '@nuxt/ui/components/Breadcrumb.vue'
-import type { TimelineItem } from '@nuxt/ui'
-import {formatTimeAgoIntl} from '@vueuse/core'
 import {useApiStore} from '@/stores/api'
 import {useAuthStore} from '@/stores/auth'
 import * as z from 'zod';
@@ -237,7 +235,6 @@ const handleSaveGeral = async () => {
 
   try {
     const payload = {
-      user_id: state.user_id,
       identifier: state.identifier,
       start_datetime: state.start_datetime != '' ? moment(state.start_datetime).toISOString() : '',
       end_datetime: state.end_datetime != '' ? moment(state.end_datetime).toISOString() : '',

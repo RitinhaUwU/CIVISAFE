@@ -1,7 +1,7 @@
 info:
   name: Atualizar Utilizador
   type: http
-  seq: 4
+  seq: 5
 
 http:
   method: PATCH
@@ -13,6 +13,11 @@ http:
         "locked": false
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true

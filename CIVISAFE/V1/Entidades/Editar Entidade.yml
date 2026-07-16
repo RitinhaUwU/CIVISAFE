@@ -10,9 +10,14 @@ http:
     type: json
     data: |-
       {
-        "name": "GNR - Pedrogão"
+        "name": "GNR - Pedrogão Grande"
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true

@@ -1,0 +1,26 @@
+info:
+  name: Atualizar Campo Específico
+  type: http
+  seq: 7
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/incidents/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "alert_source_name": "Igor Borges Canceiro"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
