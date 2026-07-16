@@ -1,16 +1,17 @@
 info:
   name: Pedir URL para Upload do Ficheiro
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
-  url: "{{BASE_URL}}/api/v1/facilities/{{id}}/documents/uploadURL"
+  url: "{{BASE_URL}}/api/v1/facilities/documents/uploadUrl"
   body:
     type: json
     data: |-
       {
-        "filename": "ficheiro.pdf"
+        "filename": "ficheiro.pdf",
+        "content_type": "application/pdf"
       }
   auth: inherit
 

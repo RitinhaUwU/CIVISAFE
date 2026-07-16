@@ -1,11 +1,11 @@
 info:
-  name: Remover Ficheiro
+  name: Obter Link para Download do Ficheiro
   type: http
-  seq: 4
+  seq: 1
 
 http:
-  method: DELETE
-  url: "{{BASE_URL}}/api/v1/facilities/{{facility_id}}/documentos/{{file_id}}"
+  method: GET
+  url: "{{BASE_URL}}/api/v1/facilities/{{facility_id}}/documentos/{{file_id}}/download"
   auth: inherit
 
 runtime:

@@ -381,7 +381,7 @@ paths:
       responses:
         '200':
           description: Sucesso.
-  /api/v1/facilities/{id}/documents/uploadURL:
+  /api/v1/facilities/documents/uploadURL:
     post:
       summary: Pedir URL para Upload do Ficheiro
       tags:
@@ -402,6 +402,16 @@ paths:
       description: Confirma a conclusão do upload de um documento de uma instalação.
       requestBody:
         $ref: '#/components/requestBodies/confirmar_upload_do_ficheiro'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{facility_id}/documentos/{file_id}/download:
+    get:
+      summary: Obter Link para Download do Ficheiro
+      tags:
+        - Instalações
+      operationId: obterLinkDownloadFicheiroInstalacao
+      description: Obter o link para o download do ficheiro.
       responses:
         '200':
           description: Sucesso.
@@ -1196,17 +1206,23 @@ components:
     confirmar_upload_do_ficheiro:
       type: object
       properties:
+        filename:
+          type: string
         key:
           type: string
       example:
-        key: ficheiro.pdf
+        filename: ficheiro.pdf
+        key: caminho/nome-no-servidor.pdf
     pedir_url_para_upload_do_ficheiro:
       type: object
       properties:
         filename:
           type: string
+        content_type:
+          type: string
       example:
         filename: ficheiro.pdf
+        content_type: application/pdf
     criar_distribui_o:
       type: object
       properties:
