@@ -101,7 +101,7 @@ export default defineNuxtConfig({
       globPatterns: ['**/*.{js,css,svg,png,ico}'],
 
       // 2. Explicitly tell Workbox to ignore the empty static file on disk
-      globIgnores: ['**/index.html'],
+      globIgnores: ['**/index.html', '**/sw.js'],
 
       // 3. Force the Service Worker to fetch the root route during installation.
       // This forces the request through Nitro, caching the HTML *with* your injected env vars.

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { Map, Marker } from 'leaflet'
+import { useDebounceFn } from '@vueuse/core'
+import { incidentDisplayName } from "@/utils"
 
 const mapContainer = ref<HTMLElement | null>(null)
 
@@ -24,7 +26,15 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   'map-click': [{ lat: number, lng: number }]
+  'bounds-change': [string]
 }>()
+
+function emitBounds() {
+  if (!map) return
+  emit('bounds-change', map.getBounds().toBBoxString())
+}
+
+const debouncedEmitBounds = useDebounceFn(emitBounds, 500)
 
 function createIcons(L: any) {
   const incidentIcon = L.icon({
@@ -58,9 +68,7 @@ function renderMarkers(L: any) {
   props.incidents.forEach((incident) => {
     if (!incident.coordinates) return
 
-    const [lat, lng] = incident.coordinates
-      .split(',')
-      .map((v: string) => Number(v.trim()))
+    const [lat, lng] = incident.coordinates.split(',').map((v: string) => Number(v.trim()))
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) return
 
@@ -70,10 +78,10 @@ function renderMarkers(L: any) {
       .addTo(map)
       .bindPopup(`
         <div style="line-height: 1.8;">
-          <b>Identificador: </b><span>${incident.identifier}</span><br>
-          <b>Tipo: </b><span>${incident.incidentType?.code} - ${incident.incidentType?.species} - ${incident.incidentType?.type}</span><br>
-          <b>Estado: </b><span>${incident.incidentState?.name}</span><br>
-          <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
+            <b>Identificador: </b><span>${incidentDisplayName(incident)}</span><br>
+            <b>Tipo: </b><span>${incident.incidentType?.code} - ${incident.incidentType?.species} - ${incident.incidentType?.type}</span><br>
+            <b>Estado: </b><span>${incident.incidentState?.name}</span><br>
+            <a href="/incidents/${incident.id}/dashboard">Ver ocorrência</a>
         </div>
       `)
     markers.push(marker)
@@ -88,6 +96,9 @@ onMounted(async () => {
   const { selectedIcon } = createIcons(L)
 
   map = L.map(mapContainer.value).setView(props.selectedCoords ?? props.center, props.zoom)
+
+  map.on('moveend', debouncedEmitBounds)
+  emitBounds()
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -153,6 +164,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  map?.off('moveend', debouncedEmitBounds)
   map?.remove()
   map = null
 })

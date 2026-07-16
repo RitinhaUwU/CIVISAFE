@@ -124,7 +124,6 @@ const columns: TableColumn<Incident>[] = [
             navigateTo(`/incidents/${row.original.id}`)
           }
         }),
-        //@ts-ignore
         h(UButton, {
           icon: 'i-lucide-trash',
           color: 'error',
@@ -190,15 +189,15 @@ watchDebounced([search, statusFilter, prioritiesFilter, is_majorFilter], async (
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
   if(!useAuthStore().hasPermission('INCIDENTS_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
-  states.fetchItems()
-  priorities.fetchItems()
+  await fetch()
+  await states.fetchItems()
+  await priorities.fetchItems()
 
   useInfiniteScroll(
     scrollContainer,
@@ -280,6 +279,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[80vh] overflow-y-auto">
         <UTable
+          v-if="loading || incidents.length > 0"
           :data="incidents"
           :columns="columns"
           :loading="loading"
@@ -293,6 +293,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de ocorrência encontrado.
+        </div>
       </div>
       <IncidentsDeleteModal
         v-if="selectedIncidentById"

@@ -1,0 +1,28 @@
+info:
+  name: Editar Tipo de Bem
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/donationGoodsTypes/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Tipo",
+        "is_type_countable": true,
+        "unit": "liters"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

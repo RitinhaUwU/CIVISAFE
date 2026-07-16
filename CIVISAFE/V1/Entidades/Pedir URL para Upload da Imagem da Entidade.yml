@@ -1,0 +1,21 @@
+info:
+  name: Pedir URL para Upload da Imagem da Entidade
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/entities/uploadUrl"
+  body:
+    type: json
+    data: |-
+      {
+        "filename": "logotipo.png"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

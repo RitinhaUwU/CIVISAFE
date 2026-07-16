@@ -1,0 +1,31 @@
+info:
+  name: Editar Instalação
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/facilities/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Junta de Freguesia do Castelo",
+        "contact": "275874214",
+        "email": "jfcastelo@example.com",
+        "address": "Castelo, Sertã",
+        "image": null,
+        "description": "teste teste"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -27,6 +27,20 @@ const state = reactive<Partial<Schema>>({
 })
 
 const handleSave = async (event: FormSubmitEvent<Schema>) => {
+  if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
+    await useRouter().push('/inicio');
+    throw new Error('User does not have access to the donations module');
+  }
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try
   {
     await useApiStore().postStockAudit(event.data)
@@ -62,65 +76,65 @@ watch(open, () => {
 });
 
 onMounted(async () => {
+  if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
+    await useRouter().push('/inicio');
+    throw new Error('User does not have access to the donations module');
+  }
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   goodCategories.value = (await useApiStore().getAllDonationGoodTypes()).data.data;
 })
 </script>
 
 <template>
-  <UModal
-    v-model:open="open"
-    title="Registar Atualização de Stock"
-    :ui="{ content: 'max-h-[90vh] overflow-y-auto w-full max-w-2xl' }"
-  >
-    <UButton
-      icon="i-lucide-plus"
-      label="Registar Atualização de Stock"
-    />
+  <UModal v-model:open="open" title="Registar Atualização de Stock" :ui="{ content: 'max-h-[90vh] overflow-y-auto w-full max-w-2xl' }">
+    <UButton icon="i-lucide-plus" label="Registar Atualização de Stock"/>
     <template #body>
-      <UForm
-        :state="state"
-        :schema="schema"
-        class="space-y-5"
-        @submit="handleSave"
-      >
+      <UForm :state="state" :schema="schema" class="space-y-5" @submit="handleSave">
         <UFormField name="adjustment_type">
           <div class="grid grid-cols-2 gap-2 mb-5">
-
             <UButton
-              :ui="{ base: 'justify-start' }"
-              class="flex gap-3 px-3 py-2.5 rounded-lg border transition-all hover:bg-success-800 target:bg-none"
-              :class="state.adjustment_type === 'add'
-                    ? 'border-success bg-success/10 text-success'
-                    : 'border-default bg-muted/40 text-muted hover:border-default/80'"
+              color="neutral"
+              variant="ghost"
+              :ui="{ base: 'justify-start focus-visible:ring-0 focus:outline-none' }"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors duration-300"
+              :class="state.adjustment_type === 'add' ? 'border-success/40 bg-success-50 text-success-700 hover:bg-success-100 dark:bg-success-950 dark:text-success-300 dark:hover:bg-success-900' : 'border-default bg-elevated/50 text-muted hover:bg-elevated hover:text-toned'"
               @click="state.adjustment_type = 'add'"
             >
-              <span class="size-7 rounded-md flex items-center justify-center bg-success/20">
-                <UIcon name="i-lucide-plus" class="size-4"/>
+              <span class="size-7 rounded-md flex items-center justify-center bg-success-100 dark:bg-success-900 shrink-0">
+                <UIcon name="i-lucide-plus" class="size-4 text-success-600 dark:text-success-400"/>
               </span>
-              <div>
+              <div class="flex flex-col items-baseline gap-1">
                 <p class="text-sm font-medium text-highlighted">Adicionar</p>
                 <p class="text-xs text-muted">Adicionar Stock ao Sistema</p>
               </div>
             </UButton>
-
             <UButton
-              class="flex gap-3 px-3 py-2.5 rounded-lg border transition-all hover:bg-error-800"
-              :class="state.adjustment_type === 'remove'
-                ? 'border-error bg-error/10 text-error'
-                : 'border-default bg-muted/40 text-muted hover:border-default/80'"
+              color="neutral"
+              variant="ghost"
+              :ui="{ base: 'justify-start focus-visible:ring-0 focus:outline-none' }"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors duration-300"
+              :class="state.adjustment_type === 'remove' ? 'border-error/40 bg-error-50 text-error-700 hover:bg-error-100 dark:bg-error-950 dark:text-error-300 dark:hover:bg-error-900' : 'border-default bg-elevated/50 text-muted hover:bg-elevated hover:text-toned'"
               @click="state.adjustment_type = 'remove'"
             >
-              <span class="size-7 rounded-md flex items-center justify-center bg-error/20">
-                <UIcon name="i-lucide-minus" class="size-4"/>
+              <span class="size-7 rounded-md flex items-center justify-center bg-error-100 dark:bg-error-900 shrink-0">
+                <UIcon name="i-lucide-minus" class="size-4 text-error-600 dark:text-error-400"/>
               </span>
-              <div>
+              <div class="flex flex-col items-baseline">
                 <p class="text-sm font-medium text-highlighted">Remover</p>
                 <p class="text-xs text-muted">Remover Stock do Sistema</p>
               </div>
             </UButton>
           </div>
         </UFormField>
-
         <div class="grid grid-cols-2 gap-5">
           <UFormField label="Categoria" name="category_id" required>
             <USelectMenu
@@ -132,10 +146,9 @@ onMounted(async () => {
               placeholder="Selecione uma Categoria..."
             />
           </UFormField>
-
-          <UFormField :label="`Quantidade ${suffixForQuantityBox(goodCategories, state.category_id)}`" name="quantity"
-                      required>
+          <UFormField :label="`Quantidade ${suffixForQuantityBox(goodCategories, state.category_id)}`" name="quantity" required>
             <UInputNumber
+              data-testid="good-quantity-input"
               v-model="state.quantity"
               :min="0"
               :step="suffixForQuantityBox(goodCategories, state.category_id, true) === 'Unidades' ? 1 : 0.1"
@@ -144,7 +157,6 @@ onMounted(async () => {
               class="w-full"/>
           </UFormField>
         </div>
-
         <UFormField label="Motivo" name="reason" class="mt-2" required>
           <USelect
             class="w-full"
@@ -169,15 +181,9 @@ onMounted(async () => {
             ]"
           />
         </UFormField>
-
         <UFormField label="Observações" name="obs">
-          <UTextarea
-            class="w-full"
-            v-model="state.obs"
-            placeholder="Aqui pode escrever alguma informação adicional que queira registar"
-          />
+          <UTextarea class="w-full" v-model="state.obs" placeholder="Aqui pode escrever alguma informação adicional que queira registar"/>
         </UFormField>
-
         <div class="flex justify-end gap-3 pt-2">
           <UButton
             label="Cancelar"
@@ -193,7 +199,6 @@ onMounted(async () => {
             class="w-fit"
           />
         </div>
-
       </UForm>
     </template>
   </UModal>

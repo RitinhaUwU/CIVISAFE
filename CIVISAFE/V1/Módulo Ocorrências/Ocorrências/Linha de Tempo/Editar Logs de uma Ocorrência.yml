@@ -1,0 +1,30 @@
+info:
+  name: Editar Logs de uma Ocorrência
+  type: http
+  seq: 2
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/v1/incidents/{{incident_id}}/comments/{{comment_id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "body": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.",
+        "user_id": 1,
+        "datetime": "2026-06-25 20:00:00"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: incident_id
+      value: ""
+    - name: comment_id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -2,6 +2,9 @@
 import z from "zod";
 import type {DonationDistribution, DonationGoodType} from "@/types";
 import {suffixForQuantityBox} from "@/utils";
+import {ref} from "@vue/runtime-core";
+import {useApiStore} from "~/stores/api";
+import {useToast} from "@nuxt/ui/composables";
 
 const toast = useToast();
 const stockTracker = ref(new Map<number, {
@@ -11,6 +14,7 @@ const stockTracker = ref(new Map<number, {
   lastUpdated: number
 }>());
 const goodCategories = ref<DonationGoodType[]>([]);
+const isStockLocked = ref(true);
 
 /**
  * Websocket event handlers
@@ -34,6 +38,10 @@ const handleStockUpdate = async (stockUpdate: { id: number, stock: number, times
   }
 }
 
+const handleStockLockUpdate = (lockUpdate: any) => {
+  isStockLocked.value = lockUpdate.isUnlocked == 0;
+}
+
 onMounted(async () => {
   if (!await checkServerAccess()) {
     useToast().add({
@@ -52,9 +60,11 @@ onMounted(async () => {
   const {$echo} = useNuxtApp();
 
   $echo.private('DonationStocks')
-    .listen('.stock.updated', handleStockUpdate);
+    .listen('.stock.updated', handleStockUpdate)
+    .listen('.stock.lock_status', handleStockLockUpdate);
 
   const initialStocks = (await useApiStore().getAllStock()).data.data;
+  isStockLocked.value = (await useApiStore().getStockUnlock()).data.state == 0;
   goodCategories.value = (await useApiStore().getAllDonationGoodTypes()).data.data;
 
   initialStocks.forEach((stock: { type_id: number, type_name: string, stock: number }) => {
@@ -71,6 +81,10 @@ onMounted(async () => {
  * Relacionado com o formulário de distribuíção
  */
 const addGood = () => {
+  if(distributionForm.goods == undefined) {
+    distributionForm.goods = [];
+  }
+
   distributionForm.goods.push({
     // @ts-ignore
     category_id: null,
@@ -79,6 +93,10 @@ const addGood = () => {
 }
 
 const removeGood = (index: number) => {
+  if(distributionForm.goods == undefined) {
+    return;
+  }
+
   if (distributionForm.goods.length > 1) {
     distributionForm.goods.splice(index, 1)
   }
@@ -149,7 +167,15 @@ const submitDistribution = async () => {
   }
 }
 
+const editingGoodsHolder = ref<{category_id: null, quantity: 0}[]>();
+
 const onRowSelected = (record: DonationDistribution) => {
+
+  editingGoodsHolder.value = record.goods.map(item => ({
+    quantity: item.quantity,
+    category_id: item.donation_goods_type_id
+  }))
+
   Object.assign(distributionForm, {
     ...record, goods: record.goods.map(item => ({
       quantity: item.quantity,
@@ -159,6 +185,7 @@ const onRowSelected = (record: DonationDistribution) => {
 }
 
 const clearForm = () => {
+  editingGoodsHolder.value = [];
   Object.assign(distributionForm, {
     name: '',
     contact: '',
@@ -172,8 +199,33 @@ const clearForm = () => {
 }
 
 const calculateBoxMaxValue = (index: number) => {
+  if(distributionForm.goods == undefined) {
+    return 0;
+  }
 
-  if(!distributionForm.goods[index].category_id)
+  if(distributionForm.goods[index] == undefined) {
+    return 0;
+  }
+
+  if(!isStockLocked.value)
+  {
+    return Infinity;
+  }
+
+  if(distributionForm.id !== undefined) {
+    //We're editing a distribution
+
+    if(stockTracker.value.has(distributionForm.goods[index].category_id))
+    {
+      return stockTracker.value.get(distributionForm.goods[index].category_id)?.stock + editingGoodsHolder.value[index]?.quantity
+    }
+    else
+    {
+      return Infinity;
+    }
+  }
+
+  if(!distributionForm.goods?.[index]?.category_id)
   {
     return 0
   }
@@ -201,11 +253,18 @@ const calculateBoxMaxValue = (index: number) => {
 
     <template #body class="overflow-y-auto h-full">
 
-      <div class="grid grid-cols-4 gap-4">
+      <UAlert
+        v-if="!isStockLocked"
+        title="Limites de Stock Desbloqueados!"
+        description="Um Administrador desbloqueou os limites de stock. Isto significa que pode fazer entregas com quantidades superiores às indicadas pelo sistema."
+        icon="i-lucide-megaphone"
+      />
 
-        <UCard class="col-span-3">
+      <div class="grid sm:grid-cols-4 gap-4">
 
-          <template #title>
+        <UCard class="sm:col-span-3">
+
+          <template #header>
             {{distributionForm.id === undefined ? "Nova Entrega" : `Entrega a ${distributionForm.name}`}}
 
             <UButton
@@ -277,8 +336,13 @@ const calculateBoxMaxValue = (index: number) => {
                         </span>
                     </UFormField>
 
-                    <UButton v-if="distributionForm.goods.length > 1" icon="i-lucide-trash-2" class="w-fit h-fit"
-                             @click="removeGood(index)"/>
+                    <UButton
+                      v-if="distributionForm.goods.length > 1"
+                      data-testid="remove-good-row"
+                      icon="i-lucide-trash-2"
+                      class="w-fit h-fit"
+                      @click="removeGood(index)"
+                    />
                   </div>
 
                 </UCard>
@@ -299,7 +363,7 @@ const calculateBoxMaxValue = (index: number) => {
           </UForm>
         </UCard>
 
-        <div class="grid grid-cols-1 gap-4 max-h-fit h-fit sticky top-4 self-start">
+        <div class="grid sm:grid-cols-1 gap-4 max-h-fit h-fit sticky top-4 self-start">
 
           <UButton
             icon="i-lucide-hand-coins"
@@ -314,10 +378,12 @@ const calculateBoxMaxValue = (index: number) => {
 
           <DonationDistributionRulesModal/>
 
-          <DonationDistributionStocksModal :stockTracker="stockTracker"/>
+          <DonationDistributionStocksModal
+            :stockTracker="stockTracker"
+            v-model:stockUnlocked="isStockLocked"
+          />
 
         </div>
-
       </div>
     </template>
   </UDashboardPanel>

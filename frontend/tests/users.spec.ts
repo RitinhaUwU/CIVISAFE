@@ -26,7 +26,7 @@ test('create user', async ({ page }) => {
   await page.getByLabel('Telemóvel').fill('912345678')
 
   await page.getByLabel('Função').click()
-  await page.getByRole('option', { name: 'Utilizador' }).click()
+  await page.getByRole('option', { name: 'Administrador' }).click()
 
   const passwordField = page.getByTestId('password')
   await passwordField.click()
@@ -74,6 +74,7 @@ test('edit user', async ({ page }) => {
   await expect(page.getByLabel('Nome')).not.toHaveValue('', { timeout: 20000 })
 
   await page.getByLabel('Nome').fill('Updated User')
+  await page.getByLabel('Telemóvel').fill('913456789')
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
@@ -112,7 +113,7 @@ test('edit user role', async ({ page }) => {
   await expect(page.getByLabel('Nome')).not.toHaveValue('', { timeout: 20000 })
 
   await page.getByLabel('Função').click()
-  await page.getByRole('option', { name: 'Gestor' }).click()
+  await page.getByRole('option', { name: 'Utilizador' }).click()
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
@@ -137,7 +138,7 @@ test('edit user password mismatch fails', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
-  await expect(page.getByText('Passwords não coincidem', { exact: true })).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText('As palavras-passe não coincidem.', { exact: true })).toBeVisible({ timeout: 20000 })
 })
 
 test('search filters users', async ({ page }) => {
@@ -207,5 +208,5 @@ test('delete user', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Eliminar' }).click()
 
-  await expect(page.getByText('Eliminado com sucesso', { exact: true })).toBeVisible({ timeout: 20000 })
+  await expect(page.getByText('O utilizador foi eliminado.', { exact: true })).toBeVisible({ timeout: 20000 })
 })

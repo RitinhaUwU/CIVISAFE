@@ -7,9 +7,10 @@ use App\Http\Requests\Donations\DonationGoodsTypeRequest;
 use App\Http\Resources\Donations\DonationGoodsTypeResource;
 use App\Models\Donations\DonationGoodsType;
 use App\Models\Donations\DonationStock;
-use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -94,7 +95,7 @@ class DonationGoodsTypeController extends Controller
         catch (\Throwable $e)
         {
             DB::rollBack();
-            \Log::error($e->getMessage());
+            Log::error($e->getMessage());
             return response()->json($e->getMessage(), 500);
         }
     }

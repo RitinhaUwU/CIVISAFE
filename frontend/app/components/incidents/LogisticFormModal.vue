@@ -3,6 +3,7 @@ import * as z from 'zod'
 import { usePaginatedSelect } from '@/composables/usePaginatedSelect'
 import { useApiStore } from '@/stores/api'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import {useAuthStore} from "~/stores/auth";
 
 const props = defineProps<{
   open: boolean
@@ -66,6 +67,17 @@ watch(() => props.open, (open) => {
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const payload = {
     ...event.data,
     entity_id: event.data.entity_id?.id
@@ -103,10 +115,10 @@ onMounted(async () => {
           </UFormField>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <UFormField label="Nº de Veículos" name="vehicle_count" required>
-              <UInputNumber v-model="state.vehicle_count" class="w-full" />
+              <UInputNumber v-model="state.vehicle_count" class="w-full" :min="0" />
             </UFormField>
             <UFormField label="Nº de Operacionais" name="human_count" required>
-              <UInputNumber v-model="state.human_count" class="w-full" />
+              <UInputNumber v-model="state.human_count" class="w-full" :min="0" />
             </UFormField>
           </div>
         </div>
@@ -119,7 +131,7 @@ onMounted(async () => {
             @click="emit('update:open', false)"
           />
           <UButton
-            :label="isEditing ? 'Atualizar' : 'Guardar'"
+            :label="isEditing ? 'Guardar' : 'Adicionar'"
             color="primary"
             type="submit"
             class="flex-1 justify-center"

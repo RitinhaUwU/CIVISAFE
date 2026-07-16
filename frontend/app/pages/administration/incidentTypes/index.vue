@@ -119,15 +119,15 @@ watchDebounced(search, async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('INCIDENT_TYPES_LIST'))
   {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -151,7 +151,17 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesUploadModal v-if="useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
+
+        <div class="flex items-center gap-3">
+          <UButton
+            icon="i-lucide-download"
+            label="Transferir Template para Preenchimento"
+            to="/templates/TemplateTiposOcorrencia.xlsx"
+            target="_blank"
+            download
+          />
+          <IncidentTypesUploadModal v-if="useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
+        </div>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -163,6 +173,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || incidentTypes.length > 0"
           :data="incidentTypes"
           :columns="columns"
           :loading="loading"
@@ -176,6 +187,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo dos tipos de ocorrência encontrado.
+        </div>
       </div>
     </template>
   </UDashboardPanel>

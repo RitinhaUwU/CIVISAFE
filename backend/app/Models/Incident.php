@@ -14,6 +14,22 @@ class Incident extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
 
+    protected static function booted(): void
+    {
+        static::saving(function (Incident $incident) {
+            $incident->identifier = $incident->resolveIdentifier();
+        });
+
+        static::updating(function (Incident $incident) {
+            if ($incident->isDirty('is_major') || $incident->isDirty('incident_id')) {
+                $incident->identifier = $incident->resolveIdentifier();
+                return;
+            }
+
+            $incident->identifier = $incident->getOriginal('identifier');
+        });
+    }
+
     public function incidentType(): BelongsTo
     {
         return $this->belongsTo(IncidentType::class, 'incident_type_id')->withTrashed();
@@ -54,6 +70,43 @@ class Incident extends Model
         return $this->hasMany(TimelineComment::class);
     }
 
+    public static function nextIdentifier(): string
+    {
+        $year = now()->year;
+
+        $last = self::where('identifier', 'like', "{$year}/%")
+            ->lockForUpdate()
+            ->orderByDesc('identifier')
+            ->first();
+
+        if (!$last) {
+            return sprintf('%d/%04d', $year, 1);
+        }
+
+        [, $number] = explode('/', $last->identifier);
+
+        return sprintf('%d/%04d', ((int) $year), ((int) $number) + 1);
+    }
+
+    /**
+     * Regras de negócio para o identificador:
+     * - Major: identificador obrigatório (mantém o que já tem, ou gera um novo se ainda não tiver).
+     * - Minor associada a uma major (incident_id definido): sem identificador.
+     * - Minor standalone (sem incident_id): identificador próprio (mantém ou gera um novo).
+     */
+    private function resolveIdentifier(): ?string
+    {
+        if ($this->is_major) {
+            return $this->identifier ?: self::nextIdentifier();
+        }
+
+        if (!empty($this->incident_id)) {
+            return null;
+        }
+
+        return $this->identifier ?: self::nextIdentifier();
+    }
+
     protected $with = [
         'incidentType',
         'incidentState',
@@ -62,6 +115,8 @@ class Incident extends Model
         'parties',
         'comments',
     ];
+
+    protected $dateFormat = 'Y-m-d H:i:sP';
 
     protected function casts(): array
     {
@@ -80,6 +135,7 @@ class Incident extends Model
         'user_id',
         'start_datetime',
         'end_datetime',
+        'operational_grid',
         'coordinates',
         'common_place',
         'address',
@@ -99,27 +155,8 @@ class Incident extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly([
-                'identifier',
-                'incident_type_id',
-                'incident_state_id',
-                'incident_priority_id',
-                'start_datetime',
-                'end_datetime',
-                'coordinates',
-                'common_place',
-                'address',
-                'parish',
-                'municipality',
-                'district',
-                'is_major',
-                'alert_source_relationship',
-                'alert_source_name',
-                'alert_source_contact',
-                'obs',
-                'coordinates_pco',
-                'name_pco',
-            ])
+            ->logFillable()
+            ->logExcept(['user_id'])
             ->logOnlyDirty()
             ->useLogName('incidents')
             ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {

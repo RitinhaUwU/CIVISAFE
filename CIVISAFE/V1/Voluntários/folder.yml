@@ -1,7 +1,0 @@
-info:
-  name: Voluntários
-  type: folder
-  seq: 12
-
-request:
-  auth: inherit

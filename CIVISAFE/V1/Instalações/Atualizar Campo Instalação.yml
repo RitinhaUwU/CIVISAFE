@@ -1,0 +1,26 @@
+info:
+  name: Atualizar Campo Instalação
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/facilities/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "image": null
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

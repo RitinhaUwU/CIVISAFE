@@ -1,0 +1,26 @@
+info:
+  name: Confirmar Upload Imagem
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/facilities/{{id}}/upload"
+  body:
+    type: json
+    data: |-
+      {
+        "key": "logotipo.png"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

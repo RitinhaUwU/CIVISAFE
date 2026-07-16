@@ -5,7 +5,6 @@ import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const api = useApiStore()
 
 const saving = ref(false)
@@ -27,7 +26,7 @@ const toast = useToast()
 const fetchEntityType = async () => {
   if(!useAuthStore().hasPermission('ENTITY_TYPES_LIST'))
   {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 

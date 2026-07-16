@@ -136,14 +136,14 @@ watchDebounced([search, statusFilter], async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('INCIDENT_PRIORITIES_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -195,6 +195,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || priorities.length > 0"
           :data="priorities"
           :columns="columns"
           :loading="loading"
@@ -208,6 +209,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de tipos de priodade de uma ocorrência encontrado.
+        </div>
       </div>
       <IncidentPrioritiesDeleteModal
         v-if="selectedPriorityById"

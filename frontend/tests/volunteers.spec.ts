@@ -54,6 +54,11 @@ test('edit volunteer', async ({ page }) => {
   await page.goto('http://localhost:3000/volunteers')
   await page.waitForSelector('table')
 
+  const input = page.getByPlaceholder('Filtrar voluntários...')
+  await input.click()
+  await input.fill('Equipa Teste')
+  await page.waitForTimeout(1000)
+
   const volunteerRow = page.getByRole('row').filter({ hasText: 'Equipa Teste' }).first()
   await expect(volunteerRow).toBeVisible({ timeout: 20000 })
 
@@ -74,6 +79,11 @@ test('edit volunteer fails', async ({ page }) => {
   await page.goto('http://localhost:3000/volunteers')
   await page.waitForSelector('table')
 
+  const input = page.getByPlaceholder('Filtrar voluntários...')
+  await input.click()
+  await input.fill('Equipa Teste')
+  await page.waitForTimeout(1000)
+
   const volunteerRow = page.getByRole('row').filter({ hasText: 'Updated Volunteer' }).first()
   await expect(volunteerRow).toBeVisible({ timeout: 20000 })
 
@@ -93,6 +103,11 @@ test('edit volunteer classification', async ({ page }) => {
 
   await page.goto('http://localhost:3000/volunteers')
   await page.waitForSelector('table')
+
+  const input = page.getByPlaceholder('Filtrar voluntários...')
+  await input.click()
+  await input.fill('Equipa Teste')
+  await page.waitForTimeout(1000)
 
   const volunteerRow = page.getByRole('row').filter({ hasText: 'Updated Volunteer' }).first()
   await expect(volunteerRow).toBeVisible({ timeout: 20000 })
@@ -116,8 +131,6 @@ test('search filters volunteers', async ({ page }) => {
 
   await page.goto('http://localhost:3000/volunteers')
   await page.waitForSelector('table')
-
-  await expect(page.getByRole('row').filter({ hasText: 'Updated Volunteer' }).first()).toBeVisible({ timeout: 20000 })
 
   const input = page.getByPlaceholder('Filtrar voluntários...')
   await input.click()
@@ -165,6 +178,11 @@ test('cancel delete volunteer', async ({ page }) => {
   await page.goto('http://localhost:3000/volunteers')
   await page.waitForSelector('table')
 
+  const input = page.getByPlaceholder('Filtrar voluntários...')
+  await input.click()
+  await input.fill('Equipa Teste')
+  await page.waitForTimeout(1000)
+
   const volunteerRow = page.getByRole('row').filter({ hasText: 'Updated Volunteer' }).first()
   await expect(volunteerRow).toBeVisible({ timeout: 20000 })
 
@@ -182,6 +200,11 @@ test('delete volunteer', async ({ page }) => {
 
   await page.goto('http://localhost:3000/volunteers')
   await page.waitForSelector('table')
+
+  const input = page.getByPlaceholder('Filtrar voluntários...')
+  await input.click()
+  await input.fill('Equipa Teste')
+  await page.waitForTimeout(1000)
 
   const volunteerRow = page.getByRole('row').filter({ hasText: 'Updated Volunteer' }).first()
   await expect(volunteerRow).toBeVisible({ timeout: 20000 })

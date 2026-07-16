@@ -56,6 +56,20 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('DONATION_LOG_CREATE')) {
+    await useRouter().push('/inicio');
+    return;
+  }
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await apiStore.createDonationLog(event.data);
 
@@ -88,6 +102,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 onMounted(async () => {
+  if (!useAuthStore().hasPermission('DONATION_GOODS_TYPES_LIST') || !useAuthStore().hasPermission('DONATION_LOG_CREATE')) {
+    await useRouter().push('/inicio');
+    return;
+  }
   goodCategories.value = (await apiStore.getAllDonationGoodTypes()).data.data;
 })
 </script>
@@ -176,6 +194,7 @@ onMounted(async () => {
 
                 <UFormField :label="`Quantidade ${suffixForQuantityBox(goodCategories, state.goods[index].category_id)}`" :name="`goods.${index}.quantity`" required>
                   <UInputNumber
+                    data-testid="good-quantity-input"
                     v-model="item.quantity"
                     :min="0"
                     :step="suffixForQuantityBox(goodCategories, state.goods[index].category_id, true) === 'Unidades' ? 1 : 0.1"

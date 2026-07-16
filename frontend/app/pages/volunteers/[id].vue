@@ -5,6 +5,7 @@ import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import {toDatetimeLocal} from "@/utils"
+import moment from "moment";
 
 const route = useRoute()
 const router = useRouter()
@@ -20,7 +21,10 @@ const incidents = usePaginatedSelect({
   filters: () => ({
     is_major: false
   }),
-  map: (i: any) => ({id: i.id, name: i.identifier})
+  map: (i: any) => ({
+    id: i.id,
+    name: `${i.parentIncident?.identifier ? `(Major ${i.parentIncident.identifier}) ` : ''}${i.incidentType?.type ?? 'Ocorrência'}${i.address ? ` - ${i.address}${i.municipality ? `, ${i.municipality}` : ''}` : ''}`
+  })
 })
 
 const selectOptionSchema = z.object({
@@ -31,7 +35,7 @@ const selectOptionSchema = z.object({
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   contact: z.string().min(9, 'Número inválido').regex(/^\+?[0-9]+(?: [0-9]+)*$/, 'Insira apenas números ou formato +000 000000000'),
-  email: z.string().email('Email inválido'),
+  email: z.string().email('Email inválido').nullable().optional(),
   classification: z.enum(['single', 'org', 'misc']),
   num_elements: z.number().min(1),
   mission: z.string().nullable().optional(),
@@ -95,6 +99,8 @@ const handleSave = async () => {
   try {
     const payload = {
       ...result.data,
+      start_datetime: result.data.start_datetime != '' ? moment(result.data.start_datetime).toISOString() : '',
+      end_datetime: result.data.end_datetime != '' ? moment(result.data.end_datetime).toISOString() : '',
       incident_id: result.data.incident_id?.id ?? null
     }
 
@@ -135,13 +141,13 @@ const fetchVolunteer = async () => {
     num_elements: Number(data.num_elements),
     start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
-    incident_id: data.incident ? {id: data.incident.id, name: data.incident.identifier} : null
+    incident_id: data.incident ? {id: data.incident.id, name: `${data.incident.parentIncident?.identifier ? `(Major ${data.incident.parentIncident.identifier}) ` : ''}${data.incident.incidentType?.type ?? 'Ocorrência'}${data.incident.address ? ` - ${data.incident.address}${data.incident.municipality ? `, ${data.incident.municipality}` : ''}` : ''}`} : null
   })
 
   if (data.incident) {
     incidents.prependSelected([{
       id: data.incident.id,
-      name: data.incident.identifier
+      name: `${data.incident.parentIncident?.identifier ? `(Major ${data.incident.parentIncident.identifier}) ` : ''}${data.incident.incidentType?.type ?? 'Ocorrência'}${data.incident.address ? ` - ${data.incident.address}${data.incident.municipality ? `, ${data.incident.municipality}` : ''}` : ''}`
     }])
   }
 }
@@ -294,7 +300,7 @@ onMounted(async () => {
       <section class="space-y-3">
         <h2 class="font-bold">Período</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <UFormField label="Início">
+          <UFormField label="Início" required>
             <UInput type="datetime-local" v-model="state.start_datetime" />
           </UFormField>
           <UFormField label="Fim">

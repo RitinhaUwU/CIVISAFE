@@ -110,14 +110,14 @@ watchDebounced(search, async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('FACILITIES_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -156,6 +156,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[80vh] overflow-y-auto">
         <UTable
+          v-if="loading || facilities.length > 0"
           :data="facilities"
           :columns="columns"
           :loading="loading"
@@ -169,6 +170,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de instalações encontrado.
+        </div>
       </div>
       <FacilitiesDeleteModal
         v-if="selectedFacilitiesById"

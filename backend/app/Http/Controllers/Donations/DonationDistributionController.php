@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\Donations;
 
-use App\Events\DistributionCreated;
-use App\Events\DistributionUpdated;
-use App\Events\StockUpdated;
+use App\Events\Donations\DistributionCreated;
+use App\Events\Donations\DistributionUpdated;
+use App\Events\Donations\StockUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ActivityHelper;
 use App\Http\Requests\Donations\DonationDistributionRequest;
 use App\Http\Resources\Donations\DonationDistributionResource;
+use App\Models\AppSetting;
 use App\Models\Donations\DistributionContent;
 use App\Models\Donations\DonationDistribution;
 use App\Models\Donations\DonationStock;
-use Auth;
-use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -23,9 +24,10 @@ class DonationDistributionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:DONATION_LOG_LIST')->only(['index', 'show']);
+        $this->middleware('permission:DONATION_LOG_LIST')->only(['index', 'show', 'getRules']);
         $this->middleware('permission:DONATION_LOG_CREATE')->only(['store']);
         $this->middleware('permission:DONATION_LOG_UPDATE')->only(['update']);
+        $this->middleware('permission:SETTING_DONATION_DISTRIBUTION_RULES_UPDATE')->only(['storeRules']);
     }
 
     public function index(Request $request)
@@ -95,12 +97,13 @@ class DonationDistributionController extends Controller
             });
 
             DB::commit();
-            broadcast(new DistributionCreated($distribution));
 
             foreach($goods as $good)
             {
                 broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good['category_id']])->first()));
             }
+
+            broadcast(new DistributionCreated($distribution));
 
             return new DonationDistributionResource($distribution);
         }
@@ -124,12 +127,19 @@ class DonationDistributionController extends Controller
          */
 
         try {
-            DB::transaction(function () use ($request, $donationDistribution) {
+            $goods = collect($request->validated('goods'))
+                ->groupBy('category_id')
+                ->map(fn($group, $categoryId) => [
+                    'category_id' => $categoryId,
+                    'quantity' => $group->sum('quantity')
+                ]);
+
+            DB::transaction(function () use ($request, $donationDistribution, $goods) {
                 $fields = collect($request->validated());
 
                 $donationDistribution->update($fields->except('goods')->toArray());
 
-                collect($fields['goods'])->each(function ($item) use ($donationDistribution) {
+                $goods->each(function ($item) use ($donationDistribution) {
 
                     $good = DistributionContent::where(['donation_distribution_id' => $donationDistribution->id])
                         ->where(['donation_goods_type_id' => $item['category_id']])
@@ -158,7 +168,6 @@ class DonationDistributionController extends Controller
                                     ->lockForUpdate()
                                     ->increment('stock', abs($diff));
                             }
-                            broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
                         }
                     } else {
                         //Se o item não existe na db, adicionamos as unidades
@@ -171,8 +180,6 @@ class DonationDistributionController extends Controller
                         DonationStock::where(['donation_goods_type_id' => $item['category_id']])
                             ->lockForUpdate()
                             ->decrement('stock', $item['quantity']);
-
-                        broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
                     }
                 });
 
@@ -189,14 +196,17 @@ class DonationDistributionController extends Controller
                             ->increment('stock', $good->quantity);
 
                         $good->delete();
-                        broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good->donation_goods_type_id])->first()));
                     });
-
-
             });
 
             DB::commit();
+
+            $goods->each(function ($item) use ($donationDistribution) {
+                broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
+            });
+
             broadcast(new DistributionUpdated($donationDistribution));
+
             return new DonationDistributionResource($donationDistribution->fresh());
         }
         catch (\Throwable $e) {
@@ -232,5 +242,24 @@ class DonationDistributionController extends Controller
             });
 
         return response()->json($logs);
+    }
+
+    public function getRules(Request $request)
+    {
+        $setting = AppSetting::firstOrCreate(['name' => 'donation_distribution_rules'], ['state' => '']);
+
+        return response()->json($setting->toArray());
+    }
+
+    public function storeRules(Request $request)
+    {
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'max:4000000000'],
+        ]);
+
+        AppSetting::firstOrNew(['name' => 'donation_distribution_rules'])
+            ->update(['state' => $validated['body']]);
+
+        return response()->json(AppSetting::where(['name' => 'donation_distribution_rules'])->first()->toArray());
     }
 }

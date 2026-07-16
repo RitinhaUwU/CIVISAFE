@@ -1,0 +1,28 @@
+info:
+  name: Criar Logística
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/incidents/{{incident_id}}/parties"
+  body:
+    type: json
+    data: |-
+      {
+        "vehicle_count": 5,
+        "human_count": 12,
+        "entity_id": 2
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: incident_id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -5,14 +5,19 @@ info:
 
 http:
   method: PUT
-  url: "{{BASE_URL}}/api/v1/entities/1"
+  url: "{{BASE_URL}}/api/v1/entities/{{id}}"
   body:
     type: json
     data: |-
       {
-        "name": "GNR - Pedrogão"
+        "name": "GNR - Pedrogão Grande"
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true

@@ -73,7 +73,10 @@ enum PermissionsEnum: string
     case DONATION_LOG_LIST = 'DONATION_LOG_LIST';
     case DONATION_LOG_CREATE = 'DONATION_LOG_CREATE';
     case DONATION_LOG_UPDATE = 'DONATION_LOG_UPDATE';
-//    case DONATION_LOG_DELETE = 'DONATION_LOG_DELETE';
+
+    # APP SETTINGS
+    case SETTING_DONATION_DISTRIBUTION_RULES_UPDATE = 'SETTING_DONATION_DISTRIBUTION_RULES_UPDATE';
+    CASE SETTING_DONATION_DISTRIBUTION_STOCK_UNLOCK = 'SETTING_DONATION_DISTRIBUTION_STOCK_UNLOCK';
 
     public function label(): string
     {
@@ -134,7 +137,9 @@ enum PermissionsEnum: string
             self::DONATION_LOG_LIST => 'Ver Lista de Doações',
             self::DONATION_LOG_CREATE => 'Registar uma nova Doação',
             self::DONATION_LOG_UPDATE => 'Editar uma Doação',
-//            self::DONATION_LOG_DELETE => 'Remover uma Doação'
+            # APP SETTINGS
+            self::SETTING_DONATION_DISTRIBUTION_RULES_UPDATE => 'Atualizar Texto do Regulamento de Distribuição de Bens',
+            self::SETTING_DONATION_DISTRIBUTION_STOCK_UNLOCK => 'Alterar Modo do Sistema de Restrição de Entrega de Bens ao Nível do Stock'
         };
     }
 }

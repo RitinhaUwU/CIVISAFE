@@ -21,7 +21,7 @@ class TimelineCommentController extends Controller
         $comment = $incident->comments()->create([
             'user_id' => auth()->id(),
             'body' => $request->body,
-            'datetime' => $request->datetime ?? now()
+            'datetime' => $request->datetime
         ]);
 
         return new TimelineCommentResource($comment->load('user'));

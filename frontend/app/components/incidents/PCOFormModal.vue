@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { watch } from 'vue'
 import * as z from 'zod'
 import {toDatetimeLocal} from "@/utils"
+import type {FormSubmitEvent} from "@nuxt/ui";
+import moment from "moment/min/moment-with-locales";
+import {useAuthStore} from "~/stores/auth";
 
 const props = defineProps<{
   open: boolean
@@ -15,7 +18,7 @@ const emit = defineEmits<{
 
 const schema = z.object({
   function_pco: z.string().min(1, 'Selecione uma função'),
-  resp_pco: z.string().min(2, 'Nome demasiado curto'),
+  resp_pco: z.string().min(1, 'Nome demasiado curto'),
   category_pco: z.string().min(1, 'Categoria obrigatória'),
   contact1_pco: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000'),
   contact2_pco: z.string().refine(value => !value || /^\+?[0-9]+(?: [0-9]+)*$/.test(value), 'Insira apenas números ou formato +000 000000000').optional().nullable(),
@@ -27,7 +30,9 @@ const schema = z.object({
   end_pco_datetime: z.string().optional().nullable(),
 })
 
-const form = reactive({
+type Schema = z.output<typeof schema>
+
+const defaultForm = {
   function_pco: '',
   resp_pco: '',
   category_pco: '',
@@ -37,33 +42,21 @@ const form = reactive({
   rob_pco: '',
   srp_pco: '',
   activation_pco_datetime: '',
-  start_pco_datetime: '',
+  start_pco_datetime: toDatetimeLocal(new Date().toISOString()),
   end_pco_datetime: '',
-})
-
-const resetForm = () => {
-  Object.assign(form, {
-    function_pco: '',
-    resp_pco: '',
-    category_pco: '',
-    contact1_pco: '',
-    contact2_pco: '',
-    localization_pco: '',
-    rob_pco: '',
-    srp_pco: '',
-    activation_pco_datetime: '',
-    start_pco_datetime: '',
-    end_pco_datetime: '',
-  })
 }
 
-const isEditMode = computed(() => !!props.modelValue?.id)
+const state = reactive<Partial<Schema>>({ ...defaultForm })
+
+function resetForm() {
+  Object.assign(state, defaultForm)
+}
 
 watch(() => [props.modelValue, props.open], ([val, open]) => {
     if (!open) return resetForm()
 
     if (val?.id) {
-      Object.assign(form, {
+      Object.assign(state, {
         function_pco: val.function_pco ?? '',
         resp_pco: val.resp_pco ?? '',
         category_pco: val.category_pco ?? '',
@@ -82,25 +75,28 @@ watch(() => [props.modelValue, props.open], ([val, open]) => {
   }
 )
 
-const toast = useToast()
+const formRef = ref()
 
 const close = () => emit('update:open', false)
 
-const submit = () => {
-  const result = schema.safeParse(form)
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
 
-  if (!result.success) {
-    result.error.issues.forEach((err) => {
-      toast.add({
-        title: 'Erro de validação',
-        description: err.message,
-        color: 'error'
-      })
-    })
-    return
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
   }
 
-  emit('save', result.data)
+  emit('save', {
+    ...event.data,
+    activation_pco_datetime: event.data.activation_pco_datetime !== '' ?  moment(event.data.activation_pco_datetime).toISOString() : null,
+    start_pco_datetime:  moment(event.data.start_pco_datetime).toISOString(),
+    end_pco_datetime:  event.data.end_pco_datetime !== '' ? moment(event.data.end_pco_datetime).toISOString() : null,
+  })
   close()
 }
 </script>
@@ -116,65 +112,69 @@ const submit = () => {
     }"
   >
     <template #body>
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UFormField label="Função" name="function_pco" required>
-            <USelect
-              v-model="form.function_pco"
-              :items="[
-                { label: 'COS', value: 'COS' },
-                { label: 'Oficial Operações', value: 'Oficial Operações' },
-                { label: 'Oficial Logística', value: 'Oficial Logística' },
-                { label: 'Oficial Planeamento', value: 'Oficial Planeamento' },
-                { label: 'Oficial Operações Aéreas', value: 'Oficial Operações Aéreas' },
-                { label: 'Adjunto Segurança', value: 'Adjunto Segurança' },
-                { label: 'Adjunto Relações Públicas', value: 'Adjunto Relações Públicas' },
-                { label: 'Adjunto Ligação', value: 'Adjunto Ligação' }
-              ]"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Responsável" name="resp_pco" required>
-            <UInput v-model="form.resp_pco" class="w-full" />
-          </UFormField>
-          <UFormField label="Categoria" name="category_pco" required>
-            <UInput v-model="form.category_pco" class="w-full" />
-          </UFormField>
+      <UForm ref="formRef" :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+        <div class="space-y-4 p-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UFormField label="Função" name="function_pco" required>
+              <USelect
+                v-model="state.function_pco"
+                :items="[
+                  { label: 'COS', value: 'COS' },
+                  { label: 'Oficial Operações', value: 'Oficial Operações' },
+                  { label: 'Oficial Logística', value: 'Oficial Logística' },
+                  { label: 'Oficial Planeamento', value: 'Oficial Planeamento' },
+                  { label: 'Oficial Operações Aéreas', value: 'Oficial Operações Aéreas' },
+                  { label: 'Adjunto Segurança', value: 'Adjunto Segurança' },
+                  { label: 'Adjunto Relações Públicas', value: 'Adjunto Relações Públicas' },
+                  { label: 'Adjunto Ligação', value: 'Adjunto Ligação' }
+                ]"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="Responsável" name="resp_pco" required>
+              <UInput v-model="state.resp_pco" class="w-full" />
+            </UFormField>
+            <UFormField label="Categoria" name="category_pco" required>
+              <UInput v-model="state.category_pco" class="w-full" />
+            </UFormField>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UFormField label="Contacto 1" name="contact1_pco" required>
+              <UInput v-model="state.contact1_pco" class="w-full" />
+            </UFormField>
+            <UFormField label="Contacto 2" name="contact2_pco">
+              <UInput v-model="state.contact2_pco" class="w-full" />
+            </UFormField>
+            <UFormField label="Localização" name="localization_pco">
+              <UInput v-model="state.localization_pco" class="w-full" />
+            </UFormField>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <UFormField label="ROB" name="rob_pco">
+              <UInput v-model="state.rob_pco" class="w-full" />
+            </UFormField>
+            <UFormField label="SRP" name="srp_pco">
+              <UInput v-model="state.srp_pco" class="w-full" />
+            </UFormField>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <UFormField label="Data Ativação" name="activation_pco_datetime">
+              <UInput type="datetime-local" v-model="state.activation_pco_datetime" class="w-full" />
+            </UFormField>
+            <UFormField label="Data Início" name="start_pco_datetime" required>
+              <UInput type="datetime-local" v-model="state.start_pco_datetime" class="w-full" />
+            </UFormField>
+            <UFormField label="Data Fim" name="end_pco_datetime">
+              <UInput type="datetime-local" v-model="state.end_pco_datetime" class="w-full" />
+            </UFormField>
+          </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UFormField label="Contacto 1" name="contact1_pco" required>
-            <UInput v-model="form.contact1_pco" class="w-full" />
-          </UFormField>
-          <UFormField label="Contacto 2" name="contact2_pco">
-            <UInput v-model="form.contact2_pco" class="w-full" />
-          </UFormField>
-          <UFormField label="Localização" name="localization_pco">
-            <UInput v-model="form.localization_pco" class="w-full" />
-          </UFormField>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <UFormField label="ROB" name="rob_pco">
-            <UInput v-model="form.rob_pco" class="w-full" />
-          </UFormField>
-          <UFormField label="SRP" name="srp_pco">
-            <UInput v-model="form.srp_pco" class="w-full" />
-          </UFormField>
-          <UFormField label="Data Ativação" name="activation_pco_datetime">
-            <UInput type="datetime-local" v-model="form.activation_pco_datetime" class="w-full" />
-          </UFormField>
-          <UFormField label="Data Início" name="start_pco_datetime" required>
-            <UInput type="datetime-local" v-model="form.start_pco_datetime" class="w-full" />
-          </UFormField>
-          <UFormField label="Data Fim" name="end_pco_datetime">
-            <UInput type="datetime-local" v-model="form.end_pco_datetime" class="w-full" />
-          </UFormField>
-        </div>
-      </div>
+      </UForm>
     </template>
     <template #footer>
       <div class="flex justify-end gap-2 w-full">
         <UButton label="Cancelar" color="neutral" variant="soft" @click="close" />
-        <UButton :label="modelValue?.id ? 'Guardar' : 'Adicionar'" color="primary" @click="submit" />
+        <UButton :label="modelValue?.id ? 'Guardar' : 'Adicionar'" color="primary" @click="formRef.submit()" />
       </div>
     </template>
   </UModal>

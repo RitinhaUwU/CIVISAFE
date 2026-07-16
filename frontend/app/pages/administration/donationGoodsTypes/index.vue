@@ -105,9 +105,10 @@ const fetch = async (loadMore: boolean = false) => {
   if (loading.value) return
 
   loading.value = true
+
   try {
     const params: any = {
-      per_page: 15,
+      per_page: 10,
       ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
     }
 
@@ -116,16 +117,14 @@ const fetch = async (loadMore: boolean = false) => {
     }
 
     const res = await api.getDonationGoodTypes(params)
+    const newGoodTypes = res.data.data
 
-    const newGoodTypes = res.data.data;
-
-    if(loadMore)
-    {
+    if (loadMore) {
       const existing = new Set(tiposBens.value.map(type => type.id))
-      tiposBens.value.push(...newGoodTypes.filter(type => !existing.has(type.id)))
-    }
-    else
-    {
+      const filtered = newGoodTypes.filter(type => !existing.has(type.id))
+
+      tiposBens.value.push(...filtered)
+    } else {
       tiposBens.value = newGoodTypes
     }
 
@@ -154,14 +153,14 @@ const postDelete = (id: number) => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('DONATION_GOODS_TYPES_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -185,10 +184,10 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Bens Doáveis</h2>
           <p class="text-sm text-muted max-w-md">Lista de todos os Tipos de Bens Doáveis disponíveis no módulo de Doações.</p>
         </div>
-          <DonationGoodTypesAddModal
-            @created="fetch"
-            v-if="useAuthStore().hasPermission('DONATION_GOODS_TYPES_CREATE')"
-          />
+        <DonationGoodTypesAddModal
+          @created="fetch"
+          v-if="useAuthStore().hasPermission('DONATION_GOODS_TYPES_CREATE')"
+        />
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput
@@ -200,6 +199,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[70vh] overflow-y-auto">
         <UTable
+          v-if="loading || tiposBens.length > 0"
           :data="tiposBens"
           :columns="columns"
           :loading="loading"
@@ -213,6 +213,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de tipos de bens encontrado.
+        </div>
       </div>
       <DonationGoodTypesDeleteModal
         v-if="selectedGoodById"

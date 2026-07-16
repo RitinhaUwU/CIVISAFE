@@ -175,9 +175,9 @@ const patchUser = async (user: User) => {
     }
 
     toast.add({
-      title: updated ? 'Conta ativada' : 'Conta bloqueada',
-      description: `${user.name} foi ${updated ? 'ativado(a)' : 'bloqueado(a)'} com sucesso`,
-      color: updated ? 'success' : 'warning'
+      title: updated ? 'Conta bloqueada' : 'Conta ativada',
+      description: `${user.name} foi ${updated ? 'bloqueado(a)' : 'ativado(a)'} com sucesso`,
+      color: updated ? 'warning' : 'success'
     })
   } catch (e) {
     toast.add({
@@ -196,14 +196,14 @@ watchDebounced(search, async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
   if(!auth.hasPermission('USERS_VIEW_ANY'))
   {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -242,6 +242,7 @@ onMounted(() => {
       </div>
       <div ref="scrollContainer" class="overflow-x-auto max-h-[80vh] overflow-y-auto">
         <UTable
+          v-if="loading || users.length > 0"
           :data="users"
           :columns="columns"
           :loading="loading"
@@ -255,6 +256,9 @@ onMounted(() => {
           }"
           class="w-full"
         />
+        <div v-else class="flex items-center justify-center py-12 text-center text-muted">
+          Nenhum registo de utilizador encontrado.
+        </div>
       </div>
       <UsersDeleteModal
         v-if="auth.hasPermission('USERS_DELETE') && selectedUserById"

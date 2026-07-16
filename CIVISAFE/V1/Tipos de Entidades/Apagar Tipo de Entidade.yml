@@ -5,8 +5,13 @@ info:
 
 http:
   method: DELETE
-  url: "{{BASE_URL}}/api/v1/entityTypes/3"
+  url: "{{BASE_URL}}/api/v1/entityTypes/{{id}}"
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true
