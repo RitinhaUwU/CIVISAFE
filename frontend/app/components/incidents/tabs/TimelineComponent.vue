@@ -66,8 +66,8 @@ const fieldLabels: Record<string, string> = {
   incident_type_id: 'Tipo',
   incident_state_id: 'Estado',
   incident_priority_id: 'Prioridade',
-  start_datetime: 'Data Início',
-  end_datetime: 'Data Fim',
+  start_datetime: 'Data Início (UTC)',
+  end_datetime: 'Data Fim (UTC)',
   coodinates: 'Coordenadas',
   common_place: 'Ponto de Referência',
   address: 'Morada',
@@ -94,9 +94,9 @@ const fieldLabels: Record<string, string> = {
   localization_pco: 'Localização',
   rob_pco: 'ROB',
   srp_pco: 'SRP',
-  activation_pco_datetime: 'Data Ativação',
-  start_pco_datetime: 'Data Início',
-  end_pco_datetime: 'Data Fim',
+  activation_pco_datetime: 'Data Ativação (UTC)',
+  start_pco_datetime: 'Data Início (UTC)',
+  end_pco_datetime: 'Data Fim (UTC)',
 }
 
 const moduleIcon = (module: string) => {

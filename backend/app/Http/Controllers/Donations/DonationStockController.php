@@ -132,11 +132,11 @@ class DonationStockController extends Controller
     public function storeUnlock(Request $request)
     {
         $validated = $request->validate([
-            'status' => ['required', 'boolean'],
+            'state' => ['required', 'boolean'],
         ]);
 
         AppSetting::firstOrNew(['name' => 'donation_stock_unlocked'])
-            ->update(['state' => $validated['status']]);
+            ->update(['state' => $validated['state']]);
 
         $setting = AppSetting::where(['name' => 'donation_stock_unlocked'])->first();
 

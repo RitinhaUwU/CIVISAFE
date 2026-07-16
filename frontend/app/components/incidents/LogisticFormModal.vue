@@ -87,15 +87,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 onMounted(async () => {
-  if (!await checkServerAccess()) {
-    useToast().add({
-      title: 'Sem ligação à internet!',
-      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
-      color: 'error'
-    });
-    return;
-  }
-
   await entities.fetchItems()
 })
 </script>

@@ -10,6 +10,7 @@ use App\Models\IncidentState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -98,7 +99,8 @@ class IncidentController extends Controller
                     }
                 }),
             )
-            ->orderBy('id')
+            ->orderBy('start_datetime', 'desc')
+            ->orderBy('id', 'desc')
             ->cursorPaginate($request->input('per_page', 10))
             ->appends($request->query());
 
@@ -173,6 +175,7 @@ class IncidentController extends Controller
 
     public function update(IncidentRequest $request, Incident $incident)
     {
+        Log::debug("Update Ocorrencia", $request->validated());
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
