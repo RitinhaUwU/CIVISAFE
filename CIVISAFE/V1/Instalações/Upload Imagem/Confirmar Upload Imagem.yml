@@ -1,18 +1,23 @@
 info:
-  name: Pedir URL para Upload da Imagem
+  name: Confirmar Upload Imagem
   type: http
-  seq: 7
+  seq: 2
 
 http:
   method: POST
-  url: "{{BASE_URL}}/api/v1/facilities/uploadUrl"
+  url: "{{BASE_URL}}/api/v1/facilities/{{id}}/upload"
   body:
     type: json
     data: |-
       {
-        "filename": "logotipo.png"
+        "key": "logotipo.png"
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true

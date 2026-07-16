@@ -1,0 +1,2175 @@
+openapi: 3.0.0
+info:
+  title: CIVISAFE API
+  version: 1.0.0
+servers:
+- url: http://localhost:8000
+- url: https://api.civisafe.pt
+tags:
+- name: Autenticação
+  description: Operações de autenticação de utilizadores na plataforma.
+- name: Entidades
+  description: 'Gestão das entidades parceiras (ex: bombeiros, GNR, PSP) registadas no sistema.'
+- name: Tipos de Entidade
+  description: 'Gestão dos tipos de entidade disponíveis para classificação (ex: Bombeiros, Polícia).'
+- name: Utilizadores
+  description: Gestão de contas de utilizador da plataforma.
+- name: Instalações
+  description: 'Gestão das instalações (ex: juntas de freguesia, armazéns) registadas no sistema.'
+- name: Doações
+  description: Registo e consulta das doações de bens recebidas pela organização.
+- name: Distribuições
+  description: Registo e consulta das distribuições de bens efetuadas à comunidade.
+- name: Tipos de Bens Doáveis
+  description: Gestão dos tipos de bens que podem ser doados ou distribuídos.
+- name: Stock
+  description: Consulta e gestão do stock de bens doados.
+- name: Ocorrências
+  description: Registo e gestão das ocorrências geridas pela organização.
+- name: Timeline de Ocorrência
+  description: Registo cronológico (linha de tempo) de eventos e comentários associados a uma ocorrência.
+- name: Logística de Ocorrência
+  description: Gestão dos meios e recursos logísticos mobilizados numa ocorrência.
+- name: Posto de Comando (PCO)
+  description: Gestão dos postos de comando operacional (PCO) montados durante uma ocorrência.
+- name: Prioridades de Ocorrência
+  description: Gestão dos níveis de prioridade atribuíveis a uma ocorrência.
+- name: Tipos de Ocorrência
+  description: Consulta dos tipos de ocorrência disponíveis para classificação.
+- name: Estados de Ocorrência
+  description: 'Gestão dos estados possíveis de uma ocorrência (ex: em curso, terminada).'
+- name: Voluntários
+  description: Registo e gestão de voluntários/equipas mobilizados numa ocorrência.
+- name: Notificações
+  description: Consulta das notificações do utilizador autenticado.
+paths:
+  /api/v1/login:
+    post:
+      summary: Autenticar Utilizador
+      tags:
+      - Autenticação
+      operationId: autenticarUtilizador
+      description: Autentica um utilizador com email e password e devolve um token de acesso.
+      requestBody:
+        $ref: '#/components/requestBodies/autenticar_utilizador'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entities:
+    get:
+      summary: Obter Lista de Entidades
+      tags:
+      - Entidades
+      operationId: listarEntidades
+      description: Lista todas as entidades registadas no sistema.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Entidade
+      tags:
+      - Entidades
+      operationId: criarEntidade
+      description: Cria uma nova entidade no sistema.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entities/uploadUrl:
+    post:
+      summary: Pedir URL para Upload da Imagem da Entidade
+      tags:
+      - Entidades
+      operationId: pedirUrlUploadImagemEntidade
+      description: Gera um URL temporário para efetuar o upload da imagem de uma entidade.
+      requestBody:
+        $ref: '#/components/requestBodies/pedir_url_para_upload_da_imagem_da_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entities/{id}:
+    get:
+      summary: Obter Entidade Especifica
+      tags:
+      - Entidades
+      operationId: obterEntidade
+      description: Obtém os dados de uma entidade específica pelo seu ID.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Entidade
+      tags:
+      - Entidades
+      operationId: editarEntidade
+      description: Substitui os dados de uma entidade existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Especifico da Entidade
+      tags:
+      - Entidades
+      operationId: atualizarCampoEntidade
+      description: 'Atualiza um campo específico de uma entidade (ex: tipo de entidade).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_especifico_da_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Entidade
+      tags:
+      - Entidades
+      operationId: apagarEntidade
+      description: Remove uma entidade do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entities/{id}/upload:
+    post:
+      summary: Confirmar Upload Imagem
+      tags:
+      - Entidades
+      operationId: confirmarUploadImagemEntidade
+      description: Confirma a conclusão do upload da imagem de uma entidade.
+      requestBody:
+        $ref: '#/components/requestBodies/confirmar_upload_imagem'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entities/{id}/image:
+    delete:
+      summary: Remover Imagem
+      tags:
+      - Entidades
+      operationId: removerImagemEntidade
+      description: Remove a imagem associada a uma entidade.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entityTypes:
+    get:
+      summary: Lista de Tipos de Entidade
+      tags:
+      - Tipos de Entidade
+      operationId: listarTiposEntidade
+      description: Lista todos os tipos de entidade disponíveis.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Tipo de Entidade
+      tags:
+      - Tipos de Entidade
+      operationId: criarTipoEntidade
+      description: Cria um novo tipo de entidade.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_tipo_de_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/entityTypes/{id}:
+    get:
+      summary: Tipo de Entidades Especifica
+      tags:
+      - Tipos de Entidade
+      operationId: obterTipoEntidade
+      description: Obtém os dados de um tipo de entidade específico.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Tipo de Entidade
+      tags:
+      - Tipos de Entidade
+      operationId: editarTipoEntidade
+      description: Substitui os dados de um tipo de entidade existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_tipo_de_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Especifico do Tipo de Entidade
+      tags:
+      - Tipos de Entidade
+      operationId: atualizarCampoTipoEntidade
+      description: 'Atualiza um campo específico de um tipo de entidade (ex: descrição).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_especifico_do_tipo_de_entidade'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Tipo de Entidade
+      tags:
+      - Tipos de Entidade
+      operationId: apagarTipoEntidade
+      description: Remove um tipo de entidade do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/users:
+    get:
+      summary: Lista de Utilizadores
+      tags:
+      - Utilizadores
+      operationId: listarUtilizadores
+      description: Lista todos os utilizadores registados.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Utilizador
+      tags:
+      - Utilizadores
+      operationId: criarUtilizador
+      description: Cria um novo utilizador no sistema.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_utilizador'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/users/{id}:
+    get:
+      summary: Dados Utilizador
+      tags:
+      - Utilizadores
+      operationId: obterUtilizador
+      description: Obtém os dados de um utilizador específico pelo seu ID.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Utilizador
+      tags:
+      - Utilizadores
+      operationId: editarUtilizador
+      description: Substitui os dados de um utilizador existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_utilizador'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Utilizador
+      tags:
+      - Utilizadores
+      operationId: atualizarCampoUtilizador
+      description: 'Atualiza um campo específico de um utilizador (ex: bloqueio de conta).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_utilizador'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Utilizador
+      tags:
+      - Utilizadores
+      operationId: apagarUtilizador
+      description: Remove um utilizador do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/user:
+    get:
+      summary: Dados Utilizador Auth
+      tags:
+      - Utilizadores
+      operationId: obterUtilizadorAutenticado
+      description: Obtém os dados do utilizador atualmente autenticado.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities:
+    get:
+      summary: Lista de Instalações
+      tags:
+      - Instalações
+      operationId: listarInstalacoes
+      description: Lista todas as instalações registadas.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Instalação
+      tags:
+      - Instalações
+      operationId: criarInstalacao
+      description: Cria uma nova instalação no sistema.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_instala_o'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/uploadUrl:
+    post:
+      summary: Pedir URL para Upload da Imagem
+      tags:
+      - Instalações
+      operationId: pedirUrlUploadImagemInstalacao
+      description: Gera um URL temporário para efetuar o upload da imagem de uma instalação.
+      requestBody:
+        $ref: '#/components/requestBodies/pedir_url_para_upload_da_imagem'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{id}:
+    get:
+      summary: Instalação Específica
+      tags:
+      - Instalações
+      operationId: obterInstalacao
+      description: Obtém os dados de uma instalação específica.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Instalação
+      tags:
+      - Instalações
+      operationId: editarInstalacao
+      description: Substitui os dados de uma instalação existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_instala_o'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Instalação
+      tags:
+      - Instalações
+      operationId: atualizarCampoInstalacao
+      description: 'Atualiza um campo específico de uma instalação (ex: imagem).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_instala_o'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Instalação
+      tags:
+      - Instalações
+      operationId: apagarInstalacao
+      description: Remove uma instalação do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{id}/upload:
+    post:
+      summary: Confirmar Upload Imagem
+      tags:
+      - Instalações
+      operationId: confirmarUploadImagemInstalacao
+      description: Confirma a conclusão do upload da imagem de uma instalação.
+      requestBody:
+        $ref: '#/components/requestBodies/confirmar_upload_imagem_1'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{id}/image:
+    delete:
+      summary: Remover Imagem
+      tags:
+      - Instalações
+      operationId: removerImagemInstalacao
+      description: Remove a imagem associada a uma instalação.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{id}/documents/uploadURL:
+    post:
+      summary: Pedir URL para Upload do Ficheiro
+      tags:
+      - Instalações
+      operationId: pedirUrlUploadFicheiroInstalacao
+      description: Gera um URL temporário para efetuar o upload de um documento de uma instalação.
+      requestBody:
+        $ref: '#/components/requestBodies/pedir_url_para_upload_do_ficheiro'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{id}/documents/upload:
+    post:
+      summary: Confirmar Upload do Ficheiro
+      tags:
+      - Instalações
+      operationId: confirmarUploadFicheiroInstalacao
+      description: Confirma a conclusão do upload de um documento de uma instalação.
+      requestBody:
+        $ref: '#/components/requestBodies/confirmar_upload_do_ficheiro'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/facilities/{facility_id}/documentos/{file_id}:
+    delete:
+      summary: Remover Ficheiro
+      tags:
+      - Instalações
+      operationId: removerFicheiroInstalacao
+      description: Remove um documento associado a uma instalação.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/:
+    get:
+      summary: Lista de Doações
+      tags:
+      - Doações
+      operationId: listarDoacoes
+      description: Lista todas as doações recebidas.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Doação
+      tags:
+      - Doações
+      operationId: criarDoacao
+      description: Regista uma nova doação recebida.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_doacao'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/stats:
+    get:
+      summary: Estatisticas
+      tags:
+      - Doações
+      operationId: obterEstatisticasDoacoes
+      description: Obtém estatísticas gerais sobre as doações recebidas.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/{id}:
+    get:
+      summary: Dados de uma Doação
+      tags:
+      - Doações
+      operationId: obterDoacao
+      description: Obtém os dados de uma doação específica.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Doação
+      tags:
+      - Doações
+      operationId: editarDoacao
+      description: Substitui os dados de uma doação existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_doa_o'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/{id}/audit:
+    get:
+      summary: Audit/Histórico de uma Doação
+      tags:
+      - Doações
+      operationId: obterAuditoriaDoacao
+      description: Obtém o histórico de alterações de uma doação específica.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/distributions/:
+    get:
+      summary: Lista de Distribuições
+      tags:
+      - Distribuições
+      operationId: listarDistribuicoes
+      description: Lista todas as distribuições de bens efetuadas.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Distribuição
+      tags:
+      - Distribuições
+      operationId: criarDistribuicao
+      description: Regista uma nova distribuição de bens à comunidade.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_distribui_o'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/distributions/rules:
+    get:
+      summary: Obter Regras
+      tags:
+      - Distribuições
+      operationId: obterRegrasDistribuicao
+      description: Obtém as regras atuais de distribuição de bens, em formato Markdown.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Editar Regras
+      tags:
+      - Distribuições
+      operationId: editarRegrasDistribuicao
+      description: Atualiza o corpo de texto das regras de distribuição.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_regras'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/distributions/{id}:
+    get:
+      summary: Dados de uma Distribuição
+      tags:
+      - Distribuições
+      operationId: obterDistribuicao
+      description: Obtém os dados de uma distribuição específica.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Distribuição
+      tags:
+      - Distribuições
+      operationId: editarDistribuicao
+      description: Substitui os dados de uma distribuição existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_distribui_o'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/distributions/{id}/audit:
+    get:
+      summary: Auditoria a uma Distribuição
+      tags:
+      - Distribuições
+      operationId: obterAuditoriaDistribuicao
+      description: Obtém o histórico de alterações de uma distribuição específica.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donationGoodsTypes:
+    get:
+      summary: Lista Tipos de Bens
+      tags:
+      - Tipos de Bens Doáveis
+      operationId: listarTiposBens
+      description: Lista todos os tipos de bens doáveis disponíveis.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Tipo de Bem
+      tags:
+      - Tipos de Bens Doáveis
+      operationId: criarTipoBem
+      description: Cria um novo tipo de bem doável.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_tipo_de_bem'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donationGoodsTypes/{id}:
+    get:
+      summary: Tipo de Bens
+      tags:
+      - Tipos de Bens Doáveis
+      operationId: obterTipoBem
+      description: Obtém os dados de um tipo de bem específico.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Tipo de Bem
+      tags:
+      - Tipos de Bens Doáveis
+      operationId: editarTipoBem
+      description: Substitui os dados de um tipo de bem existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_tipo_de_bem'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Tipo de Bem
+      tags:
+      - Tipos de Bens Doáveis
+      operationId: apagarTipoBem
+      description: Remove um tipo de bem doável do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/stock:
+    get:
+      summary: Stock de Bens
+      tags:
+      - Stock
+      operationId: obterStock
+      description: Obtém o stock atual de bens doados.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/stock/audit:
+    get:
+      summary: Obter Registo de Auditoria
+      tags:
+      - Stock
+      operationId: obterAuditoriaStock
+      description: Obtém o registo de auditoria de alterações ao stock.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Registar Alteração Manual ao Stock
+      tags:
+      - Stock
+      operationId: registarAlteracaoStock
+      description: Regista uma alteração manual (entrada ou remoção) ao stock de bens.
+      requestBody:
+        $ref: '#/components/requestBodies/registar_altera_o_manual_ao_stock'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/donations/stock/unlock:
+    get:
+      summary: Obter Estado do Bloqueio de Stock
+      tags:
+      - Stock
+      operationId: obterEstadoBloqueioStock
+      description: Obtém o estado atual do bloqueio de stock.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Alterar Estado do Bloqueio de Stock
+      tags:
+      - Stock
+      operationId: alterarEstadoBloqueioStock
+      description: Altera o estado de bloqueio do stock (bloqueado/desbloqueado).
+      requestBody:
+        $ref: '#/components/requestBodies/alterar_estado_do_bloqueio_de_stock'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents:
+    get:
+      summary: Lista Ocorrências
+      tags:
+      - Ocorrências
+      operationId: listarOcorrencias
+      description: Lista todas as ocorrências registadas.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Ocorrências
+      tags:
+      - Ocorrências
+      operationId: criarOcorrencia
+      description: Cria uma nova ocorrência no sistema.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_ocorr_ncias'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{id}:
+    get:
+      summary: Ocorrência Especifica
+      tags:
+      - Ocorrências
+      operationId: obterOcorrencia
+      description: Obtém os dados de uma ocorrência específica.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Ocorrência
+      tags:
+      - Ocorrências
+      operationId: editarOcorrencia
+      description: Substitui os dados de uma ocorrência existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_ocorr_ncia'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Específico
+      tags:
+      - Ocorrências
+      operationId: atualizarCampoOcorrencia
+      description: 'Atualiza um campo específico de uma ocorrência (ex: nome da fonte do alerta).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_espec_fico'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Ocorrência
+      tags:
+      - Ocorrências
+      operationId: apagarOcorrencia
+      description: Remove uma ocorrência do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{id}/timeline:
+    get:
+      summary: Logs Específicos de uma Ocorrência
+      tags:
+      - Timeline de Ocorrência
+      operationId: listarLogsOcorrencia
+      description: Lista os logs/linha de tempo de uma ocorrência específica.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{incident_id}/comments:
+    post:
+      summary: Criar Logs de uma Ocorrência
+      tags:
+      - Timeline de Ocorrência
+      operationId: criarLogOcorrencia
+      description: Cria um novo log/comentário na linha de tempo de uma ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_logs_de_uma_ocorr_ncia_copy'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{incident_id}/comments/{comment_id}:
+    put:
+      summary: Editar Logs de uma Ocorrência
+      tags:
+      - Timeline de Ocorrência
+      operationId: editarLogOcorrencia
+      description: Substitui o conteúdo de um log específico da linha de tempo de uma ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_logs_de_uma_ocorr_ncia'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{incident_id}/parties:
+    get:
+      summary: Lista de Logísticas
+      tags:
+      - Logística de Ocorrência
+      operationId: listarLogisticaOcorrencia
+      description: Lista os meios e recursos logísticos associados a uma ocorrência.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Logística
+      tags:
+      - Logística de Ocorrência
+      operationId: criarLogisticaOcorrencia
+      description: Associa um novo meio/recurso logístico a uma ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_log_stica'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{incident_id}/parties/{party_id}:
+    put:
+      summary: Editar Logística
+      tags:
+      - Logística de Ocorrência
+      operationId: editarLogisticaOcorrencia
+      description: Substitui os dados de um meio/recurso logístico associado a uma ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_log_stica'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Específico Logística
+      tags:
+      - Logística de Ocorrência
+      operationId: atualizarCampoLogisticaOcorrencia
+      description: 'Atualiza um campo específico de um meio/recurso logístico (ex: entidade responsável).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_espec_fico_log_stica'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{incident_id}/pco:
+    get:
+      summary: Lista de PCOs
+      tags:
+      - Posto de Comando (PCO)
+      operationId: listarPCOs
+      description: Lista os postos de comando operacional associados a uma ocorrência.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar PCOs
+      tags:
+      - Posto de Comando (PCO)
+      operationId: criarPCO
+      description: Cria um novo posto de comando operacional para uma ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_pcos'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidents/{incident_id}/pco/{pco_id}:
+    put:
+      summary: Editar PCO
+      tags:
+      - Posto de Comando (PCO)
+      operationId: editarPCO
+      description: Substitui os dados de um posto de comando operacional existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_pco'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Específico PCO
+      tags:
+      - Posto de Comando (PCO)
+      operationId: atualizarCampoPCO
+      description: 'Atualiza um campo específico de um posto de comando operacional (ex: função).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_espec_fico_pco'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidentPriorities:
+    get:
+      summary: Lista Prioridades
+      tags:
+      - Prioridades de Ocorrência
+      operationId: listarPrioridades
+      description: Lista todos os níveis de prioridade de ocorrência disponíveis.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Prioridade
+      tags:
+      - Prioridades de Ocorrência
+      operationId: criarPrioridade
+      description: Cria um novo nível de prioridade de ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_entidade_1'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidentPriorities/{id}:
+    get:
+      summary: Tipo de Prioridade Especifica
+      tags:
+      - Prioridades de Ocorrência
+      operationId: obterPrioridade
+      description: Obtém os dados de um nível de prioridade específico.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Prioridade
+      tags:
+      - Prioridades de Ocorrência
+      operationId: editarPrioridade
+      description: Substitui os dados de um nível de prioridade existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_entidade_1'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Especifico
+      tags:
+      - Prioridades de Ocorrência
+      operationId: atualizarCampoPrioridade
+      description: 'Atualiza um campo específico de um nível de prioridade (ex: cor).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_especifico'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Prioridade
+      tags:
+      - Prioridades de Ocorrência
+      operationId: apagarPrioridade
+      description: Remove um nível de prioridade do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidentTypes:
+    get:
+      summary: Lista Tipos
+      tags:
+      - Tipos de Ocorrência
+      operationId: listarTiposOcorrencia
+      description: Lista todos os tipos de ocorrência disponíveis.
+      parameters:
+      - name: per_page
+        in: query
+        description: Número de itens por página a devolver.
+        required: false
+        schema:
+          type: integer
+          format: int32
+        example: '20'
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Carregar Ficheiro de Tipos em Excel
+      tags:
+        - Tipos de Ocorrência
+      operationId: carregarTiposOcorrenciaExcel
+      description: Carrega o ficheiro dos tipos em excel para o servidor para processamento em segundo plano
+      requestBody:
+        $ref: '#/components/requestBodies/upload_ficheiro_tipos_ocorrencia'
+      responses:
+        '201':
+          description: Sucesso
+        '500':
+          description: Um erro ao carregar o ficheiro ou a dar dispatch do evento para processamento em segundo plano
+  /api/v1/incidentTypes/{id}:
+    get:
+      summary: Tipo Especifico
+      tags:
+      - Tipos de Ocorrência
+      operationId: obterTipoOcorrencia
+      description: Obtém os dados de um tipo de ocorrência específico.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidentStates:
+    get:
+      summary: Lista Estados
+      tags:
+      - Estados de Ocorrência
+      operationId: listarEstadosOcorrencia
+      description: Lista todos os estados possíveis de uma ocorrência.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Tipo de Estado
+      tags:
+      - Estados de Ocorrência
+      operationId: criarEstadoOcorrencia
+      description: Cria um novo estado de ocorrência.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_tipo_de_estado'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/incidentStates/{id}:
+    get:
+      summary: Tipo de Estado Específico
+      tags:
+      - Estados de Ocorrência
+      operationId: obterEstadoOcorrencia
+      description: Obtém os dados de um estado de ocorrência específico.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Tipo de Estado
+      tags:
+      - Estados de Ocorrência
+      operationId: editarEstadoOcorrencia
+      description: Substitui os dados de um estado de ocorrência existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_tipo_de_estado'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Específico do Tipo de Estado
+      tags:
+      - Estados de Ocorrência
+      operationId: atualizarCampoEstadoOcorrencia
+      description: 'Atualiza um campo específico de um estado de ocorrência (ex: se termina a ocorrência).'
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_espec_fico_do_tipo_de_estado'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar um Tipo de Estado
+      tags:
+      - Estados de Ocorrência
+      operationId: apagarEstadoOcorrencia
+      description: Remove um estado de ocorrência do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/volunteers:
+    get:
+      summary: Lista de Voluntários
+      tags:
+      - Voluntários
+      operationId: listarVoluntarios
+      description: Lista todos os voluntários/equipas registados.
+      responses:
+        '200':
+          description: Sucesso.
+    post:
+      summary: Criar Voluntário
+      tags:
+      - Voluntários
+      operationId: criarVoluntario
+      description: Regista um novo voluntário/equipa no sistema.
+      requestBody:
+        $ref: '#/components/requestBodies/criar_volunt_rio'
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/volunteers/{id}:
+    get:
+      summary: Voluntário Específico
+      tags:
+      - Voluntários
+      operationId: obterVoluntario
+      description: Obtém os dados de um voluntário/equipa específico.
+      responses:
+        '200':
+          description: Sucesso.
+    put:
+      summary: Editar Voluntário
+      tags:
+      - Voluntários
+      operationId: editarVoluntario
+      description: Substitui os dados de um voluntário/equipa existente.
+      requestBody:
+        $ref: '#/components/requestBodies/editar_volunt_rio'
+      responses:
+        '200':
+          description: Sucesso.
+    patch:
+      summary: Atualizar Campo Voluntário
+      tags:
+      - Voluntários
+      operationId: atualizarCampoVoluntario
+      description: Atualiza um campo específico de um voluntário/equipa.
+      requestBody:
+        $ref: '#/components/requestBodies/atualizar_campo_volunt_rio'
+      responses:
+        '200':
+          description: Sucesso.
+    delete:
+      summary: Apagar Voluntário
+      tags:
+      - Voluntários
+      operationId: apagarVoluntario
+      description: Remove um voluntário/equipa do sistema.
+      responses:
+        '200':
+          description: Sucesso.
+  /api/v1/notifications:
+    get:
+      summary: Obter notificações
+      tags:
+      - Notificações
+      operationId: listarNotificacoes
+      description: Lista as notificações do utilizador autenticado.
+      responses:
+        '200':
+          description: Sucesso.
+components:
+  schemas:
+    autenticar_utilizador:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    atualizar_campo_especifico_da_entidade:
+      type: object
+      properties:
+        entity_type_id:
+          type: string
+      example:
+        entity_type_id: '1'
+    confirmar_upload_imagem:
+      type: object
+      properties:
+        key:
+          type: string
+      example:
+        key: logotipo.png
+    criar_entidade:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        entity_type_id:
+          type: string
+      example:
+        name: Guarda Nacional Republicana
+        description: GNR
+        entity_type_id: '2'
+    editar_entidade:
+      type: object
+      properties:
+        name:
+          type: string
+      example:
+        name: GNR - Pedrogão Grande
+    pedir_url_para_upload_da_imagem_da_entidade:
+      type: object
+      properties:
+        filename:
+          type: string
+      example:
+        filename: logotipo.png
+    atualizar_campo_instala_o:
+      type: object
+      properties:
+        image:
+          type: string
+          nullable: true
+      example:
+        image: null
+    criar_instala_o:
+      type: object
+      properties:
+        name:
+          type: string
+        contact:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        image:
+          type: string
+          nullable: true
+        description:
+          type: string
+      example:
+        name: Junta de Freguesia da Sertã
+        contact: '275418963'
+        email: jfserta@example.com
+        address: Sertã
+        image: null
+        description: teste teste
+    editar_instala_o:
+      type: object
+      properties:
+        name:
+          type: string
+        contact:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        image:
+          type: string
+          nullable: true
+        description:
+          type: string
+      example:
+        name: Junta de Freguesia do Castelo
+        contact: '275874214'
+        email: jfcastelo@example.com
+        address: Castelo, Sertã
+        image: null
+        description: teste teste
+    pedir_url_para_upload_da_imagem:
+      type: object
+      properties:
+        filename:
+          type: string
+      example:
+        filename: logotipo.png
+    confirmar_upload_imagem_1:
+      type: object
+      properties:
+        key:
+          type: string
+      example:
+        key: logotipo.png
+    confirmar_upload_do_ficheiro:
+      type: object
+      properties:
+        key:
+          type: string
+      example:
+        key: ficheiro.pdf
+    pedir_url_para_upload_do_ficheiro:
+      type: object
+      properties:
+        filename:
+          type: string
+      example:
+        filename: ficheiro.pdf
+    criar_distribui_o:
+      type: object
+      properties:
+        name:
+          type: string
+        contact:
+          type: string
+        obs:
+          type: string
+        goods:
+          type: array
+          items:
+            type: object
+            properties:
+              category_id:
+                type: integer
+              quantity:
+                type: integer
+      example:
+        name: Ana Sofia
+        contact: '910123123'
+        obs: Observações Opcionais a adicionar à distribuição
+        goods:
+        - category_id: 1
+          quantity: 10
+        - category_id: 2
+          quantity: 7
+    editar_distribui_o:
+      type: object
+      properties:
+        name:
+          type: string
+        contact:
+          type: string
+        obs:
+          type: string
+        goods:
+          type: array
+          items:
+            type: object
+            properties:
+              category_id:
+                type: integer
+              quantity:
+                type: integer
+      example:
+        name: Ana Sofia
+        contact: '910123123'
+        obs: Observações Opcionais a adicionar à distribuição
+        goods:
+        - category_id: 1
+          quantity: 10
+    editar_regras:
+      type: object
+      properties:
+        body:
+          type: string
+      example:
+        body: '# Novo Corpo das Regras de Distribuicao (em Markdown)'
+    editar_doa_o:
+      type: object
+      properties:
+        date:
+          type: string
+        name:
+          type: string
+        contact:
+          type: string
+        email:
+          type: string
+        donor_type:
+          type: string
+        goods:
+          type: array
+          items:
+            type: object
+            properties:
+              category_id:
+                type: integer
+              quantity:
+                type: integer
+      example:
+        date: '2026-07-10'
+        name: Ana Sofia
+        contact: '910123123'
+        email: optional@example.com
+        donor_type: single
+        goods:
+        - category_id: 1
+          quantity: 10
+        - category_id: 2
+          quantity: 7
+    criar_tipo_de_bem:
+      type: object
+      properties:
+        name:
+          type: string
+        is_type_countable:
+          type: boolean
+        unit:
+          type: string
+      example:
+        name: Unidade Não Quantificável
+        is_type_countable: false
+        unit: ''
+    editar_tipo_de_bem:
+      type: object
+      properties:
+        name:
+          type: string
+        is_type_countable:
+          type: boolean
+        unit:
+          type: string
+      example:
+        name: Tipo
+        is_type_countable: true
+        unit: liters
+    alterar_estado_do_bloqueio_de_stock:
+      type: object
+      properties:
+        state:
+          type: boolean
+      example:
+        state: false
+    registar_altera_o_manual_ao_stock:
+      type: object
+      properties:
+        adjustment_type:
+          type: string
+        category_id:
+          type: integer
+        quantity:
+          type: integer
+        reason:
+          type: string
+        obs:
+          type: string
+      example:
+        adjustment_type: remove
+        category_id: 1
+        quantity: 10
+        reason: lost
+        obs: Bem perdido na transferência entre armazéns
+    atualizar_campo_volunt_rio:
+      type: object
+      properties: {}
+    criar_volunt_rio:
+      type: object
+      properties:
+        name:
+          type: string
+        contact:
+          type: string
+        email:
+          type: string
+        classification:
+          type: string
+        num_elements:
+          type: integer
+        mission:
+          type: string
+        team_identification:
+          type: string
+        start_datetime:
+          type: string
+        has_accommodation:
+          type: boolean
+        has_meal:
+          type: boolean
+        location:
+          type: string
+        incident_id:
+          type: integer
+      example:
+        name: João Silva
+        contact: '912345678'
+        email: joao@example.com
+        classification: single
+        num_elements: 10
+        mission: Apoio logístico
+        team_identification: Team A
+        start_datetime: '2026-04-20 10:00:00'
+        has_accommodation: true
+        has_meal: false
+        location: Lisboa
+        incident_id: 1
+    editar_volunt_rio:
+      type: object
+      properties:
+        name:
+          type: string
+        contact:
+          type: string
+        email:
+          type: string
+        classification:
+          type: string
+        num_elements:
+          type: integer
+        mission:
+          type: string
+        team_identification:
+          type: string
+        start_datetime:
+          type: string
+        has_accommodation:
+          type: boolean
+        location:
+          type: string
+        incident_id:
+          type: integer
+      example:
+        name: João Silva
+        contact: '912345678'
+        email: joao@example.com
+        classification: org
+        num_elements: 8
+        mission: Apoio logístico
+        team_identification: Team A
+        start_datetime: '2026-04-20 10:00:00'
+        has_accommodation: true
+        location: Lisboa
+        incident_id: 1
+    atualizar_utilizador:
+      type: object
+      properties:
+        locked:
+          type: boolean
+      example:
+        locked: false
+    criar_utilizador:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        password_confirmation:
+          type: string
+        mobile:
+          type: string
+        locked:
+          type: boolean
+        role:
+          type: string
+        module_incidents:
+          type: boolean
+        module_volunteers:
+          type: boolean
+        module_donations:
+          type: boolean
+      example:
+        name: Rute Marques Cardoso
+        email: rute@example.com
+        password: password
+        password_confirmation: password
+        mobile: '925786321'
+        locked: true
+        role: user
+        module_incidents: true
+        module_volunteers: true
+        module_donations: true
+    editar_utilizador:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        password_confirmation:
+          type: string
+        mobile:
+          type: string
+        locked:
+          type: boolean
+        role:
+          type: string
+        module_incidents:
+          type: boolean
+        module_volunteers:
+          type: boolean
+        module_donations:
+          type: boolean
+      example:
+        name: Rute Marques Cardoso
+        email: rute@example.com
+        password: password
+        password_confirmation: password
+        mobile: '925786321'
+        locked: true
+        role: user
+        module_incidents: true
+        module_volunteers: true
+        module_donations: true
+    atualizar_campo_especifico_do_tipo_de_entidade:
+      type: object
+      properties:
+        description:
+          type: string
+      example:
+        description: Polícia de Segurança Pública
+    criar_tipo_de_entidade:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: Bombeiros
+        description: Bombeiros
+    editar_tipo_de_entidade:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: PSP
+        description: Polícia de Segurança Publica
+    atualizar_campo_espec_fico_do_tipo_de_estado:
+      type: object
+      properties:
+        terminates_incident:
+          type: string
+      example:
+        terminates_incident: 'false'
+    upload_ficheiro_tipos_ocorrencia:
+      type: object
+      properties:
+        file:
+          type: string
+    criar_tipo_de_estado:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        hex_color:
+          type: string
+        terminates_incident:
+          type: string
+        is_active:
+          type: string
+      example:
+        name: Em Processo
+        description: Estado em andamento
+        hex_color: '#D0FF00'
+        terminates_incident: 'true'
+        is_active: 'true'
+    editar_tipo_de_estado:
+      type: object
+      properties:
+        hex_color:
+          type: string
+      example:
+        hex_color: '#00FF45'
+    atualizar_campo_espec_fico:
+      type: object
+      properties:
+        alert_source_name:
+          type: string
+      example:
+        alert_source_name: Igor Borges Canceiro
+    criar_ocorr_ncias:
+      type: object
+      properties:
+        start_datetime:
+          type: string
+        operational_grid:
+          type: string
+        coordinates:
+          type: string
+        common_place:
+          type: string
+        address:
+          type: string
+        parish:
+          type: string
+        municipality:
+          type: string
+        district:
+          type: string
+        command_post:
+          type: string
+        is_major:
+          type: boolean
+        alert_source_relationship:
+          type: string
+        alert_source_name:
+          type: string
+        alert_source_contact:
+          type: string
+        obs:
+          type: string
+        incident_type_id:
+          type: integer
+        incident_priority_id:
+          type: integer
+        incident_state_id:
+          type: integer
+        coordinates_post:
+          type: string
+        post_datetime:
+          type: string
+        resp_post_id:
+          type: integer
+      example:
+        start_datetime: '2026-05-18 10:00:00'
+        operational_grid: At repellendus eum dolorem cumque similique deleniti ullam.
+        coordinates: -21.779066, -49.139885
+        common_place: vero dicta
+        address: Tv. São. Sofia
+        parish: Ílhavo
+        municipality: Marco de Canaveses
+        district: Guarda
+        command_post: aliquam
+        is_major: false
+        alert_source_relationship: Empresa
+        alert_source_name: Igor Borges Carneiro
+        alert_source_contact: +351 968544849
+        obs: At repellendus eum dolorem cumque similique deleniti ullam. Voluptatum asperiores laboriosam
+          eius minima qui. Ea molestiae occaecati vel aut.
+        incident_type_id: 1
+        incident_priority_id: 1
+        incident_state_id: 1
+        coordinates_post: -21.779066, -49.139886
+        post_datetime: '2026-05-18 10:15:02'
+        resp_post_id: 5
+    editar_ocorr_ncia:
+      type: object
+      properties:
+        start_datetime:
+          type: string
+        coordinates:
+          type: string
+        common_place:
+          type: string
+        address:
+          type: string
+        parish:
+          type: string
+        municipality:
+          type: string
+        district:
+          type: string
+        command_post:
+          type: string
+        is_major:
+          type: boolean
+        alert_source_relationship:
+          type: string
+        alert_source_name:
+          type: string
+        alert_source_contact:
+          type: string
+        obs:
+          type: string
+        incident_type_id:
+          type: integer
+        incident_priority_id:
+          type: integer
+        incident_state_id:
+          type: integer
+      example:
+        start_datetime: '2026-05-18 10:00:00'
+        coordinates: -21.779066, -49.139885
+        common_place: vero dicta
+        address: Tv. São. Sofia
+        parish: Ílhavo
+        municipality: Marco de Canaveses
+        district: Guarda
+        command_post: aliquam
+        is_major: false
+        alert_source_relationship: Empresa
+        alert_source_name: Igor Borges Carneiro
+        alert_source_contact: '968544849'
+        obs: At repellendus eum dolorem cumque similique deleniti ullam. Voluptatum asperiores laboriosam
+          eius minima qui. Ea molestiae occaecati vel aut.
+        incident_type_id: 2
+        incident_priority_id: 1
+        incident_state_id: 1
+    criar_logs_de_uma_ocorr_ncia_copy:
+      type: object
+      properties:
+        body:
+          type: string
+        user_id:
+          type: integer
+        datetime:
+          type: string
+      example:
+        body: Sed ut perspiciatis unde omnis iste natus error sit teste teste.
+        user_id: 1
+        datetime: '2026-06-14 20:00:00'
+    editar_logs_de_uma_ocorr_ncia:
+      type: object
+      properties:
+        body:
+          type: string
+        user_id:
+          type: integer
+        datetime:
+          type: string
+      example:
+        body: Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
+        user_id: 1
+        datetime: '2026-06-25 20:00:00'
+    atualizar_campo_espec_fico_log_stica:
+      type: object
+      properties:
+        entity_id:
+          type: integer
+      example:
+        entity_id: 3
+    criar_log_stica:
+      type: object
+      properties:
+        vehicle_count:
+          type: integer
+        human_count:
+          type: integer
+        entity_id:
+          type: integer
+      example:
+        vehicle_count: 5
+        human_count: 12
+        entity_id: 2
+    editar_log_stica:
+      type: object
+      properties:
+        vehicle_count:
+          type: integer
+        human_count:
+          type: integer
+        entity_id:
+          type: integer
+      example:
+        vehicle_count: 5
+        human_count: 10
+        entity_id: 2
+    atualizar_campo_espec_fico_pco:
+      type: object
+      properties:
+        function_pco:
+          type: string
+      example:
+        function_pco: Oficial Operações Aérias
+    criar_pcos:
+      type: object
+      properties:
+        function_pco:
+          type: string
+        resp_pco:
+          type: string
+        category_pco:
+          type: string
+        contact1_pco:
+          type: string
+        localization_pco:
+          type: string
+        rob_pco:
+          type: string
+        srp_pco:
+          type: string
+        start_pco_datetime:
+          type: string
+      example:
+        function_pco: Oficial Logistica
+        resp_pco: José Antunes Miranda
+        category_pco: ut
+        contact1_pco: '913577340'
+        localization_pco: Rio Maior
+        rob_pco: sit1785
+        srp_pco: nam538
+        start_pco_datetime: '2026-05-19 10:00:00'
+    editar_pco:
+      type: object
+      properties:
+        function_pco:
+          type: string
+        resp_pco:
+          type: string
+        category_pco:
+          type: string
+        contact1_pco:
+          type: string
+        localization_pco:
+          type: string
+        rob_pco:
+          type: string
+        srp_pco:
+          type: string
+        start_pco_datetime:
+          type: string
+      example:
+        function_pco: Oficial Planeamento
+        resp_pco: José Antunes Miranda
+        category_pco: ut
+        contact1_pco: '913577340'
+        localization_pco: Rio Maior
+        rob_pco: sit#1785
+        srp_pco: nam538
+        start_pco_datetime: '2026-05-19 10:00:00'
+    atualizar_campo_especifico:
+      type: object
+      properties:
+        hex_color:
+          type: string
+      example:
+        hex_color: '#1F52A5'
+    criar_entidade_1:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        hex_color:
+          type: string
+      example:
+        name: P99
+        description: Estado Crítico
+        hex_color: '#3b82f6'
+    editar_entidade_1:
+      type: object
+      properties:
+        description:
+          type: string
+      example:
+        description: Por Averiguar
+    criar_doacao:
+      type: object
+      properties:
+        date:
+          type: string
+        name:
+          type: string
+        contact:
+          type: string
+        email:
+          type: string
+        donor_type:
+          type: string
+        goods:
+          type: array
+          items:
+            type: object
+            properties:
+              category_id:
+                type: integer
+              quantity:
+                type: integer
+      example:
+        date: '2026-07-10'
+        name: Ana Sofia
+        contact: '910123123'
+        email: optional@example.com
+        donor_type: single
+        goods:
+        - category_id: 1
+          quantity: 10
+        - category_id: 2
+          quantity: 7
+  requestBodies:
+    autenticar_utilizador:
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/autenticar_utilizador'
+      required: true
+    atualizar_campo_especifico_da_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_especifico_da_entidade'
+      required: true
+    confirmar_upload_imagem:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/confirmar_upload_imagem'
+      required: true
+    criar_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_entidade'
+      required: true
+    editar_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_entidade'
+      required: true
+    pedir_url_para_upload_da_imagem_da_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/pedir_url_para_upload_da_imagem_da_entidade'
+      required: true
+    atualizar_campo_instala_o:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_instala_o'
+      required: true
+    criar_instala_o:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_instala_o'
+      required: true
+    editar_instala_o:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_instala_o'
+      required: true
+    pedir_url_para_upload_da_imagem:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/pedir_url_para_upload_da_imagem'
+      required: true
+    confirmar_upload_imagem_1:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/confirmar_upload_imagem_1'
+      required: true
+    confirmar_upload_do_ficheiro:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/confirmar_upload_do_ficheiro'
+      required: true
+    pedir_url_para_upload_do_ficheiro:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/pedir_url_para_upload_do_ficheiro'
+      required: true
+    criar_distribui_o:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_distribui_o'
+      required: true
+    editar_distribui_o:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_distribui_o'
+      required: true
+    editar_regras:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_regras'
+      required: true
+    editar_doa_o:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_doa_o'
+      required: true
+    criar_tipo_de_bem:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_tipo_de_bem'
+      required: true
+    editar_tipo_de_bem:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_tipo_de_bem'
+      required: true
+    alterar_estado_do_bloqueio_de_stock:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/alterar_estado_do_bloqueio_de_stock'
+      required: true
+    registar_altera_o_manual_ao_stock:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/registar_altera_o_manual_ao_stock'
+      required: true
+    atualizar_campo_volunt_rio:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_volunt_rio'
+      required: true
+    criar_volunt_rio:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_volunt_rio'
+      required: true
+    editar_volunt_rio:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_volunt_rio'
+      required: true
+    atualizar_utilizador:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_utilizador'
+      required: true
+    criar_utilizador:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_utilizador'
+      required: true
+    editar_utilizador:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_utilizador'
+      required: true
+    atualizar_campo_especifico_do_tipo_de_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_especifico_do_tipo_de_entidade'
+      required: true
+    criar_tipo_de_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_tipo_de_entidade'
+      required: true
+    editar_tipo_de_entidade:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_tipo_de_entidade'
+      required: true
+    atualizar_campo_espec_fico_do_tipo_de_estado:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_espec_fico_do_tipo_de_estado'
+      required: true
+    upload_ficheiro_tipos_ocorrencia:
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/upload_ficheiro_tipos_ocorrencia'
+    criar_tipo_de_estado:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_tipo_de_estado'
+      required: true
+    editar_tipo_de_estado:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_tipo_de_estado'
+      required: true
+    atualizar_campo_espec_fico:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_espec_fico'
+      required: true
+    criar_ocorr_ncias:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_ocorr_ncias'
+      required: true
+    editar_ocorr_ncia:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_ocorr_ncia'
+      required: true
+    criar_logs_de_uma_ocorr_ncia_copy:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_logs_de_uma_ocorr_ncia_copy'
+      required: true
+    editar_logs_de_uma_ocorr_ncia:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_logs_de_uma_ocorr_ncia'
+      required: true
+    atualizar_campo_espec_fico_log_stica:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_espec_fico_log_stica'
+      required: true
+    criar_log_stica:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_log_stica'
+      required: true
+    editar_log_stica:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_log_stica'
+      required: true
+    atualizar_campo_espec_fico_pco:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_espec_fico_pco'
+      required: true
+    criar_pcos:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_pcos'
+      required: true
+    editar_pco:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_pco'
+      required: true
+    atualizar_campo_especifico:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/atualizar_campo_especifico'
+      required: true
+    criar_entidade_1:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_entidade_1'
+      required: true
+    editar_entidade_1:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/editar_entidade_1'
+      required: true
+    criar_doacao:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/criar_doacao'
+      required: true
+  securitySchemes: {}

@@ -16,7 +16,10 @@ http:
         "password_confirmation": "password",
         "mobile": "925786321",
         "locked": true,
-        "role": "user"
+        "role": "user",
+        "module_incidents": true,
+        "module_volunteers": true,
+        "module_donations": true
       }
   auth: inherit
 

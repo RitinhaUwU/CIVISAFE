@@ -1,0 +1,21 @@
+info:
+  name: Upload de Ficheiro de Tipos em Excel
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/incidentTypes"
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: text
+        value: ""
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

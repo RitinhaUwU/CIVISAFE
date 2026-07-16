@@ -1,0 +1,26 @@
+info:
+  name: Pedir URL para Upload do Ficheiro
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/facilities/{{id}}/documents/uploadURL"
+  body:
+    type: json
+    data: |-
+      {
+        "filename": "ficheiro.pdf"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
