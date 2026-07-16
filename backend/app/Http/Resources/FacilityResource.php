@@ -24,11 +24,9 @@ class FacilityResource extends JsonResource
             'updated_at' => $this->updated_at,
             'documents' => $this->getMedia('documents')->map(fn($media) => [
                 'id'        => $media->id,
-                'name'      => $media->file_name,
+                'name'      => $media->name,
                 'mime_type' => $media->mime_type,
                 'size'      => $media->size,
-                // URL temporário de 30 min para download (funciona com MinIO privado)
-                'url'       => $media->getTemporaryUrl(now()->addMinutes(30)),
             ]),
         ];
     }

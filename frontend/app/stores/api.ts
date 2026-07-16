@@ -533,20 +533,22 @@ export const useApiStore = defineStore('api', () => {
   }
 
   // Facilities - Documentos
-  const uploadFacilityDocuments = (facilityId: number, files: File[]) => {
-    const form = new FormData()
-    files.forEach(file => form.append('files[]', file))
-    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/documents`, form)
+  const requestFacilityDocumentSignedUrl = (filename: string, contentType: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/documents/uploadUrl`, {filename, content_type: contentType})
+  }
+
+  const uploadFacilityDocument = (facilityId: number, key: string, filename: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/documents/upload`, {key, filename})
   }
 
   const downloadFacilityDocument = async (facilityId: number, mediaId: number, filename: string) => {
-    const response = await axios.get(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}/download`, {responseType: 'blob'})
-    const url = URL.createObjectURL(response.data)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
+    const response = await axios.get(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}/download`)
+    const link = document.createElement('a')
+    link.href = response.data.url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
   }
 
   const deleteFacilityDocument = (facilityId: number, mediaId: number) => {
@@ -834,7 +836,8 @@ export const useApiStore = defineStore('api', () => {
     requestFacilitySignedUrl,
     updateFacilityImage,
     deleteFacilityImage,
-    uploadFacilityDocuments,
+    requestFacilityDocumentSignedUrl,
+    uploadFacilityDocument,
     downloadFacilityDocument,
     deleteFacilityDocument,
     getIncidentTimeline,

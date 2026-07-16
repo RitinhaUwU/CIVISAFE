@@ -122,42 +122,70 @@ class FacilitiesController extends Controller
 
     public function destroy(Facility $facility)
     {
-        if($facility->image !== null) {
+        if ($facility->image !== null) {
             Storage::disk('data_bucket')->delete($facility->image);
         }
+
+        $facility->clearMediaCollection('documents');
 
         $facility->delete();
 
         return response()->json();
     }
 
-    /**
-     * Upload de ficheiros
-     * POST /facilities/{facility}/documents
-     */
-    public function uploadDocuments(Request $request, Facility $facility)
+    public function signedDocumentUrl(Request $request)
     {
-        $request->validate([
-            'files'   => ['required', 'array', 'min:1'],
-            'files.*' => ['required', 'file', 'mimes:jpeg,jpg,png,pdf,docx,xlsx', 'max:20480'],
+        $validated = $request->validate([
+            'filename' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (explode(".", $value)
+                        |> last(...)
+                        |> (fn($x) => ! in_array($x, ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpeg', 'jpg', 'png']))) {
+                    $fail("The file must be pdf, doc, docx, xls, xlsx, jpeg, jpg or png format.");
+                }
+            }],
+            'content_type' => ['required', 'string'],
         ]);
 
+        $fileExtension = last(explode('.', $validated['filename']));
+        $fileKey = '/facilities/documents/' . uuid_create() . '.' . $fileExtension;
+
+        $upload = Storage::disk('data_bucket')->temporaryUploadUrl($fileKey, now()->addMinutes(10), ['ContentType' => $validated['content_type']]);
+
+        return response()->json([
+            'key' => $fileKey,
+            'url' => $upload['url'],
+            'headers' => $upload['headers'],
+        ]);
+    }
+
+    public function confirmDocumentUpload(Request $request, Facility $facility)
+    {
         try {
-            foreach ($request->file('files') as $file) {
-                $facility->addMedia($file)->toMediaCollection('documents');
-            }
+            $validated = $request->validate([
+                'filename' => ['required', 'string'],
+                'key' => ['required', 'string', function ($attribute, $value, $fail) {
+                    if (
+                        explode(".", $value)
+                            |> last(...)
+                            |> (fn($x) => ! in_array($x, ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpeg', 'jpg', 'png']))
+                    ) {
+                        $fail("The file must be pdf, doc, docx, xls, xlsx, jpeg, jpg or png format.");
+                    }
+                }],
+            ]);
+
+            $facility->addMediaFromDisk($validated['key'], 'data_bucket')
+                ->usingName(pathinfo($validated['filename'], PATHINFO_FILENAME))
+                ->usingFileName($validated['filename'])
+                ->toMediaCollection('documents');
 
             return new FacilityResource($facility->fresh());
         } catch (\Throwable $e) {
             Log::error($e);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage(),], 500);
         }
     }
 
-    /**
-     * Download de um ficheiro
-     * GET /facilities/{facility}/documents/{mediaId}/download
-     */
     public function downloadDocument(Facility $facility, int $mediaId)
     {
         $media = $facility->getMedia('documents')->firstWhere('id', $mediaId);
@@ -166,23 +194,26 @@ class FacilitiesController extends Controller
             return response()->json(['message' => 'Document not found.'], 404);
         }
 
-        return $media->toResponse(request());
+        return response()->json([
+            'url' => $media->getTemporaryUrl(now()->addMinutes(10)),
+        ]);
     }
 
-    /**
-     * Eliminar um ficheiro
-     * DELETE /facilities/{facility}/documents/{mediaId}
-     */
     public function deleteDocument(Facility $facility, int $mediaId)
     {
-        $media = $facility->getMedia('documents')->firstWhere('id', $mediaId);
+        try {
+            $media = $facility->getMedia('documents')->firstWhere('id', $mediaId);
 
-        if (! $media) {
-            return response()->json(['message' => 'Document not found.'], 404);
+            if (! $media) {
+                return response()->json(['message' => 'Document not found.',], 404);
+            }
+
+            $media->delete();
+
+            return new FacilityResource($facility->fresh());
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return response()->json(['message' => $e->getMessage(),], 500);
         }
-
-        $media->delete();
-
-        return response()->json();
     }
 }

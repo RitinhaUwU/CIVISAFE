@@ -114,7 +114,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/{facility}/upload', [FacilitiesController::class, 'confirmUpload']);
             Route::delete('/{facility}/image', [FacilitiesController::class, 'deleteImage']);
             // DOCUMENTOS
-            Route::post('/{facility}/documents', [FacilitiesController::class, 'uploadDocuments']);
+            Route::post('/documents/uploadUrl', [FacilitiesController::class, 'signedDocumentUrl']);
+            Route::post('/{facility}/documents/upload', [FacilitiesController::class, 'confirmDocumentUpload']);
             Route::get('/{facility}/documents/{mediaId}/download', [FacilitiesController::class, 'downloadDocument']);
             Route::delete('/{facility}/documents/{mediaId}', [FacilitiesController::class, 'deleteDocument']);
         });
