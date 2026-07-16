@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/v1/incidents/1/parties"
+  url: "{{BASE_URL}}/api/v1/incidents/{{id}}/parties"
   auth: inherit
 
 settings:
