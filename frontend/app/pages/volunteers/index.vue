@@ -285,7 +285,7 @@ onMounted(async () => {
         v-if="selectedVolunteerById"
         v-model:open="deleteModalOpen"
         :id="selectedVolunteerById?.id"
-        :team_identification="selectedVolunteerById?.team_identification"
+        :name="selectedVolunteerById?.name"
         @deleted="fetch"
       />
     </template>

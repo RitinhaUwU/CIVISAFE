@@ -6,7 +6,7 @@ const api = useApiStore()
 const toast = useToast()
 const props = defineProps<{
   id: number
-  team_identification: string
+  name: string
   open: boolean
 }>()
 
@@ -36,7 +36,7 @@ const onSubmit = async () => {
 
     toast.add({
       title: 'Voluntário eliminado',
-      description: `${props.team_identification} foi removido com sucesso.`,
+      description: `${props.name} foi removido com sucesso.`,
       color: 'success'
     })
 
@@ -56,8 +56,8 @@ const onSubmit = async () => {
 <template>
   <UModal
     :open="openModel"
-    :title="`Eliminar Voluntário: ${props.team_identification}`"
-    :description="`Tens a certeza que queres eliminar o voluntário '${props.team_identification}'?`"
+    :title="`Eliminar Voluntário: ${props.name}`"
+    :description="`Tens a certeza que queres eliminar o voluntário '${props.name}'?`"
     :ui="{ close: 'hidden' }"
   >
     <template #body>
