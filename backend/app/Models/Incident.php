@@ -19,6 +19,15 @@ class Incident extends Model
         static::saving(function (Incident $incident) {
             $incident->identifier = $incident->resolveIdentifier();
         });
+
+        static::updating(function (Incident $incident) {
+            if ($incident->isDirty('is_major') || $incident->isDirty('incident_id')) {
+                $incident->identifier = $incident->resolveIdentifier();
+                return;
+            }
+
+            $incident->identifier = $incident->getOriginal('identifier');
+        });
     }
 
     public function incidentType(): BelongsTo

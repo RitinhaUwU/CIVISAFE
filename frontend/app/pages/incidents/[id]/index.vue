@@ -200,6 +200,12 @@ function updateCoordinates(coords: { lat: number, lng: number }) {
 
 // Geral
 const loadingIncident = ref(true)
+const userTouchedAssociation = ref(false)
+
+const displayIdentifier = computed(() => {
+  if (!shouldHaveOwnIdentifier()) return ''
+  return state.identifier || ''
+})
 
 const handleSaveGeral = async () => {
   if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
@@ -256,7 +262,8 @@ const handleSaveGeral = async () => {
       name_pco: state.name_pco,
     }
 
-    await api.updateIncident(incidentID, payload)
+    const response = await api.updateIncident(incidentID, payload)
+    state.identifier = response.data.data.identifier
 
     toast.add({
       title: 'Sucesso',
@@ -276,6 +283,7 @@ const handleSaveGeral = async () => {
 }
 
 const fetchIncident = async () => {
+  userTouchedAssociation.value = false
   const data = (await api.getIncident(incidentID)).data.data
 
   state.is_major = data.is_major
@@ -372,20 +380,10 @@ watch(() => state.is_major, async (isMajor, wasMajor) => {
   if (loadingIncident.value) return
 
   state.incident_id = isMajor ? [] : null
-
   await incidents.reset(true)
 
-  // Só gera/limpa identifier quando o tipo (major/minor) muda de facto.
-  // Se continuar minor (wasMajor === false && isMajor === false) mantém o identifier existente.
-  if (isMajor || wasMajor) {
-    await loadNextIdentifier()
-  }
-})
-
-watch(() => state.incident_id, async () => {
-  if (loadingIncident.value) return
-  if (!state.is_major) {
-    await loadNextIdentifier()
+  if (isMajor) {
+    state.coordinates = ''
   }
 })
 
@@ -603,18 +601,6 @@ const fetchLogistics = async () => {
   logisticTotals.value = res?.data?.meta ?? { total_vehicles: 0, total_humans: 0 }
 }
 
-watch(() => state.is_major, async () => {
-  if (loadingIncident.value) return
-
-  state.incident_id = state.is_major ? [] : null
-
-  await incidents.reset(true)
-
-  if (state.is_major) {
-    state.coordinates = ''
-  }
-})
-
 onMounted(async () => {
   if (!useAuthStore().hasPermission('INCIDENTS_LIST')) {
     await router.push('/inicio');
@@ -671,7 +657,7 @@ onMounted(async () => {
               <h2 class="font-bold">Dados Gerais</h2>
               <USwitch v-model="state.is_major" label="Ocorrência Major"/>
               <UFormField v-if="state.is_major || !state.incident_id" label="Identificador" name="identifier">
-                <UInput v-model="state.identifier" class="w-full" disabled />
+                <UInput :model-value="displayIdentifier" class="w-full" disabled />
               </UFormField>
               <UFormField label="Tipo de Ocorrência" name="incident_type_id" class="sm:col-span-2">
                 <USelectMenu
@@ -724,6 +710,7 @@ onMounted(async () => {
                     :multiple="state.is_major"
                     class="w-full"
                     :placeholder="state.is_major ? 'Selecionar ocorrências associadas' : 'Selecionar ocorrência major'"
+                    @update:model-value="userTouchedAssociation = true"
                   />
                   <UButton
                     v-if="!state.is_major && !!state.incident_id"

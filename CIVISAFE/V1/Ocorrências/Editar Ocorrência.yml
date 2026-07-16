@@ -5,12 +5,11 @@ info:
 
 http:
   method: PUT
-  url: "{{BASE_URL}}/api/v1/incidents/82"
+  url: "{{BASE_URL}}/api/v1/incidents/{{id}}"
   body:
     type: json
     data: |-
       {
-        "identifier": "2026/2026",
         "start_datetime": "2026-05-18 10:00:00",
         "coordinates": "-21.779066, -49.139885",
         "common_place": "vero dicta",

@@ -179,6 +179,7 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
+            unset($data['identifier']);
             $children = $data['children_incidents'] ?? [];
             unset($data['children_incidents']);
 
