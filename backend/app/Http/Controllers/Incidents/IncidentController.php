@@ -10,6 +10,7 @@ use App\Models\IncidentState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -98,7 +99,8 @@ class IncidentController extends Controller
                     }
                 }),
             )
-            ->orderBy('id')
+            ->orderBy('start_datetime', 'desc')
+            ->orderBy('id', 'desc')
             ->cursorPaginate($request->input('per_page', 10))
             ->appends($request->query());
 
@@ -114,7 +116,7 @@ class IncidentController extends Controller
         $state = IncidentState::find($data['incident_state_id']);
 
         if ($state?->terminates_incident && empty($data['end_datetime'])) {
-            $data['end_datetime'] = now();
+            $data['end_datetime'] = now()->toIso8601String();
         }
     }
 
@@ -131,6 +133,7 @@ class IncidentController extends Controller
         return DB::transaction(function () use ($request) {
 
             $data = $request->validated();
+            $data['user_id'] = auth()->id();
             $children = $data['children_incidents'] ?? [];
             unset($data['children_incidents']);
 
@@ -173,9 +176,11 @@ class IncidentController extends Controller
 
     public function update(IncidentRequest $request, Incident $incident)
     {
+        Log::debug("Update Ocorrencia", $request->validated());
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
+            unset($data['identifier']);
             $children = $data['children_incidents'] ?? [];
             unset($data['children_incidents']);
 

@@ -189,15 +189,15 @@ watchDebounced([search, statusFilter, prioritiesFilter, is_majorFilter], async (
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
   if(!useAuthStore().hasPermission('INCIDENTS_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
-  states.fetchItems()
-  priorities.fetchItems()
+  await fetch()
+  await states.fetchItems()
+  await priorities.fetchItems()
 
   useInfiniteScroll(
     scrollContainer,

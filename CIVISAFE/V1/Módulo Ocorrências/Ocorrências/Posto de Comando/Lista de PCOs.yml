@@ -1,0 +1,20 @@
+info:
+  name: Lista de PCOs
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/v1/incidents/{{incident_id}}/pco"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: incident_id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

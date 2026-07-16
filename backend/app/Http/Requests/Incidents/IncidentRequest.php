@@ -36,7 +36,6 @@ class IncidentRequest extends FormRequest
             'incident_id' => [$is_patch ? 'sometimes' : 'nullable', 'nullable', 'exists:incidents,id'],
             'children_incidents' => ['sometimes', 'array'],
             'children_incidents.*' => ['integer', 'exists:incidents,id'],
-            'user_id' => [$is_patch ? 'sometimes' : 'required', 'exists:users,id'],
             'coordinates_pco' => [$is_patch ? 'sometimes' : 'nullable'],
             'name_pco' => [$is_patch ? 'sometimes' : 'nullable'],
         ];

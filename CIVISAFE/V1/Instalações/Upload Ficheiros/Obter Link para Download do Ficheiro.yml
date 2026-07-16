@@ -1,0 +1,22 @@
+info:
+  name: Obter Link para Download do Ficheiro
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/v1/facilities/{{facility_id}}/documentos/{{file_id}}/download"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: facility_id
+      value: ""
+    - name: file_id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

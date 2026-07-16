@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import {createBlobURL, formatBytes} from '@/utils'
-import z from 'zod'
 import {useApiStore} from '@/stores/api'
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const toast = useToast()
@@ -11,46 +10,68 @@ const emit = defineEmits(['uploaded'])
 
 const open = ref(false)
 const loading = ref(false)
-const files = ref<File[]>([])
+const file = ref<File>()
 
 /***
  Upload da ficheiros
  ***/
-const ACCEPTED_TYPES = ['application/pdf', 'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',]
-
-const removeFile = (index: number) => {
-  files.value.splice(index, 1)
-}
-
 const onSubmit = async () => {
+  if (!useAuthStore().hasPermission('FACILITIES_FILES_UPLOAD')) return
+
   if (!props.facilityId) return
 
-  if (!files.value.length) {
+  if (!await checkServerAccess()) {
     toast.add({
-      title: 'Erro',
-      description: 'Seleciona pelo menos um ficheiro.',
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet.',
       color: 'error'
     })
-
     return
   }
 
+  if (!file.value) {
+    toast.add({
+      title: 'Erro',
+      description: 'Seleciona um ficheiro.',
+      color: 'error'
+    })
+    return
+  }
+
+
   loading.value = true
   try {
-    await api.uploadFacilityDocuments(props.facilityId, files.value)
+    const uploadURL = await api.requestFacilityDocumentSignedUrl(file.value.name, file.value.type)
+
+    const bucketResponse = await fetch(uploadURL.data.url, {
+      method: 'PUT',
+      headers: {
+        ...uploadURL.data.headers,
+        'Content-Type': file.value.type
+      },
+      body: file.value
+    })
+
+    if (!bucketResponse.ok) {
+      toast.add({
+        title: 'Erro ao carregar ficheiro',
+        description: 'Ocorreu um erro ao carregar ficheiro. A restante informação foi gravada.',
+        color: 'error'
+      })
+      return;
+    }
+
+    await api.uploadFacilityDocument(props.facilityId, uploadURL.data.key, file.value.name)
 
     toast.add({
       title: 'Sucesso',
-      description: 'Ficheiros carregados com sucesso.',
+      description: 'Ficheiro carregado com sucesso.',
       color: 'success'
     })
 
-    files.value = []
-
+    file.value = undefined
     open.value = false
+
     emit('uploaded')
   } catch {
     toast.add({
@@ -69,17 +90,15 @@ const onSubmit = async () => {
     <UButton icon="i-lucide-upload" label="Carregar Ficheiros" color="primary" />
     <template #body>
       <UFileUpload
-        v-model="files"
+        v-model="file"
         icon="i-lucide-file-up"
-        label="Arrasta os teus ficheiros aqui"
-        description="PDF, DOC, XLS, PNG, JPG (máx. 20 MB cada)"
+        label="Arrasta o ficheiro aqui"
+        description="PDF, DOC, XLS, PNG, JPG (máx. 20 MB)"
         layout="list"
         position="inside"
-        multiple
         :interactive="false"
         :ui="{ base: 'min-h-48' }"
         accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-        class="w-full"
       >
         <template #actions="{ open: openPicker }">
           <UButton
@@ -89,19 +108,6 @@ const onSubmit = async () => {
             variant="outline"
             @click="openPicker()"
           />
-        </template>
-        <template #files-top="{ open: openPicker, files: selectedFiles }">
-          <div v-if="selectedFiles?.length" class="mb-2 flex items-center justify-between">
-            <p class="font-bold">Ficheiros ({{ selectedFiles?.length }})</p>
-            <UButton
-              icon="i-lucide-plus"
-              label="Adicionar mais"
-              color="neutral"
-              variant="outline"
-              class="-my-2"
-              @click="openPicker()"
-            />
-          </div>
         </template>
       </UFileUpload>
       <div class="flex justify-between gap-3 pt-4">
@@ -117,7 +123,7 @@ const onSubmit = async () => {
           color="primary"
           class="flex-1 justify-center"
           :loading="loading"
-          :disabled="!files.length"
+          :disabled="!file"
           @click="onSubmit"
         />
       </div>

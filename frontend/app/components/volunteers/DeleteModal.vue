@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useApiStore } from "@/stores/api"
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const toast = useToast()
 const props = defineProps<{
   id: number
-  team_identification: string
+  name: string
   open: boolean
 }>()
 
@@ -17,14 +18,25 @@ const openModel = computed({
 })
 
 const onSubmit = async () => {
+  if (!useAuthStore().hasPermission('VOLUNTEERS_DELETE')) return;
+
   if (!props.id) return
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
 
   try {
     await api.deleteVolunteer(props.id)
 
     toast.add({
       title: 'Voluntário eliminado',
-      description: `${props.team_identification} foi removido com sucesso.`,
+      description: `${props.name} foi removido com sucesso.`,
       color: 'success'
     })
 
@@ -37,8 +49,6 @@ const onSubmit = async () => {
       description: 'Não foi possível eliminar o voluntário.',
       color: 'error'
     })
-  } finally {
-    loading.value = false
   }
 }
 </script>
@@ -46,8 +56,8 @@ const onSubmit = async () => {
 <template>
   <UModal
     :open="openModel"
-    :title="`Eliminar Voluntário: ${props.team_identification}`"
-    :description="`Tens a certeza que queres eliminar o voluntário '${props.team_identification}'?`"
+    :title="`Eliminar Voluntário: ${props.name}`"
+    :description="`Tens a certeza que queres eliminar o voluntário '${props.name}'?`"
     :ui="{ close: 'hidden' }"
   >
     <template #body>

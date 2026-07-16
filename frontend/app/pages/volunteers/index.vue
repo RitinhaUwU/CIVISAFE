@@ -186,15 +186,15 @@ watchDebounced([search, accommodationFilter, mealFilter, classificationFilter], 
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('VOLUNTEERS_LIST'))
   {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -285,7 +285,7 @@ onMounted(() => {
         v-if="selectedVolunteerById"
         v-model:open="deleteModalOpen"
         :id="selectedVolunteerById?.id"
-        :team_identification="selectedVolunteerById?.team_identification"
+        :name="selectedVolunteerById?.name"
         @deleted="fetch"
       />
     </template>

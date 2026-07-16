@@ -18,6 +18,21 @@ class UserUpdateRequest extends FormRequest
             'mobile' => [$is_patch ? 'sometimes' : 'required', 'regex:/^\+?[0-9]+(?: [0-9]+)*$/'],
             'locked' => [$is_patch ? 'sometimes' : 'required', 'boolean'],
             'role' => [$is_patch ? 'sometimes' : 'required', 'string', 'exists:roles,name'],
+            'module_incidents' => [
+                $is_patch ? 'sometimes' : 'required',
+                'required_if:role,user',
+                'boolean'
+            ],
+            'module_volunteers'=> [
+                $is_patch ? 'sometimes' : 'required',
+                'required_if:role,user',
+                'boolean'
+            ],
+            'module_donations' => [
+                $is_patch ? 'sometimes' : 'required',
+                'required_if:role,user',
+                'boolean'
+            ],
         ];
 
         if (auth()->id() == $this->route('user')->id) {

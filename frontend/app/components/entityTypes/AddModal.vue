@@ -2,6 +2,7 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '../../stores/api'
+import {useAuthStore} from "~/stores/auth";
 
 const apiStore = useApiStore()
 const open = ref(false)
@@ -22,6 +23,17 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('ENTITY_TYPES_CREATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await apiStore.createEntityType(event.data)
 

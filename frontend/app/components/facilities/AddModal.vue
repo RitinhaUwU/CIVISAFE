@@ -3,14 +3,13 @@ import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '~/stores/api'
 import {createBlobURL, formatBytes} from "~/utils";
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
 
 const toast = useToast()
-
-const imageFile = ref(null)
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -80,6 +79,17 @@ const fileState = reactive<Partial<FileSchema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('FACILITIES_CREATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     const facility = await api.createFacility(event.data)
 

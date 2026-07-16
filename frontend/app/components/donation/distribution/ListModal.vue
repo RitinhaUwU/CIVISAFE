@@ -112,14 +112,28 @@ const handleUpdateToDistribution = (event: {resource: any}) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (!useAuthStore().hasPermission('DONATION_LOG_LIST')) {
+    await useRouter().push('/inicio');
+    return;
+  }
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   const {$echo} = useNuxtApp();
 
   $echo.private('DonationStocks')
     .listen('.distribution.created', handleUpdateToDistribution)
     .listen('.distribution.updated', handleUpdateToDistribution);
 
-  fetch(false)
+  await fetch(false)
 
   useInfiniteScroll(
     scrollContainer,

@@ -1,0 +1,26 @@
+info:
+  name: Atualizar Campo Especifico da Entidade
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/entities/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "entity_type_id": "1"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -252,14 +252,14 @@ const entityLogoURL = computed(() => {
   return undefined
 });
 
-onMounted(() => {
+onMounted(async () => {
   if(!useAuthStore().hasPermission('ENTITIES_LIST')) {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetchEntity()
-  entityTypes.fetchItems()
+  await fetchEntity()
+  await entityTypes.fetchItems()
 })
 </script>
 

@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { useApiStore } from '../../stores/api'
+import { useApiStore } from '@/stores/api'
+import {useAuthStore} from "~/stores/auth";
 
 const apiStore = useApiStore()
 const open = ref(false)
 const emit = defineEmits(['created'])
 
 const toast = useToast()
-
-const chip = computed(() => ({ backgroundColor: color.value }))
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -28,6 +27,17 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENT_PRIORITIES_CREATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await apiStore.createIncidentPriority(event.data)
 

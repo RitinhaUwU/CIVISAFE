@@ -146,9 +146,9 @@ onMounted(async () => {
     return;
   }
 
-  if (!auth.hasPermission('DONATION_LOG_LIST')) {
+  if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
     await useRouter().push('/inicio');
-    return;
+    throw new Error('User does not have access to the donations module');
   }
 
   await fetchCategories()

@@ -7,7 +7,7 @@ import Map from '@/components/Map.vue'
 import moment from 'moment'
 import 'moment/locale/pt'
 import type {TableColumn} from "@nuxt/ui";
-import {UButton} from "#components";
+import {UBadge, UButton} from "#components";
 
 moment.locale('pt')
 
@@ -20,7 +20,6 @@ const incident       = ref<any>(null)
 const pcoList        = ref<any[]>([])
 const logistics      = ref<any[]>([])
 const logisticTotals = ref({ total_vehicles: 0, total_humans: 0 })
-const timeline       = ref<any[]>([])
 const loading        = ref(true)
 
 const activePCOs = computed(() => pcoList.value.filter(p => !p.end_pco_datetime))
@@ -237,10 +236,9 @@ onMounted(async () => {
 
     const idsToFetch = incident.value.is_major ? (incident.value.children_incidents ?? []).map((i: any) => i.id) : [incidentId.value]
 
-    const [pcoSettled, logSettled, tlRes] = await Promise.all([
+    const [pcoSettled, logSettled] = await Promise.all([
       Promise.allSettled(idsToFetch.map((id: number) => api.getIncidentPCOs(id))),
       Promise.allSettled(idsToFetch.map((id: number) => api.getIncidentLogistics(id))),
-      api.getIncidentTimeline(incidentId.value),
     ])
 
     const pcoResults = pcoSettled.map(r => r.status === 'fulfilled' ? r.value : { data: { data: [] } })
@@ -259,8 +257,6 @@ onMounted(async () => {
       },
       { total_vehicles: 0, total_humans: 0 }
     )
-
-    timeline.value = tlRes.data ?? []
   } finally {
     loading.value = false
   }

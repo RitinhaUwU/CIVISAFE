@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Donations;
 
-use App\Events\StockUpdated;
+use App\Events\Donations\DonationCreated;
+use App\Events\Donations\DonationUpdated;
+use App\Events\Donations\StockUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ActivityHelper;
 use App\Http\Requests\Donations\DonationLogRequest;
@@ -10,9 +12,9 @@ use App\Http\Resources\Donations\DonationLogResource;
 use App\Models\Donations\DonationContent;
 use App\Models\Donations\DonationLog;
 use App\Models\Donations\DonationStock;
-use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -48,7 +50,15 @@ class DonationLogController extends Controller
     public function store(DonationLogRequest $request)
     {
         try {
-            $donation = DB::transaction(function () use ($request) {
+            $goods = collect($request->validated('goods'))
+                ->groupBy('category_id')
+                ->map(fn($group, $categoryId) => [
+                    'category_id' => $categoryId,
+                    'quantity' => $group->sum('quantity')
+                ])
+                ->values()->all();
+
+            $donation = DB::transaction(function () use ($request, $goods) {
                 $donation = DonationLog::create([
                     'date' => $request->validated('date'),
                     'name' => $request->validated('name'),
@@ -57,14 +67,6 @@ class DonationLogController extends Controller
                     'donor_type' => $request->validated('donor_type'),
                     'user_id' => $request->user()->id
                 ]);
-
-                $goods = collect($request->validated('goods'))
-                    ->groupBy('category_id')
-                    ->map(fn($group, $categoryId) => [
-                        'category_id' => $categoryId,
-                        'quantity' => $group->sum('quantity')
-                    ])
-                    ->values()->all();
 
                 foreach ($goods as $good) {
                     DonationContent::create([
@@ -78,14 +80,19 @@ class DonationLogController extends Controller
                         ->incrementOrCreate([
                             'donation_goods_type_id' => $good['category_id'],
                         ], 'stock', $good['quantity']);
-
-                    broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good['category_id']])->first()));
                 }
 
                 return $donation;
             });
 
             DB::commit();
+
+            foreach ($goods as $good) {
+                broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good['category_id']])->first()));
+            }
+
+            broadcast(new DonationCreated($donation->refresh()));
+
             return new DonationLogResource($donation);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -101,7 +108,15 @@ class DonationLogController extends Controller
     public function update(DonationLogRequest $request, DonationLog $donationLog)
     {
         try {
-            DB::transaction(function () use ($request, $donationLog) {
+
+            $goods = collect($request->validated('goods'))
+                ->groupBy('category_id')
+                ->map(fn($group, $categoryId) => [
+                    'category_id' => $categoryId,
+                    'quantity' => $group->sum('quantity')
+                ]);
+
+            DB::transaction(function () use ($request, $donationLog, $goods) {
                 $fields = collect($request->validated());
 
                 $donationLog->update($fields->except('goods')->toArray());
@@ -113,7 +128,7 @@ class DonationLogController extends Controller
                  * Remover ou adicionar itens de novas categorias
                  */
 
-                collect($fields['goods'])->each(function ($item) use ($donationLog) {
+                $goods->each(function ($item) use ($donationLog) {
 
                     $good = DonationContent::where(['donation_log_id' => $donationLog->id])
                         ->where(['donation_goods_types_id' => $item['category_id']])
@@ -139,7 +154,6 @@ class DonationLogController extends Controller
                                     ->lockForUpdate()
                                     ->increment('stock', abs($diff));
                             }
-                            broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
                         }
                     } else {
                         //Se o item não existe na db, adicionamos as unidades
@@ -154,8 +168,6 @@ class DonationLogController extends Controller
                             ->incrementOrCreate([
                                 'donation_goods_type_id' => $item['category_id'],
                             ], 'stock', $item['quantity']);
-
-                        broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
                     }
                 });
 
@@ -172,11 +184,17 @@ class DonationLogController extends Controller
                             ->decrement('stock', $good->quantity);
 
                         $good->delete();
-                        broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $good->donation_goods_types_id])->first()));
                     });
             });
 
             DB::commit();
+
+            $goods->each(function ($item) use ($donationLog) {
+                broadcast(new StockUpdated(DonationStock::where(['donation_goods_type_id' => $item['category_id']])->first()));
+            });
+
+            broadcast(new DonationUpdated($donationLog->refresh()));
+
             return new DonationLogResource($donationLog->fresh());
         } catch (\Throwable $e) {
             DB::rollBack();

@@ -125,6 +125,21 @@ const readableKey = (key: string) => {
 }
 
 onMounted(async () => {
+
+  if (!useAuthStore().hasRole('module_donations') && !useAuthStore().hasRole('admin')) {
+    await useRouter().push('/inicio');
+    throw new Error('User does not have access to the donations module');
+  }
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   await fetchCategories();
 })
 </script>

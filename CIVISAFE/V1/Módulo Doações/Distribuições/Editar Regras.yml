@@ -1,0 +1,21 @@
+info:
+  name: Editar Regras
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/donations/distributions/rules"
+  body:
+    type: json
+    data: |-
+      {
+        "body": "# Novo Corpo das Regras de Distribuicao (em Markdown)"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

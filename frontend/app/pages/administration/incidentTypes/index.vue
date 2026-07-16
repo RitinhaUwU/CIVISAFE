@@ -119,15 +119,15 @@ watchDebounced(search, async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
 
   if(!useAuthStore().hasPermission('INCIDENT_TYPES_LIST'))
   {
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetch()
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
@@ -151,7 +151,17 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">Tipos de Ocorrências</h2>
           <p class="text-sm text-muted max-w-md">Lista de todas os Tipos de Ocorrências.</p>
         </div>
-        <IncidentTypesUploadModal v-if="useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
+
+        <div class="flex items-center gap-3">
+          <UButton
+            icon="i-lucide-download"
+            label="Transferir Template para Preenchimento"
+            to="/templates/TemplateTiposOcorrencia.xlsx"
+            target="_blank"
+            download
+          />
+          <IncidentTypesUploadModal v-if="useAuthStore().hasPermission('INCIDENT_TYPES_UPLOAD')" />
+        </div>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <UInput

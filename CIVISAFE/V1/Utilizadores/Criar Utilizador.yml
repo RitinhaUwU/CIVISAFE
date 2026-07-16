@@ -1,7 +1,7 @@
 info:
   name: Criar Utilizador
   type: http
-  seq: 3
+  seq: 4
 
 http:
   method: POST
@@ -16,7 +16,10 @@ http:
         "password_confirmation": "password",
         "mobile": "925786321",
         "locked": true,
-        "role": "admin"
+        "role": "user",
+        "module_incidents": true,
+        "module_volunteers": true,
+        "module_donations": true
       }
   auth: inherit
 

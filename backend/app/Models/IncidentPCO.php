@@ -20,6 +20,8 @@ class IncidentPCO extends Model
         return $this->belongsTo(Incident::class);
     }
 
+    protected $dateFormat = 'Y-m-d H:i:sP';
+
     protected $with = [
         'incident'
     ];

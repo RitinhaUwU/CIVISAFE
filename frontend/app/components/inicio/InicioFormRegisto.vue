@@ -6,6 +6,7 @@ import { useApiStore } from "@/stores/api"
 import { useAuthStore } from "@/stores/auth"
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import {toDatetimeLocal, incidentDisplayName} from "@/utils"
+import moment from "moment"
 
 const props = defineProps<{
   modelValue: boolean
@@ -146,10 +147,22 @@ function setDefaultIncidentState() {
 }
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('INCIDENTS_CREATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     const payload = {
       ...event.data,
-      user_id: authStore.currentUserID,
+      start_datetime: moment(event.data.start_datetime).toISOString(),
+      end_datetime: event.data.end_datetime != '' ? moment(event.data.end_datetime).toISOString() : '',
       incident_state_id: event.data.incident_state_id?.id,
       incident_priority_id: event.data.incident_priority_id?.id,
       incident_type_id: event.data.incident_type_id?.id,

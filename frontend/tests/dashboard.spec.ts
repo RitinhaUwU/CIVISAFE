@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   await login(page)
 })
 
-test('home page loads map', async ({ page }) => {
+test('homepage loads map', async ({ page }) => {
   await page.goto('http://localhost:3000/inicio')
 
   await expect(page.locator('.leaflet-container')).toBeVisible({ timeout: 20000 })

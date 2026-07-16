@@ -5,6 +5,7 @@ import * as z from "zod";
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
 import {toDatetimeLocal} from "@/utils"
+import moment from "moment";
 
 const route = useRoute()
 const router = useRouter()
@@ -98,6 +99,8 @@ const handleSave = async () => {
   try {
     const payload = {
       ...result.data,
+      start_datetime: result.data.start_datetime != '' ? moment(result.data.start_datetime).toISOString() : '',
+      end_datetime: result.data.end_datetime != '' ? moment(result.data.end_datetime).toISOString() : '',
       incident_id: result.data.incident_id?.id ?? null
     }
 

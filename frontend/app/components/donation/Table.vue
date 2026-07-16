@@ -8,13 +8,20 @@ import {useToast} from "@nuxt/ui/composables";
 const searchBind = defineModel();
 
 const donations = ref<DonationLog[]>([])
-const nextCursor = ref<string|null>(null)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
+
+const props = defineProps({
+  preview: {
+    type: Boolean,
+    default: false,
+  }
+})
 
 const columns: TableColumn<DonationLog>[] = [
   {
     accessorKey: "date",
-    header: "Data"
+    header: "Data",
   },
   {
     accessorKey: "name",
@@ -79,7 +86,7 @@ const fetch = async (loadMore: boolean = false) => {
   try {
     const params: any = {
       per_page: 10,
-      ...(loadMore && nextCursor.value ? { cursor: nextCursor.value } : {})
+      ...(loadMore && nextCursor.value ? {cursor: nextCursor.value} : {})
     }
 
     if (searchBind.value) {
@@ -89,13 +96,10 @@ const fetch = async (loadMore: boolean = false) => {
     }
     const res = await useApiStore().getDonationLogs(params)
 
-    if(loadMore)
-    {
+    if (loadMore) {
       const existing = new Set(donations.value.map(d => d.id))
       donations.value.push(...res.data.data.filter((d: DonationLog) => !existing.has(d.id)))
-    }
-    else
-    {
+    } else {
       donations.value = res.data.data
     }
 
@@ -111,6 +115,17 @@ const fetch = async (loadMore: boolean = false) => {
   }
 }
 
+const handleDonationCreation = (donation: any) => {
+  donations.value.unshift(donation.resource);
+}
+
+const handleDonationEdit = (donation: any) => {
+  const idx = donations.value.findIndex((d: DonationLog) => d.id === donation.resource.id);
+  if (idx !== -1) {
+    donations.value[idx] = donation.resource;
+  }
+}
+
 watchDebounced(searchBind, async () => {
   nextCursor.value = null
   donations.value = []
@@ -119,32 +134,66 @@ watchDebounced(searchBind, async () => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
-onMounted(() => {
-  fetch()
+onMounted(async () => {
+
+  if (!useAuthStore().hasPermission('DONATION_LOG_LIST')) {
+    await useRouter().push('/inicio');
+    return;
+  }
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível carregar os dados sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
+  const {$echo} = useNuxtApp();
+
+  $echo.private('DonationStocks')
+    .listen('.donation.created', handleDonationCreation)
+    .listen('.donation.updated', handleDonationEdit)
+
+  await fetch()
 
   useInfiniteScroll(
     scrollContainer,
     () => {
-      if(nextCursor.value == null) return;
+      if (nextCursor.value == null) return;
       fetch(true)
     },
     {
       distance: 200,
-      canLoadMore: () => !loading.value && nextCursor.value !== null
+      canLoadMore: () => (!loading.value && nextCursor.value !== null) && (!props.preview)
     }
   )
 })
 </script>
 
 <template>
-  <UEmpty
-    v-if="donations.length == 0"
-    icon="i-lucide-book-open"
-    title="Sem Doações Registadas"
-    description="De momento não existem quaisquer doações registadas"
-    variant="naked"
-    class="h-80"
-  />
+  <template v-if="donations.length == 0">
+    <UEmpty
+      v-if="searchBind == undefined"
+      icon="i-lucide-book-open"
+      title="Sem Doações Registadas"
+      description="De momento não existem quaisquer doações registadas"
+      variant="naked"
+      class="h-80"
+    />
+
+    <UEmpty
+      v-else
+      icon="i-lucide-book-open"
+      title="Sem Resultados"
+      description="Não existe nenhuma doação registada que cumpra os critérios da sua pesquisa"
+      variant="naked"
+      class="h-80"
+    />
+
+  </template>
+
   <div v-else ref="scrollContainer" class="overflow-x-auto max-h-150 overflow-y-auto">
     <UTable
       :data="donations"

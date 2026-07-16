@@ -1,11 +1,11 @@
 info:
   name: Editar Utilizador
   type: http
-  seq: 5
+  seq: 6
 
 http:
   method: PUT
-  url: "{{BASE_URL}}/api/v1/users/12"
+  url: "{{BASE_URL}}/api/v1/users/{{id}}"
   body:
     type: json
     data: |-
@@ -16,9 +16,17 @@ http:
         "password_confirmation": "password",
         "mobile": "925786321",
         "locked": true,
-        "role": "user"
+        "role": "user",
+        "module_incidents": true,
+        "module_volunteers": true,
+        "module_donations": true
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: ""
 
 settings:
   encodeUrl: true

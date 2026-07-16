@@ -11,7 +11,6 @@ const selectedCoords = ref<{ lat: number, lng: number }>({ lat: 0, lng: 0 })
 const openModal = ref(false)
 const openSlideover = ref(false)
 
-const incidents = ref<Incident[]>([])
 const mapIncidents = ref<Incident[]>([])
 
 const majorIncidents = ref<Incident[]>([])

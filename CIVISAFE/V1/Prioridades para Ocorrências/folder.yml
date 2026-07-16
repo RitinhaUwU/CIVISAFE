@@ -1,7 +1,0 @@
-info:
-  name: Prioridades para Ocorrências
-  type: folder
-  seq: 7
-
-request:
-  auth: inherit

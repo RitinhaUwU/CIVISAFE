@@ -1,7 +1,14 @@
 import {defineStore} from 'pinia'
 import axios from 'axios'
 import {checkServerAccess} from "@/utils";
-import {clearTable, removeEntry, retrieveData, retrieveDataPaginated, storeData} from "@/composables/useIndexedDB";
+import {
+  clearTable,
+  removeEntry,
+  retrieveData,
+  retrieveDataPaginated,
+  retrievePaginatedByIncident,
+  storeData
+} from "@/composables/useIndexedDB";
 import type {QueryParams} from "@/types";
 
 export const useApiStore = defineStore('api', () => {
@@ -271,12 +278,18 @@ export const useApiStore = defineStore('api', () => {
   /*************************
    *
    *  Incidents PCO
-   *  TODO: Implementar lógica de storage offline
    *
    *************************/
 
-  const getIncidentPCOs = (incidentId: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
+  const getIncidentPCOs = async (incidentId: number, params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents/${incidentId}/pco`, {params})
+      await storeData('incident_pcos', res.data.data);
+      return res;
+    } else {
+      console.debug("OFFLINE DATA")
+      return await retrievePaginatedByIncident('incident_pcos', 'pco', incidentId, params);
+    }
   }
 
   const createIncidentPCO = (incidentId: number, params: any) => {
@@ -290,12 +303,18 @@ export const useApiStore = defineStore('api', () => {
   /*************************
    *
    *  Incidents Logistic
-   *  TODO: Implementar lógica de storage offline
    *
    *************************/
 
-  const getIncidentLogistics = (incidentId: number, params?: QueryParams) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
+  const getIncidentLogistics = async (incidentId: number, params?: QueryParams) => {
+    if (await checkServerAccess()) {
+      const res = await axios.get(`${config.public.apiBase}/incidents/${incidentId}/parties`, {params})
+      await storeData('incident_parties', res.data.data)
+      return res;
+    } else {
+      console.debug("OFFLINE DATA")
+      return await retrievePaginatedByIncident('incident_parties', 'parties', incidentId, params);
+    }
   }
 
   const createIncidentLogistic = (incidentId: number, params: any) => {
@@ -514,20 +533,22 @@ export const useApiStore = defineStore('api', () => {
   }
 
   // Facilities - Documentos
-  const uploadFacilityDocuments = (facilityId: number, files: File[]) => {
-    const form = new FormData()
-    files.forEach(file => form.append('files[]', file))
-    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/documents`, form)
+  const requestFacilityDocumentSignedUrl = (filename: string, contentType: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/documents/uploadUrl`, {filename, content_type: contentType})
+  }
+
+  const uploadFacilityDocument = (facilityId: number, key: string, filename: string) => {
+    return axios.post(`${config.public.apiBase}/facilities/${facilityId}/documents/upload`, {key, filename})
   }
 
   const downloadFacilityDocument = async (facilityId: number, mediaId: number, filename: string) => {
-    const response = await axios.get(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}/download`, {responseType: 'blob'})
-    const url = URL.createObjectURL(response.data)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
+    const response = await axios.get(`${config.public.apiBase}/facilities/${facilityId}/documents/${mediaId}/download`)
+    const link = document.createElement('a')
+    link.href = response.data.url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
   }
 
   const deleteFacilityDocument = (facilityId: number, mediaId: number) => {
@@ -551,7 +572,7 @@ export const useApiStore = defineStore('api', () => {
     }
   }
 
-  const getAllDonationGoodTypes = async (deleted: boolean = false)  => {
+  const getAllDonationGoodTypes = async (deleted: boolean = false) => {
     if (await checkServerAccess()) {
       const res = await axios.get(`${config.public.apiBase}/donationGoodsTypes/all${deleted ? '?include_deleted' : ''}`)
       await storeData('donation_goods_types', res.data.data)
@@ -634,20 +655,24 @@ export const useApiStore = defineStore('api', () => {
    **/
 
   const getAllDistributions = async (params: QueryParams) => {
-    if(await checkServerAccess())
-    {
+    if (await checkServerAccess()) {
       return axios.get(`${config.public.apiBase}/donations/distributions`, {params})
     }
-    //TODO
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
-  const createDistribution = (params: any) => {
-    return axios.post(`${config.public.apiBase}/donations/distributions`, params)
+  const createDistribution = async (params: any) => {
+    if (await checkServerAccess()) {
+      return axios.post(`${config.public.apiBase}/donations/distributions`, params)
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
-  const updateDistribution = (id: number, params: any) => {
-    return axios.put(`${config.public.apiBase}/donations/distributions/${id}`, params)
+  const updateDistribution = async (id: number, params: any) => {
+    if (await checkServerAccess()) {
+      return axios.put(`${config.public.apiBase}/donations/distributions/${id}`, params)
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   // Donation Statistics
@@ -655,8 +680,7 @@ export const useApiStore = defineStore('api', () => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/stats`);
     }
-    //TODO
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   // All Donation Stock
@@ -664,8 +688,7 @@ export const useApiStore = defineStore('api', () => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/stock`);
     }
-    //TODO
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   // Registo de Auditoria das Doações
@@ -673,28 +696,56 @@ export const useApiStore = defineStore('api', () => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/stock/audit`, {params});
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const getDonationAudit = async (id: number, params?: QueryParams) => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/${id}/audit`, {params});
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const getDistributionAudit = async (id: number, params?: QueryParams) => {
     if (await checkServerAccess()) {
       return await axios.get(`${config.public.apiBase}/donations/distributions/${id}/audit`, {params});
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   const postStockAudit = async (params: any) => {
-    if(await checkServerAccess()) {
+    if (await checkServerAccess()) {
       return await axios.post(`${config.public.apiBase}/donations/stock/audit`, params)
     }
-    throw new Error('Not Implemented');
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const getDistributionRules = async () => {
+    if (await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/donations/distributions/rules`);
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const updateDistributionRules = async (params: any) => {
+    if (await checkServerAccess()) {
+      return await axios.post(`${config.public.apiBase}/donations/distributions/rules`, params);
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const getStockUnlock = async () => {
+    if (await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/donations/stock/unlock`);
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
+  }
+
+  const updateStockUnlock = async (unlocked: boolean) => {
+    if (await checkServerAccess()) {
+      return await axios.post(`${config.public.apiBase}/donations/stock/unlock`, {state: unlocked});
+    }
+    throw new Error('O Endpoint não é suportado no modo offline');
   }
 
   /*************************
@@ -703,15 +754,19 @@ export const useApiStore = defineStore('api', () => {
    *
    *************************/
 
-  const getIncidentTimeline = (incidentId: number) => {
-    return axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`)
+  const getIncidentTimeline = async (incidentId: number, params: QueryParams) => {
+    if (await checkServerAccess()) {
+      return await axios.get(`${config.public.apiBase}/incidents/${incidentId}/timeline`, {params});
+    } else {
+      throw new Error('O Endpoint não é suportado no modo offline');
+    }
   }
 
-  const createTimelineComment = (incidentId: number, params: { body: string }) => {
+  const createTimelineComment = (incidentId: number, params: { body: string, datetime: string }) => {
     return axios.post(`${config.public.apiBase}/incidents/${incidentId}/comments`, params)
   }
 
-  const updateTimelineComment = (incidentId: number, commentId: number, params: { body: string }) => {
+  const updateTimelineComment = (incidentId: number, commentId: number, params: { body: string, datetime: string }) => {
     return axios.put(`${config.public.apiBase}/incidents/${incidentId}/comments/${commentId}`, params)
   }
 
@@ -781,7 +836,8 @@ export const useApiStore = defineStore('api', () => {
     requestFacilitySignedUrl,
     updateFacilityImage,
     deleteFacilityImage,
-    uploadFacilityDocuments,
+    requestFacilityDocumentSignedUrl,
+    uploadFacilityDocument,
     downloadFacilityDocument,
     deleteFacilityDocument,
     getIncidentTimeline,
@@ -806,5 +862,9 @@ export const useApiStore = defineStore('api', () => {
     getDonationAudit,
     getDistributionAudit,
     postStockAudit,
+    getDistributionRules,
+    updateDistributionRules,
+    getStockUnlock,
+    updateStockUnlock,
   }
 })

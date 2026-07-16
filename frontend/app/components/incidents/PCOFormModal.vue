@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { watch } from 'vue'
 import * as z from 'zod'
 import {toDatetimeLocal} from "@/utils"
 import type {FormSubmitEvent} from "@nuxt/ui";
+import moment from "moment/min/moment-with-locales";
+import {useAuthStore} from "~/stores/auth";
 
 const props = defineProps<{
   open: boolean
@@ -50,8 +52,6 @@ function resetForm() {
   Object.assign(state, defaultForm)
 }
 
-const isEditMode = computed(() => !!props.modelValue?.id)
-
 watch(() => [props.modelValue, props.open], ([val, open]) => {
     if (!open) return resetForm()
 
@@ -75,13 +75,28 @@ watch(() => [props.modelValue, props.open], ([val, open]) => {
   }
 )
 
-const toast = useToast()
 const formRef = ref()
 
 const close = () => emit('update:open', false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  emit('save', event.data)
+  if (!useAuthStore().hasPermission('INCIDENTS_UPDATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
+  emit('save', {
+    ...event.data,
+    activation_pco_datetime: event.data.activation_pco_datetime !== '' ?  moment(event.data.activation_pco_datetime).toISOString() : null,
+    start_pco_datetime:  moment(event.data.start_pco_datetime).toISOString(),
+    end_pco_datetime:  event.data.end_pco_datetime !== '' ? moment(event.data.end_pco_datetime).toISOString() : null,
+  })
   close()
 }
 </script>

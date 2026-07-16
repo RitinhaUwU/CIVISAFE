@@ -28,7 +28,6 @@ const onSubmit = async () => {
     return;
   }
 
-
   if (!props.id) return
 
   try {

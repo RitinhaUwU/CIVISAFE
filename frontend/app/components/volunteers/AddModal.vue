@@ -2,8 +2,10 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { useApiStore } from '@/stores/api'
-import {usePaginatedSelect} from '@/composables/usePaginatedSelect'
-import { incidentDisplayName } from '@/utils'
+import {incidentDisplayName, toDatetimeLocal} from '@/utils'
+import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
+import moment from "moment";
+import {useAuthStore} from "~/stores/auth";
 
 const api = useApiStore()
 const open = ref(false)
@@ -70,9 +72,22 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  if (!useAuthStore().hasPermission('VOLUNTEERS_CREATE')) return;
+
+  if (!await checkServerAccess()) {
+    useToast().add({
+      title: 'Sem ligação à internet!',
+      description: 'Não é possível guardar alterações sem estar ligado à internet. Tente novamente mais tarde',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await api.createVolunteer({
       ...event.data,
+      start_datetime: moment(event.data.start_datetime).toISOString(),
+      end_datetime: event.data.end_datetime != '' ? moment(event.data.end_datetime).toISOString() : null,
       incident_id: event.data.incident_id?.id ?? null
     })
 

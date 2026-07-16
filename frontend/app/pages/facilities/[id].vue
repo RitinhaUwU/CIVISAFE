@@ -241,13 +241,13 @@ const items = ref<BreadcrumbItem[]>([
   }
 ])
 
-onMounted(() => {
+onMounted(async () => {
   if(!useAuthStore().hasPermission('FACILITIES_LIST')){
-    useRouter().push('/inicio');
+    await useRouter().push('/inicio');
     return;
   }
 
-  fetchFacility()
+  await fetchFacility()
 })
 </script>
 

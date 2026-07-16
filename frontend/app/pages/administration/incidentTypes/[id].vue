@@ -4,7 +4,6 @@ import {useApiStore} from '@/stores/api'
 import type {BreadcrumbItem} from "@nuxt/ui/components/Breadcrumb.vue";
 
 const route = useRoute()
-const router = useRouter()
 const api = useApiStore()
 
 const state = reactive({
@@ -33,6 +32,7 @@ const fetchEntity = async () => {
     await useRouter().push('/incidentTypes');
     return;
   }
+
   const res = await api.getIncidentType(parseInt(routeID));
 
   Object.assign(state, res.data.data)
