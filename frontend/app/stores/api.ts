@@ -739,9 +739,9 @@ export const useApiStore = defineStore('api', () => {
     throw new Error('O Endpoint não é suportado no modo offline');
   }
 
-  const updateStockUnlock = async (status: boolean) => {
+  const updateStockUnlock = async (unlocked: boolean) => {
     if (await checkServerAccess()) {
-      return await axios.post(`${config.public.apiBase}/donations/stock/unlock`, {status: status});
+      return await axios.post(`${config.public.apiBase}/donations/stock/unlock`, {state: unlocked});
     }
     throw new Error('O Endpoint não é suportado no modo offline');
   }

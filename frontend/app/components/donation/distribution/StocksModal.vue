@@ -38,7 +38,8 @@ const handleStatusSwitch = async () => {
 
   try
   {
-    await useApiStore().updateStockUnlock(!localSwitchStatus.value);
+    // Valor a entrar: Colocar como desbloqueado?
+    await useApiStore().updateStockUnlock(localSwitchStatus.value);
 
     useToast().add({
       title: "Sucesso!",

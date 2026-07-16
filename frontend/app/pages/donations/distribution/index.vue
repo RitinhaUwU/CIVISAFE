@@ -351,16 +351,6 @@ const calculateBoxMaxValue = (index: number) => {
               </TransitionGroup>
 
               <template #footer>
-
-                <UButton
-                  label="Voltar"
-                  icon="i-lucide-undo-2"
-                  size="sm"
-                  class="flex float-start"
-                  v-if="distributionForm.id !== undefined"
-                  @click="clearForm"
-                />
-
                 <UButton
                   icon="i-lucide-plus"
                   label="Adicionar Linha"
