@@ -79,7 +79,7 @@ class DonationLogController extends Controller
                         ->lockForUpdate()
                         ->incrementOrCreate([
                             'donation_goods_type_id' => $good['category_id'],
-                        ], 'stock', $good['quantity']);
+                        ], 'stock', $good['quantity'], $good['quantity']);
                 }
 
                 return $donation;
@@ -167,7 +167,7 @@ class DonationLogController extends Controller
                             ->lockForUpdate()
                             ->incrementOrCreate([
                                 'donation_goods_type_id' => $item['category_id'],
-                            ], 'stock', $item['quantity']);
+                            ], 'stock', $item['quantity'], $item['quantity']);
                     }
                 });
 

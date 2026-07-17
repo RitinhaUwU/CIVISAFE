@@ -12,7 +12,7 @@ const toast = useToast()
 
 const schema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  description: z.string().optional().nullable(),
+  description: z.string().min(1, 'A descrição é obrigatória'),
   hex_color: z.string().optional(),
   is_active: z.boolean().optional()
 })
@@ -97,7 +97,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <UFormField label="Nome" name="name" required>
           <UInput v-model="state.name" class="w-full" />
         </UFormField>
-        <UFormField label="Observações" name="description">
+        <UFormField label="Observações" name="description" required>
           <UTextarea v-model="state.description" class="w-full" />
         </UFormField>
         <div class="p-2">

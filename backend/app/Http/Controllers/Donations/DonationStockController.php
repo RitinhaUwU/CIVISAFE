@@ -88,7 +88,7 @@ class DonationStockController extends Controller
                         ->lockForUpdate()
                         ->incrementOrCreate([
                             'donation_goods_type_id' => $request->validated('category_id'),
-                        ], 'stock', $request->validated('quantity'));
+                        ], 'stock', $request->validated('quantity'), $request->validated('quantity'));
                 } else {
                     DonationStock::upsert(
                         [

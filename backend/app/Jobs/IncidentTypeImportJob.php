@@ -8,6 +8,7 @@ use App\Models\IncidentType;
 use App\Models\User;
 use App\Notifications\GenericNotification;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\Attributes\Tries;
@@ -19,8 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
-#[Tries(1)]
-class IncidentTypeImportJob implements ShouldQueue
+class IncidentTypeImportJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
