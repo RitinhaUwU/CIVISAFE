@@ -58,6 +58,14 @@ class IncidentTypeController extends Controller
                 'visibility' => 'private'
             ]);
 
+            if(!$file)
+            {
+                Log::error("Erro de upload fo ficheiro para o fs remoto");
+                return response()->json([
+                    'message' => 'Ocorreu um erro interno ao carregar o ficheiro.'
+                ], 500);
+            }
+
             IncidentTypeImportJob::dispatch($file, $request->user())->onQueue('imports');
 
             return response()->json(['message' => 'File sent to processing', 'file' => $file], 201);
@@ -67,7 +75,7 @@ class IncidentTypeController extends Controller
                 'exceptionData' => $e,
             ]);
             return response()->json([
-                'message' => 'Ocorreu um erro interno ao carregar o ficheiro.'
+                'message' => 'Ocorreu um erro interno ao carregar o ficheiro: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -5,7 +5,7 @@ import type { TableColumn } from '@nuxt/ui'
 import type {Incident} from "@/types";
 import {UBadge, UButton} from "#components";
 import {usePaginatedSelect} from "@/composables/usePaginatedSelect";
-import {extractCursor} from '@/utils';
+import {extractCursor, incidentDisplayName} from '@/utils';
 
 const api = useApiStore()
 
@@ -301,7 +301,7 @@ onMounted(async () => {
         v-if="selectedIncidentById"
         v-model:open="deleteModalOpen"
         :id="selectedIncidentById?.id"
-        :identifier="selectedIncidentById?.identifier"
+        :identifier="incidentDisplayName(selectedIncidentById)"
         @deleted="fetch"
       />
       <InicioFormRegisto
