@@ -180,13 +180,13 @@ const state = reactive<Partial<Schema>>({
 // Map
 const mapCenter = computed(() => {
   if (!state.coordinates) {
-    return [38.7223, -9.1393]
+    return [39.917504, -8.145675]
   }
 
   const [lat, lng] = state.coordinates.split(',').map(v => Number(v.trim()))
 
   if (Number.isNaN(lat) || Number.isNaN(lng)) {
-    return [38.7223, -9.1393]
+    return [39.917504, -8.145675]
   }
 
   return [lat, lng]
@@ -327,7 +327,7 @@ const fetchIncident = async () => {
     user_id: data.user?.id,
     user: data.user,
     incident_type_id: data.incidentType ? {id: data.incidentType.id, name: `${data.incidentType.code} - ${data.incidentType.type}`} : null,
-    incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name} : null,
+    incident_state_id: data.incidentState ? {id: data.incidentState.id, name: data.incidentState.name, terminates_incident: data.incidentState.terminates_incident} : null,
     incident_priority_id: data.incidentPriority ? {id: data.incidentPriority.id, name: `${data.incidentPriority.name} - ${data.incidentPriority.description}`} : null,
     incident_id: data.is_major ? (data.children_incidents ?? []).map((i: any) => ({id: i.id, name: incidentDisplayName(i)})) : data.parentIncident ? {id: data.parentIncident.id, name: incidentDisplayName(data.parentIncident)} : null,    start_datetime: toDatetimeLocal(data.start_datetime),
     end_datetime: toDatetimeLocal(data.end_datetime),
@@ -340,7 +340,7 @@ const fetchIncident = async () => {
 
 const showEndDateWarning = computed(() => {
   return (
-    !!state.end_datetime &&
+    state.end_datetime &&
     !state.incident_state_id?.terminates_incident
   )
 })
