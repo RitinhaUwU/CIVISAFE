@@ -74,7 +74,8 @@ class Incident extends Model
     {
         $year = now()->year;
 
-        $last = self::where('identifier', 'like', "{$year}/%")
+        $last = self::withTrashed()
+            ->where('identifier', 'like', "{$year}/%")
             ->lockForUpdate()
             ->orderByDesc('identifier')
             ->first();

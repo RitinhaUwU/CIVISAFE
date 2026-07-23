@@ -447,20 +447,20 @@ onMounted(async() => {
                       <UInput v-model="state.common_place" class="w-full"/>
                     </UFormField>
                   </div>
+                  <UFormField label="Morada" name="address">
+                    <UInput v-model="state.address" class="w-full"/>
+                  </UFormField>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
-                    <UFormField label="Distrito" name="district">
-                      <UInput v-model="state.district" class="w-full"/>
+                    <UFormField label="Freguesia" name="parish">
+                      <UInput v-model="state.parish" class="w-full"/>
                     </UFormField>
                     <UFormField label="Concelho" name="municipality">
                       <UInput v-model="state.municipality" class="w-full"/>
                     </UFormField>
-                    <UFormField label="Freguesia" name="parish">
-                      <UInput v-model="state.parish" class="w-full"/>
+                    <UFormField label="Distrito" name="district">
+                      <UInput v-model="state.district" class="w-full"/>
                     </UFormField>
                   </div>
-                  <UFormField label="Localidade" name="address">
-                    <UInput v-model="state.address" class="w-full"/>
-                  </UFormField>
                 </div>
                 <Map
                   v-if="!state.is_major"

@@ -71,7 +71,7 @@ class IncidentController extends Controller
 
                     $coords = array_map(function ($v) {
                         if (!is_numeric($v)) return null;
-                        return (float) $v;
+                        return (float)$v;
                     }, $value);
 
                     if (in_array(null, $coords, true)) return;
@@ -176,7 +176,6 @@ class IncidentController extends Controller
 
     public function update(IncidentRequest $request, Incident $incident)
     {
-        Log::debug("Update Ocorrencia", $request->validated());
         return DB::transaction(function () use ($request, $incident) {
 
             $data = $request->validated();
@@ -188,7 +187,7 @@ class IncidentController extends Controller
 
             $incident->update($data);
 
-            Incident::where('incident_id', $incident->id)->whereNotIn('id', $children)->get()->each(fn ($child) => $child->update(['incident_id' => null]));
+            Incident::where('incident_id', $incident->id)->whereNotIn('id', $children)->get()->each(fn($child) => $child->update(['incident_id' => null]));
 
             if ($incident->is_major && !empty($children)) {
                 foreach (Incident::whereIn('id', $children)->get() as $child) {
@@ -212,6 +211,15 @@ class IncidentController extends Controller
 
     public function destroy(Incident $incident)
     {
+        $incident->childrenIncidents()->each(function (Incident $child) {
+            $child->incident_id = null;
+            $res = $child->save();
+
+            Log::debug('Novo valor: ' . $child->identifier);
+            Log::debug('Novo objeto: ', $child->toArray());
+            Log::debug('Res: ', (array)$res);
+        });
+
         $incident->delete();
 
         return response()->json();

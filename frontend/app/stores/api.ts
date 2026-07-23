@@ -240,7 +240,7 @@ export const useApiStore = defineStore('api', () => {
       return res;
     } else {
       console.debug("OFFLINE DATA")
-      return await retrieveDataPaginated('incidents', params);
+      return await retrieveData('incidents');
     }
   }
 

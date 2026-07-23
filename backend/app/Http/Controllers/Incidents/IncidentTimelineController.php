@@ -22,7 +22,7 @@ class IncidentTimelineController extends Controller
 
     public function index(Request $request, Incident $incident)
     {
-        $validated = $request->validate([
+        $request->validate([
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
